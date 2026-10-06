@@ -159,7 +159,7 @@ function setNav(){
   const pend = APP.pub && APP.pub.pending ? '<span class="cnt">' + APP.pub.pending + '</span>' : '';
   $('nav').innerHTML = (APP.page === 'main'
       ? '<a class="pill" href="play/">🎮 놀이터</a>' +
-        '<a class="pill" href="board.html" target="_blank">🏆 전국 현황판</a>' +
+        '<a class="pill" href="board.html" target="_blank" rel="noopener">🏆 전국 현황판</a>' +
         '<button class="pill" id="qrBtn">📱 접속 QR</button>' +
         '<button class="pill" id="apBtn">기록 승인' + pend + '</button>' +
         '<button class="pill" id="adBtn">관리자 메뉴</button>'
@@ -285,7 +285,7 @@ function renderSetup(){
     '<div class="doors">' +
       '<a class="door" href="play/"><span class="door-ico">🎮</span><b>놀이터 바로 가기</b><span>설치 없이 바로! 프로젝터·TV로 띄워 반 전체가 함께 뛰는 게임 모음</span></a>' +
       '<a class="door" href="#install" id="toInstall"><span class="door-ico">🏫</span><b>우리 학교 기록 시작하기</b><span>구글 시트 하나로 학생 기록·승인·하늘까지, 카메라 판정 기록은 전국 현황판에</span></a>' +
-      '<a class="door" href="board.html"><span class="door-ico">🏆</span><b>전국 현황판</b><span>여러 학교가 함께 모은 매트 기록과 "다 함께 하늘까지"</span></a>' +
+      '<a class="door" href="board.html" target="_blank" rel="noopener"><span class="door-ico">🏆</span><b>전국 현황판</b><span>여러 학교가 함께 모은 매트 기록과 "다 함께 하늘까지"</span></a>' +
     '</div>' +
     (last ? '<div class="card"><h2>지난번에 쓰던 학교 시트</h2><p class="hint" style="word-break:break-all">' + esc(last) + '</p><a class="btn" href="?' + (idOf(last) ? 'id=' + idOf(last) : 's=' + encodeURIComponent(last)) + '">이어서 열기 →</a></div>' : '') +
     '<div class="card" id="install"><h2>🏫 우리 학교 기록 처음 설치하기 (5분)</h2><ol class="steps">' +
@@ -454,7 +454,7 @@ function renderAdmin(msg){
       '<div class="row"><label>학교 이름</label><input type="text" id="natName" value="' + esc(nat.name || '') + '" placeholder="예: 햇살초등학교 4학년" style="flex:1;min-width:200px"></div>' +
       '<label class="switch"><input type="checkbox" id="natShow" ' + (nat.showName ? 'checked' : '') + '> 현황판에 학교 이름 보이기 <span class="hint" style="margin:0">(끄면 "익명 학교"로 보여요)</span></label>' +
       '<div class="row" style="margin-top:10px">' + (nat.on ? '<button class="btn" id="natSave">저장하고 지금 보내기</button><button class="btn ghost" id="natOff">참여 끄기</button>' + (NAT.moved() ? '<button class="btn ghost" id="natNew">참여 번호 새로 만들기</button>' : '') : '<button class="btn" id="natOn" ' + (d.approvalOn ? '' : 'disabled') + '>참여하기</button>') +
-      '<a class="btn ghost" href="board.html" target="_blank">현황판 보기</a></div>' +
+      '<a class="btn ghost" href="board.html" target="_blank" rel="noopener">현황판 보기</a></div>' +
       (nat.on ? '<p class="hint">참여 중' + (last ? ' · 마지막으로 보낸 때 ' + new Date(last).toLocaleString('ko-KR') : '') + ' · 기록을 승인하면 자동으로 보내요.</p>' : '') + '</div>' +
       '<div class="card"><h2>승인 절차</h2><label class="switch"><input type="checkbox" id="apOn" ' + (d.approvalOn ? 'checked' : '') + '> 학생 기록은 선생님이 승인해야 인정돼요</label><p class="hint">끄면 카메라 판정 기록은 바로 인정되지만, 전국 현황판에는 참여할 수 없어요.</p></div>' +
       '<div class="card"><h2>학생 접속</h2><p class="hint">학생 휴대폰·태블릿으로 QR을 찍으면 우리 학교 메인 화면이 열려요. 한 번 들어온 기기는 다음부터 자동으로 이 학교로 들어와요.</p><div class="row"><button class="btn" id="stuQr">📱 학생 접속 QR</button><button class="btn ghost" id="copyUrl">주소 복사</button></div></div>' +
