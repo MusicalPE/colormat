@@ -100,8 +100,9 @@ video{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .tips li::before{content:"";position:absolute;left:4px;top:13px;width:6px;height:6px;border-radius:50%;background:var(--coral)}
 @media (max-width:520px){.place{grid-template-columns:1fr}.place svg{max-width:220px;margin:0 auto;display:block}}
 .bigview{margin:10px auto;display:flex;justify-content:center}
-.bigview canvas{display:block;width:auto;height:auto;max-width:100%;max-height:68vh;border-radius:14px;background:#000}
-body.wide .wrap{max-width:1040px}
+.bigview canvas{display:block;width:auto;height:auto;max-width:100%;max-height:62vh;border-radius:14px;background:#000}
+body.wide .wrap{max-width:1180px}
+@media (min-width:860px){.setupgrid{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:center}.setupgrid .bigview{margin:0}.setupgrid canvas{max-height:72vh}}
 .checks{list-style:none;margin:8px 0 2px}
 .checks li{font-size:15px;padding:6px 0;display:flex;gap:8px;align-items:center}
 .checks li b{display:inline-flex;width:24px;height:24px;border-radius:50%;align-items:center;justify-content:center;font-size:13px;background:var(--bg);color:var(--sub)}
@@ -188,11 +189,15 @@ body.wide .wrap{max-width:1040px}
   <section id="setup" class="hidden">
     <div class="card">
       <h2>휴대폰 자리 맞추기</h2>
-      <p class="muted" id="setupHelp"></p>
-      <div class="bigview"><canvas id="setupCanvas"></canvas></div>
-      <ul class="checks" id="setupChecks"></ul>
-      <button class="btn" id="setupOk">시작하기</button>
-      <button class="btn ghost" id="setupAlt">네 칸에 서서 직접 맞추기</button>
+      <p class="muted" id="setupHelp" style="margin-bottom:10px"></p>
+      <div class="setupgrid">
+        <div class="bigview"><canvas id="setupCanvas"></canvas></div>
+        <div>
+          <ul class="checks" id="setupChecks"></ul>
+          <button class="btn" id="setupOk">시작하기</button>
+          <button class="btn ghost" id="setupAlt">네 칸에 서서 직접 맞추기</button>
+        </div>
+      </div>
     </div>
   </section>
 
