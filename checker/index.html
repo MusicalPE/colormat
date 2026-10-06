@@ -99,8 +99,9 @@ video{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .tips li{padding:5px 0 5px 18px;position:relative}
 .tips li::before{content:"";position:absolute;left:4px;top:13px;width:6px;height:6px;border-radius:50%;background:var(--coral)}
 @media (max-width:520px){.place{grid-template-columns:1fr}.place svg{max-width:220px;margin:0 auto;display:block}}
-.bigview{background:#000;border-radius:14px;overflow:hidden;margin:10px auto;max-width:min(420px,34vh)}
-.bigview canvas{display:block;width:100%;height:auto}
+.bigview{margin:10px auto;display:flex;justify-content:center}
+.bigview canvas{display:block;width:auto;height:auto;max-width:100%;max-height:68vh;border-radius:14px;background:#000}
+body.wide .wrap{max-width:1040px}
 .checks{list-style:none;margin:8px 0 2px}
 .checks li{font-size:15px;padding:6px 0;display:flex;gap:8px;align-items:center}
 .checks li b{display:inline-flex;width:24px;height:24px;border-radius:50%;align-items:center;justify-content:center;font-size:13px;background:var(--bg);color:var(--sub)}
@@ -261,7 +262,7 @@ video{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 <div class="badge">Made by 음악적체육인</div>
 
 <script type="module">
-const VERSION = 'v0.3';
+const VERSION = 'v0.3.1';
 // 칸 번호: 0 왼위 빨강, 1 오위 노랑, 2 왼아래 초록, 3 오아래 파랑
 const TILE = ['빨강','노랑','초록','파랑'];
 const NAME = ['빨간색','노란색','초록색','파란색'];
@@ -300,7 +301,7 @@ $('stableMs').oninput = e => { S.stableMs=+e.target.value; showSettingVals(); sa
 $('band').oninput = e => { S.band=+e.target.value/100; showSettingVals(); saveSettings(); };
 
 // ---------- 화면 ----------
-function show(id){ for (const s of ['home','loading','setup','calib','check','game','result']) $(s).classList.toggle('hidden', s!==id); S.screen=id; }
+function show(id){ document.body.classList.toggle('wide', id==='setup'); for (const s of ['home','loading','setup','calib','check','game','result']) $(s).classList.toggle('hidden', s!==id); S.screen=id; }
 function seg(id, cb){ $(id).querySelectorAll('button').forEach(b=>b.onclick=()=>{ $(id).querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); cb(b.dataset.v); }); }
 seg('camSeg', v=>S.facing=v); seg('ruleSeg', v=>S.rule=v); seg('diffSeg', v=>S.smode=+v); seg('speedSeg', v=>S.speed=+v);
 document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('on',x===b)); S.mode=b.dataset.mode; $('stroopOpts').classList.toggle('hidden',S.mode!=='stroop'); });
@@ -715,7 +716,7 @@ function loop(){
       let lm=null; try{ lm=landmarker.detectForVideo(v,t).landmarks?.[0]||null; }catch(e){}
       let info;
       if (lm) info=track(lm,t); else { TR.feet=null; TR.mat=null; TR.cand=null; TR.stable=null; info={msg:'사람이 보이지 않아요'}; }
-      if (S.screen==='setup'){ setupFrame(lm,t); drawSelf(lm, $('setupCanvas'), 640, true); } else drawSelf(lm);
+      if (S.screen==='setup'){ setupFrame(lm,t); drawSelf(lm, $('setupCanvas'), 1280, true); } else drawSelf(lm);
       if (S.screen==='calib') calibFrame(t);
       if (S.screen==='check'){ drawMat('chkMat','chkCanvas'); $('chkStatus').textContent=info.msg; }
       if (S.screen==='game'){ drawMat('gMat','gCanvas'); $('gStatus').textContent=info.msg; }
