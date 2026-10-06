@@ -105,18 +105,36 @@ function getPublic() {
     list.push({ id: String(v[i][0]).trim(), grade: v[i][1], cls: v[i][2], number: v[i][3], name: v[i][4], order: Number(v[i][5]) || 9999 + i });
   }
   list.sort(function (a, b) { return a.order - b.order; });
-  return { shell: SHELL_VERSION, title: getSS_().getName(), approvalOn: approvalOn_(), students: list, climb: climb_() };
+  const act = activity_();
+  return { shell: SHELL_VERSION, title: getSS_().getName(), approvalOn: approvalOn_(), students: list, climb: act.climb,
+    days: act.days, today: act.today, pending: act.pending, now: today_() };
 }
 // 다 함께 하늘까지: 승인된 카메라 판정 정답 착지 1번 = 1m. 학년도(3월 1일 시작)별 합
 function schoolYear_(d) { const y = Number(String(d).slice(0, 4)), m = Number(String(d).slice(5, 7)); return String(m >= 3 ? y : y - 1); }
-function climb_() {
-  const v = recordsSheet_().getDataRange().getValues(), years = {};
+// 메인 화면용 공개 자료 (실명·반·번호는 학생 목록에 이미 있음, 기록 ID 는 안 내보냄)
+//  days : 이번 학년도 승인 기록을 학생·날짜별로 묶음 [학생ID, 날짜, 정답, 시도, 초, 완주판, 완주정답, 완주시도, 판수]
+//  today: 오늘 기록 전부(승인 대기 포함) [학생ID, 게임, 난이도, 정답, 시도, 초, 완주, 상태, 시각]
+//  climb: 다 함께 하늘까지 — 승인된 카메라 판정 정답 착지 1번 = 1m, 학년도(3월 1일 시작)별 합
+function schoolYear_(d) { const y = Number(String(d).slice(0, 4)), m = Number(String(d).slice(5, 7)); return String(m >= 3 ? y : y - 1); }
+function activity_() {
+  const v = recordsSheet_().getDataRange().getValues(), years = {}, by = {}, today = [], td = today_(), sy = schoolYear_(td);
+  let pending = 0;
   for (let i = 1; i < v.length; i++) {
-    if (String(v[i][13]) !== 'approved' || Number(v[i][12]) !== 1) continue;
-    const sy = schoolYear_(fmtDate_(v[i][3]));
-    years[sy] = (years[sy] || 0) + (Number(v[i][8]) || 0);
+    const r = v[i]; if (!String(r[0]).trim()) continue;
+    const d = fmtDate_(r[3]), st = String(r[13] || 'pending'), cam = Number(r[12]) === 1;
+    const c = Number(r[8]) || 0, a = Number(r[9]) || 0, sec = Number(r[10]) || 0, done = Number(r[11]) === 1;
+    if (st === 'pending') pending++;
+    if (d === td) today.push([String(r[2]).trim(), String(r[4]), String(r[5]), c, a, sec, done ? 1 : 0, st,
+      r[1] instanceof Date ? Utilities.formatDate(r[1], Session.getScriptTimeZone(), 'HH:mm') : '']);
+    if (st !== 'approved') continue;
+    if (cam) { const y = schoolYear_(d); years[y] = (years[y] || 0) + c; }
+    if (schoolYear_(d) !== sy) continue;
+    const k = String(r[2]).trim() + '|' + d;
+    const x = by[k] || (by[k] = [String(r[2]).trim(), d, 0, 0, 0, 0, 0, 0, 0]);
+    x[2] += c; x[3] += a; x[4] += sec; x[8]++;
+    if (done) { x[5]++; x[6] += c; x[7] += a; }
   }
-  return { year: schoolYear_(today_()), years: years };
+  return { climb: { year: sy, years: years }, days: Object.keys(by).map(function (k) { return by[k]; }), today: today, pending: pending };
 }
 
 // 판정기 결과 저장: rec = { game, difficulty, rule, speed, correct, attempts, playSeconds, completed, cameraJudged, levelReached }
