@@ -116,7 +116,7 @@
 <script>
 (function(){
 'use strict';
-const VERSION = 'app v1.1';
+const VERSION = 'app v1.1.1';
 const REQUIRED_SHELL = 1;
 const GAME_NAME = { stroop:'색깔 스트룹', basic:'색깔 점프', memory:'기억력 스텝', rhythm:'리듬 스텝', dir:'방향 점프', quiz:'퀴즈 점프', assoc:'연상 점프', twist:'손발 트위스터', freeze:'얼음 스텝', lava:'용암 매트' };
 const DIFF = { normal:'노말', hard:'하드', expert:'익스퍼트' };
@@ -129,7 +129,10 @@ const LS = { get(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JS
 $('ver').textContent = VERSION;
 
 // page: main(첫 화면) · admin(관리자 메뉴) · approval(기록 승인 = 관리자 메뉴의 승인 탭)
-const APP = { s: q.s || '', pub: null, page: q.page === 'admin' || q.page === 'approval' ? 'admin' : 'main', token: null, data: null,
+// 학교 시트 주소: ?id=<배포 번호> (짧은 주소) 또는 예전처럼 ?s=<전체 주소>
+const GAS = id => 'https://script.google.com/macros/s/' + id + '/exec';
+const idOf = u => { const m = String(u || '').match(/^https:\/\/script\.google\.com\/macros\/s\/([A-Za-z0-9_-]+)\/exec$/); return m ? m[1] : ''; };
+const APP = { s: q.s || (q.id && /^[A-Za-z0-9_-]+$/.test(q.id) ? GAS(q.id) : ''), pub: null, page: q.page === 'admin' || q.page === 'approval' ? 'admin' : 'main', token: null, data: null,
   tab: q.page === 'approval' ? 'pending' : (q.tab || 'pending') };
 try { const t = JSON.parse(sessionStorage.getItem('cm_token|' + APP.s) || 'null'); if (t && t.exp > Date.now()) APP.token = t.token; } catch (e) {}
 
@@ -138,7 +141,7 @@ function rpc(fn, args){
     .then(r => { if (!r.ok) throw new Error('학교 시트 응답 오류 (' + r.status + ')'); return r.json(); })
     .then(j => { if (!j.ok) throw new Error(j.error || '요청 실패'); return j.result; });
 }
-function selfUrl(page){ return location.href.split('?')[0] + '?s=' + encodeURIComponent(APP.s) + (page ? '&page=' + page : ''); }
+function selfUrl(page){ const id = idOf(APP.s); return location.href.split('?')[0] + (id ? '?id=' + id : '?s=' + encodeURIComponent(APP.s)) + (page ? '&page=' + page : ''); }
 function go(page, tab){ APP.page = page; if (tab) APP.tab = tab; history.replaceState(null, '', selfUrl(page === 'admin' ? (APP.tab === 'pending' ? 'approval' : 'admin') : '')); render(); window.scrollTo(0, 0); }
 function wireInstall(){ const b = $('cmInstallBtn'); if (b) b.onclick = () => CMApp.showInstall(); }
 function showStudentQr(){
@@ -274,7 +277,7 @@ function renderSetup(){
   const last = LS.get('cm_last_shell', '');
   $('view').innerHTML =
     '<div class="hero"><h1>우리 학교 매트 기록 시작하기</h1><p>구글 시트 하나에 학생·기록을 모으고, 카메라 판정 기록을 전국 현황판에 올려요</p></div>' +
-    (last ? '<div class="card"><h2>지난번에 쓰던 학교 시트</h2><p class="hint" style="word-break:break-all">' + esc(last) + '</p><a class="btn" href="?s=' + encodeURIComponent(last) + '">이어서 열기 →</a></div>' : '') +
+    (last ? '<div class="card"><h2>지난번에 쓰던 학교 시트</h2><p class="hint" style="word-break:break-all">' + esc(last) + '</p><a class="btn" href="?' + (idOf(last) ? 'id=' + idOf(last) : 's=' + encodeURIComponent(last)) + '">이어서 열기 →</a></div>' : '') +
     '<div class="card"><h2>처음 설치하기 (5분)</h2><ol class="steps">' +
       '<li><b>새 구글 스프레드시트</b>를 만들고 이름을 정해요 (예: 우리 반 매트 기록).</li>' +
       '<li>메뉴 <b>확장 프로그램 → Apps Script</b>를 열어요.</li>' +
@@ -291,7 +294,7 @@ function renderSetup(){
   $('goShell').onclick = () => {
     const v = $('shellIn').value.trim();
     if (!/^https:\/\/script\.google\.com\/.+\/exec/.test(v)) { alert('…/exec 로 끝나는 웹 앱 주소를 붙여넣어 주세요.'); return; }
-    location.href = '?s=' + encodeURIComponent(v) + '&page=admin';
+    location.href = '?' + (idOf(v) ? 'id=' + idOf(v) : 's=' + encodeURIComponent(v)) + '&page=admin';
   };
 }
 
@@ -520,11 +523,12 @@ $('brand').onclick = e => { e.preventDefault(); if (APP.s) reloadPublic().then((
 // 주소에 학교 시트가 없으면: 이 기기에서 연결했던 학교 시트로 바로 이어서 열기 (?new=1 이면 새로 연결 화면)
 if (!APP.s && !q.new) {
   const last = LS.get('cm_last_shell', '');
-  if (last) { location.replace(location.pathname + '?s=' + encodeURIComponent(last) + (q.page ? '&page=' + encodeURIComponent(q.page) : '')); }
+  if (last) { location.replace(location.pathname + '?' + (idOf(last) ? 'id=' + idOf(last) : 's=' + encodeURIComponent(last)) + (q.page ? '&page=' + encodeURIComponent(q.page) : '')); }
 }
 if (!APP.s) { render(); }
 else {
   LS.set('cm_last_shell', APP.s);
+  if (q.s && idOf(APP.s)) history.replaceState(null, '', selfUrl(q.page || ''));
   setNav();
   rpc('getPublic').then(p => {
     APP.pub = p;
