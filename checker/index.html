@@ -280,7 +280,7 @@ body.wide .wrap{max-width:1180px}
 <div class="badge">Made by 음악적체육인</div>
 
 <script type="module">
-const VERSION = 'v0.6.2';
+const VERSION = 'v0.6.3';
 // 칸 번호: 0 왼위 빨강, 1 오위 노랑, 2 왼아래 초록, 3 오아래 파랑
 const TILE = ['빨강','노랑','초록','파랑'];
 const NAME = ['빨간색','노란색','초록색','파란색'];
@@ -542,7 +542,7 @@ function detectMat(v){
   const cx=cv.getContext('2d',{willReadFrequently:true}); cx.drawImage(v,0,0,W,H);
   const px=cx.getImageData(0,0,W,H).data, N=W*H, lab=new Int8Array(N);
   for (let i=0;i<N;i++) lab[i]=colorClass(px[i*4],px[i*4+1],px[i*4+2]);
-  const seen=new Uint8Array(N), best=[null,null,null,null], stack=new Int32Array(N), comp=new Int32Array(N); let cid=0;
+  const seen=new Uint8Array(N), cands=[[],[],[],[]], stack=new Int32Array(N), comp=new Int32Array(N); let cid=0;
   for (let i=0;i<N;i++){
     const c=lab[i]; if (c<0||seen[i]) continue;
     let top=0, n=0, sx=0, sy=0, x0=W, y0=H, x1=0, y1=0; cid++; stack[top++]=i; seen[i]=1;
@@ -551,9 +551,34 @@ function detectMat(v){
       if (x<W-1 && !seen[j+1] && lab[j+1]===c){ seen[j+1]=1; stack[top++]=j+1; }
       if (y>0 && !seen[j-W] && lab[j-W]===c){ seen[j-W]=1; stack[top++]=j-W; }
       if (y<H-1 && !seen[j+W] && lab[j+W]===c){ seen[j+W]=1; stack[top++]=j+W; } }
-    if (!best[c] || n>best[c].n) best[c]={n,sx,sy,x0,y0,x1,y1,cid};
+    // 매트 칸 후보: 너무 작거나 크지 않고, 네모처럼 꽉 찬 덩어리 (옷·물건은 대개 들쭉날쭉)
+    const fill = n/((x1-x0+1)*(y1-y0+1));
+    if (n>=N*.002 && n<=N*.3 && fill>=.42) cands[c].push({n,sx,sy,x0,y0,x1,y1,cid,fill});
   }
-  return best.map(b => (b && b.n>=N*.002 && b.n<=N*.3) ? { x:(b.sx/b.n+.5)/W, y:(b.sy/b.n+.5)/H, n:b.n, box:[b.x0/W,b.y0/H,(b.x1+1)/W,(b.y1+1)/H], pix:pixOf(comp,b.cid,N), W, H } : null);
+  cands.forEach(a=>{ a.sort((p,q)=>q.n-p.n); a.length=Math.min(a.length,5); });
+  // 네 색 후보 중에서 서로 붙어 2×2 네모를 이루는 조합 고르기
+  // (빨강–노랑, 빨강–초록, 노랑–파랑, 초록–파랑 이 이웃이어야 함 → 매트 밖 같은 색 옷·물건은 빠짐)
+  const near=(a,b)=>{ const m=.45*Math.sqrt(Math.min(a.n,b.n));
+    return a.x0-m<=b.x1 && b.x0-m<=a.x1 && a.y0-m<=b.y1 && b.y0-m<=a.y1; };
+  const pub=b=>({ x:(b.sx/b.n+.5)/W, y:(b.sy/b.n+.5)/H, n:b.n, box:[b.x0/W,b.y0/H,(b.x1+1)/W,(b.y1+1)/H], b });
+  let pick=null, bestScore=-1;
+  for (const r of cands[0]) for (const y of cands[1]) {
+    if (!near(r,y)) continue;
+    for (const g of cands[2]) {
+      if (!near(r,g)) continue;
+      for (const bl of cands[3]) {
+        if (!near(y,bl) || !near(g,bl)) continue;
+        const set=[r,y,g,bl], ns=set.map(o=>o.n);
+        if (Math.max(...ns)/Math.min(...ns)>8) continue;
+        if (!matShapeOk(set.map(pub))) continue;
+        const score=ns.reduce((a,b)=>a+b,0)*Math.min(...ns)/Math.max(...ns);
+        if (score>bestScore){ bestScore=score; pick=set; }
+      }
+    }
+  }
+  const out=(pick || cands.map(a=>a[0]||null)).map(b=>b ? Object.assign(pub(b), { pix: pick ? pixOf(comp,b.cid,N) : null, W, H }) : null);
+  out.ok=!!pick;
+  return out;
 }
 // 빨강→노랑→파랑→초록 순서로 이으면 볼록한 네모가 되어야 매트 배치가 맞음
 function matShapeOk(bl){
@@ -570,7 +595,7 @@ function scanMat(t){
   if (DET.found) return;
   if ((DET.n++)%3) return;
   const bl=detectMat($('video')); DET.blobs=bl;
-  if (!matShapeOk(bl)){ DET.cand=null; return; }
+  if (!bl.ok || !matShapeOk(bl)){ DET.cand=null; return; }
   const pts=bl.map(b=>({x:b.x,y:b.y}));
   if (DET.cand && pts.every((p,i)=>Math.hypot(p.x-DET.cand[i].x,p.y-DET.cand[i].y)<.03)){
     if (t-DET.since>900 && setCalibration(refineCenters(bl))){ DET.found=pts; DET.bottom=Math.max(...bl.map(b=>b.box[3])); sndOk(); }
