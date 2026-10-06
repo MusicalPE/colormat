@@ -95,7 +95,7 @@
 <script>
 (function(){
 'use strict';
-const VERSION = 'app v1.0';
+const VERSION = 'app v1.0.1';
 const REQUIRED_SHELL = 1;
 const GAME_NAME = { stroop:'색깔 스트룹', basic:'색깔 점프', memory:'기억력 스텝', rhythm:'리듬 스텝', dir:'방향 점프', quiz:'퀴즈 점프', assoc:'연상 점프', twist:'손발 트위스터', freeze:'얼음 스텝', lava:'용암 매트' };
 const DIFF = { normal:'노말', hard:'하드', expert:'익스퍼트' };
@@ -143,7 +143,7 @@ function renderSetup(){
       '<li>메뉴 <b>확장 프로그램 → Apps Script</b>를 열어요.</li>' +
       '<li>원래 있던 내용을 지우고 <b>껍데기 코드</b>를 붙여넣고 저장해요. <button class="btn ghost" id="copyShell" style="padding:6px 12px;margin-left:6px">📋 껍데기 코드 복사</button></li>' +
       '<li><b>배포 → 새 배포 → 웹 앱</b>: 다음 사용자로 실행 = <b>나</b>, 액세스 권한 = <b>모든 사용자</b> → 배포 (권한 허용).</li>' +
-      '<li>나온 <b>웹 앱 주소(…/exec)</b>를 아래에 붙여넣어요. 처음 관리자 비밀번호는 <b>1234</b>예요.</li>' +
+      '<li>나온 <b>웹 앱 주소(…/exec)</b>를 열고 <b>프로그램 열기</b>를 누르면 끝! (또는 아래에 주소를 붙여넣어도 돼요) 처음 관리자 비밀번호는 <b>1234</b>예요.</li>' +
     '</ol>' +
     '<div class="row" style="margin-top:12px"><input type="url" id="shellIn" placeholder="https://script.google.com/macros/s/…/exec" style="flex:1;min-width:240px"><button class="btn" id="goShell">열기</button></div>' +
     '<p class="hint">줄넘기 기록 관리 프로그램을 쓰고 있어도 시트는 따로 만들어요. 학교 키는 따로 생기지만, 전국 현황판에는 같은 학교 이름으로 보여요.</p></div>';
@@ -363,7 +363,7 @@ function renderAdmin(msg){
       '<div class="card"><h2>승인 절차</h2><label class="switch"><input type="checkbox" id="apOn" ' + (d.approvalOn ? 'checked' : '') + '> 학생 기록은 선생님이 승인해야 인정돼요</label><p class="hint">끄면 카메라 판정 기록은 바로 인정되지만, 전국 현황판에는 참여할 수 없어요.</p></div>' +
       '<div class="card"><h2>학생 접속</h2><p class="hint">학생 휴대폰·태블릿으로 아래 QR을 찍으면 우리 학교 화면이 열려요. 즐겨찾기·바로가기도 이 주소로 해 두세요.</p><div class="row"><button class="btn" id="stuQr">📱 학생 접속 QR</button><button class="btn ghost" id="copyUrl">주소 복사</button></div></div>' +
       '<div class="card"><h2>관리자 비밀번호</h2><form class="row" id="pwf"><input type="password" id="np1" placeholder="새 비밀번호 (4자 이상)"><input type="password" id="np2" placeholder="한 번 더"><button class="btn ghost">바꾸기</button></form></div>' +
-      '<div class="card"><h2>껍데기</h2><p class="hint">지금 껍데기 판 ' + d.shell + ' · 화면 ' + VERSION + '. 화면은 자동으로 새 판이 되고, 껍데기를 바꿔야 할 때만 여기서 알려 드려요.</p><button class="btn ghost" id="logout">로그아웃</button></div>';
+      '<div class="card"><h2>껍데기</h2><p class="hint">이 기기는 다음부터 주소 없이 <b>app.html</b>만 열어도 이 학교 시트로 바로 들어와요. 다른 시트로 바꾸려면 <a href="app.html?new=1">새로 연결하기</a>.</p><p class="hint">지금 껍데기 판 ' + d.shell + ' · 화면 ' + VERSION + '. 화면은 자동으로 새 판이 되고, 껍데기를 바꿔야 할 때만 여기서 알려 드려요.</p><button class="btn ghost" id="logout">로그아웃</button></div>';
   }
   $('view').innerHTML = h;
   $('view').querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { APP.tab = b.dataset.tab; renderAdmin(); });
@@ -417,6 +417,11 @@ function render(){
   return renderStudent();
 }
 $('brand').onclick = e => { e.preventDefault(); APP.view = 'student'; history.replaceState(null, '', APP.s ? selfUrl() : location.pathname); render(); };
+// 주소에 학교 시트가 없으면: 이 기기에서 연결했던 학교 시트로 바로 이어서 열기 (?new=1 이면 새로 연결 화면)
+if (!APP.s && !q.new) {
+  const last = LS.get('cm_last_shell', '');
+  if (last) { location.replace(location.pathname + '?s=' + encodeURIComponent(last) + (q.page ? '&page=' + encodeURIComponent(q.page) : '')); }
+}
 if (!APP.s) { render(); }
 else {
   LS.set('cm_last_shell', APP.s);
@@ -428,7 +433,7 @@ else {
     if (q.sid && (p.students || []).some(s => s.id === q.sid)) { STU.sid = q.sid; }
     render();
   }).catch(e => {
-    $('view').innerHTML = '<div class="card"><div class="msg err">학교 시트에 연결하지 못했어요: ' + esc(e.message) + '</div><p class="hint">껍데기 배포 주소가 맞는지, 배포의 액세스 권한이 "모든 사용자"인지 확인해 주세요.</p><a class="btn ghost" href="app.html">처음 화면으로</a></div>';
+    $('view').innerHTML = '<div class="card"><div class="msg err">학교 시트에 연결하지 못했어요: ' + esc(e.message) + '</div><p class="hint">껍데기 배포 주소가 맞는지, 배포의 액세스 권한이 "모든 사용자"인지 확인해 주세요.</p><a class="btn ghost" href="app.html?new=1">다른 주소로 새로 연결하기</a></div>';
   });
 }
 })();
