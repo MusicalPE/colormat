@@ -160,7 +160,12 @@
     const gameName = ($('gameSel').selectedOptions[0] || {}).textContent || '';
     const filt = [gameName, d.diff ? DIFF[d.diff] || d.diff : '', d.band ? d.band.replace('-', '~') + '학년' : ''].filter(Boolean).join(' · ');
     const s = d.summary || {};
-    let h = '<div class="kpis">' +
+    let h = '';
+    if (d.climb && window.CMApp && CMApp.climbHTML) {
+      const y = d.climb.year, ys = d.climb.years || {};
+      h += CMApp.climbHTML(Number(ys[y]) || 0, '🚀 다 함께 하늘까지 · ' + y + '학년도 전국', Number(ys[String(Number(y) - 1)]) || 0);
+    }
+    h += '<div class="kpis">' +
       '<div class="kpi"><span>참여 학교</span><b class="mono">' + num(s.schools) + '</b></div>' +
       '<div class="kpi"><span>참여 학생</span><b class="mono">' + num(s.students) + '</b></div>' +
       '<div class="kpi"><span>누적 정답 착지</span><b class="mono">' + num(s.correct) + '</b></div>' +

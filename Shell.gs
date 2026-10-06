@@ -105,7 +105,18 @@ function getPublic() {
     list.push({ id: String(v[i][0]).trim(), grade: v[i][1], cls: v[i][2], number: v[i][3], name: v[i][4], order: Number(v[i][5]) || 9999 + i });
   }
   list.sort(function (a, b) { return a.order - b.order; });
-  return { shell: SHELL_VERSION, title: getSS_().getName(), approvalOn: approvalOn_(), students: list };
+  return { shell: SHELL_VERSION, title: getSS_().getName(), approvalOn: approvalOn_(), students: list, climb: climb_() };
+}
+// 다 함께 하늘까지: 승인된 카메라 판정 정답 착지 1번 = 1m. 학년도(3월 1일 시작)별 합
+function schoolYear_(d) { const y = Number(String(d).slice(0, 4)), m = Number(String(d).slice(5, 7)); return String(m >= 3 ? y : y - 1); }
+function climb_() {
+  const v = recordsSheet_().getDataRange().getValues(), years = {};
+  for (let i = 1; i < v.length; i++) {
+    if (String(v[i][13]) !== 'approved' || Number(v[i][12]) !== 1) continue;
+    const sy = schoolYear_(fmtDate_(v[i][3]));
+    years[sy] = (years[sy] || 0) + (Number(v[i][8]) || 0);
+  }
+  return { year: schoolYear_(today_()), years: years };
 }
 
 // 판정기 결과 저장: rec = { game, difficulty, rule, speed, correct, attempts, playSeconds, completed, cameraJudged, levelReached }

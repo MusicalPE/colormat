@@ -123,5 +123,40 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire); else wire();
   // 원하는 주소 하나(또는 여러 개)로 QR 띄우기: [{key, label, url, note}]
-  window.CMApp = { showQr: showQr, showInstall: showInstall, showQrList: function (list) { showQr(list[0].key, list); }, ROOT: ROOT };
+  // ---------- 다 함께 하늘까지: 정답 착지 1번 = 1m ----------
+  var CLIMB = [
+    { m: 0, name: '출발', ico: '🟩' }, { m: 480, name: '남산서울타워', ico: '🗼' }, { m: 555, name: '롯데월드타워', ico: '🏙️' },
+    { m: 1947, name: '한라산', ico: '⛰️' }, { m: 2744, name: '백두산', ico: '🏔️' }, { m: 8849, name: '에베레스트', ico: '🏔️' },
+    { m: 10000, name: '여객기 비행 높이', ico: '✈️' }, { m: 100000, name: '우주의 시작', ico: '🌌' },
+    { m: 400000, name: '국제우주정거장', ico: '🛰️' }, { m: 384400000, name: '달', ico: '🌕' }
+  ];
+  function eul(w) { var c = w.charCodeAt(w.length - 1) - 0xAC00; return (c >= 0 && c <= 11171 && c % 28) ? '을' : '를'; }
+  function fmtM(m) { m = Math.round(m || 0); return m >= 10000 ? (Math.round(m / 100) / 10).toLocaleString('ko-KR') + 'km' : m.toLocaleString('ko-KR') + 'm'; }
+  function climbInfo(m) {
+    var i = 0; while (i + 1 < CLIMB.length && m >= CLIMB[i + 1].m) i++;
+    var prev = CLIMB[i], next = CLIMB[i + 1] || null;
+    return { m: m, prev: prev, next: next, pct: next ? (m - prev.m) / (next.m - prev.m) : 1, reached: CLIMB.slice(1, i + 1) };
+  }
+  // 위로 올라가는 그림 + 설명 HTML (높이 m, 제목, 작년 높이)
+  function climbHTML(m, title, lastYear) {
+    var c = climbInfo(m), pct = Math.max(0, Math.min(1, c.pct));
+    var steps = CLIMB.slice(1).map(function (s) { var on = m >= s.m; return '<span class="cmc-step' + (on ? ' on' : '') + (c.next === s ? ' next' : '') + '" title="' + fmtM(s.m) + '">' + s.ico + '<small>' + s.name + '</small></span>'; }).join('');
+    return '<div class="cmc"><div class="cmc-top"><div><div class="cmc-t">' + title + '</div><div class="cmc-h">' + fmtM(m) + '</div>' +
+      '<div class="cmc-s">' + (c.next ? c.prev.ico + ' ' + (c.prev.m ? c.prev.name + eul(c.prev.name) + ' 넘었어요! ' : '') + '<b>' + c.next.name + '(' + fmtM(c.next.m) + ')</b>까지 <b>' + fmtM(c.next.m - m) + '</b> 남았어요' : '🌕 달에 도착했어요!') + '</div></div>' +
+      '<div class="cmc-jump" aria-hidden="true">🤸</div></div>' +
+      '<div class="cmc-bar"><i style="width:' + (pct * 100).toFixed(1) + '%"></i><span>' + c.prev.ico + '</span><span>' + (c.next ? c.next.ico : '🌕') + '</span></div>' +
+      '<div class="cmc-steps">' + steps + '</div>' +
+      '<div class="cmc-f">정답 착지 1번 = 1m 위로 · 3월 1일마다 새로 출발' + (lastYear ? ' · 지난 학년도에는 ' + fmtM(lastYear) + '까지 올라갔어요' : '') + '</div></div>';
+  }
+  var climbCss = '.cmc{background:linear-gradient(180deg,#0B1B3F 0%,#1E3A8A 45%,#60A5FA 100%);color:#fff;border-radius:18px;padding:18px 20px;margin-bottom:16px;box-shadow:0 4px 16px rgba(17,24,39,.08);overflow:hidden}' +
+    '.cmc-top{display:flex;justify-content:space-between;align-items:center;gap:10px}.cmc-t{font-weight:800;opacity:.9}.cmc-h{font-size:2.3em;font-weight:900;line-height:1.15;font-variant-numeric:tabular-nums}' +
+    '.cmc-s{opacity:.95;margin-top:2px}.cmc-s b{color:#FDE68A}.cmc-jump{font-size:3em;animation:cmcj 1.2s ease-in-out infinite}@keyframes cmcj{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}' +
+    '.cmc-bar{position:relative;height:14px;background:rgba(255,255,255,.22);border-radius:999px;margin:34px 0 6px}.cmc-bar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#FDE68A,#F59E0B);border-radius:999px}' +
+    '.cmc-bar span{position:absolute;top:-24px;font-size:1.1em}.cmc-bar span:first-of-type{left:0}.cmc-bar span:last-of-type{right:0}' +
+    '.cmc-steps{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.cmc-step{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.12);border-radius:999px;padding:3px 9px;font-size:.95em;opacity:.55}' +
+    '.cmc-step small{font-size:.72em;font-weight:700}.cmc-step.on{opacity:1;background:rgba(253,230,138,.25)}.cmc-step.next{opacity:1;outline:2px dashed #FDE68A}' +
+    '.cmc-f{font-size:.78em;opacity:.8;margin-top:10px}';
+  function addClimbCss() { if (document.getElementById('cmc-css')) return; var st = document.createElement('style'); st.id = 'cmc-css'; st.textContent = climbCss; document.head.appendChild(st); }
+  window.CMApp = { showQr: showQr, showInstall: showInstall, showQrList: function (list) { showQr(list[0].key, list); }, ROOT: ROOT,
+    climbInfo: climbInfo, fmtM: fmtM, climbHTML: function (m, t, ly) { addClimbCss(); return climbHTML(m, t, ly); } };
 })();

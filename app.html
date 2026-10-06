@@ -171,7 +171,7 @@ function renderStudent(){
   if (!classes.includes(STU.cls)) STU.cls = classes[0];
   const names = list.filter(s => clsKey(s) === STU.cls);
   const me = list.find(s => s.id === STU.sid);
-  let h = '<div class="hero"><h1>' + esc(APP.pub.title || '색깔 매트 놀이터') + '</h1><p>이름을 고르고 카메라 판정으로 뛰어요 · 끝까지(5분) 뛰면 완주 기록!</p></div>';
+  let h = '<div class="hero"><h1>' + esc(APP.pub.title || '색깔 매트 놀이터') + '</h1><p>이름을 고르고 카메라 판정으로 뛰어요 · 끝까지(5분) 뛰면 완주 기록!</p></div>' + climbCard(APP.pub.climb);
   if (!me) {
     h += '<div class="card"><h2>누구인가요?</h2>' + (classes.length > 1 ? '<div class="chips">' + classes.map(c => '<button class="chip ' + (c===STU.cls?'on':'') + '" data-cls="' + esc(c) + '">' + esc(c || '우리 반') + '</button>').join('') + '</div>' : '') +
       '<div class="names">' + names.map(s => '<button class="name" data-sid="' + esc(s.id) + '">' + esc(s.name) + '<small>' + esc(s.number ? s.number + '번' : '') + '</small></button>').join('') + '</div></div>';
@@ -198,6 +198,20 @@ function renderStudent(){
       location.href = 'checker/index.html?' + p.toString();
     };
   }
+}
+
+function climbCard(c){
+  if (!c || !window.CMApp || !CMApp.climbHTML) return '';
+  const ys = c.years || {};
+  return CMApp.climbHTML(Number(ys[c.year]) || 0, '🚀 우리 학교 하늘까지 · ' + c.year + '학년도', Number(ys[String(Number(c.year) - 1)]) || 0);
+}
+// 선생님 화면용: 기록에서 바로 계산 (승인된 카메라 판정 정답 착지)
+function climbFromRecords(records){
+  const sy = d => { const y = +d.slice(0,4), m = +d.slice(5,7); return String(m >= 3 ? y : y - 1); };
+  const now = new Date(), cur = sy(now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0'));
+  const years = {};
+  records.forEach(r => { if (r.status === 'approved' && r.camera && r.date) years[sy(r.date)] = (years[sy(r.date)] || 0) + r.correct; });
+  return { year: cur, years };
 }
 
 /* ================= 전국 현황판 보내기 =================
@@ -318,6 +332,7 @@ function renderAdmin(msg){
     });
     const rows = Object.keys(by).map(id => Object.assign({ id }, by[id])).sort((a,b) => b.c - a.c);
     const tot = rows.reduce((t,x) => (t.c += x.c, t.s += x.s, t.runs += x.runs, t), { c:0, s:0, runs:0 });
+    h += climbCard(climbFromRecords(d.records));
     h += '<div class="card"><h2>이번 달 학생별 (승인된 기록)</h2>' +
       '<div class="kpis"><div class="kpi"><span>뛴 학생</span><b class="mono">' + rows.length + '명</b></div><div class="kpi"><span>정답 착지</span><b class="mono">' + num(tot.c) + '</b></div><div class="kpi"><span>플레이 시간</span><b class="mono">' + dur(tot.s) + '</b></div><div class="kpi"><span>완주</span><b class="mono">' + tot.runs + '판</b></div></div>' +
       (rows.length ? '<div class="table-wrap"><table><thead><tr><th>학생</th><th class="num">정답 착지</th><th class="num">플레이 시간</th><th class="num">완주</th><th class="num">최고 정확도(완주)</th></tr></thead><tbody>' +
