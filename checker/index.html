@@ -187,10 +187,11 @@ video{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
   <section id="setup" class="hidden">
     <div class="card">
       <h2>휴대폰 자리 맞추기</h2>
-      <p class="muted">매트 가운데에 서서 화면을 보세요. 매트가 <b>주황 점선 안</b>에 들어오고 아래 세 가지가 모두 ✓가 되면 좋아요.</p>
+      <p class="muted" id="setupHelp"></p>
       <div class="bigview"><canvas id="setupCanvas"></canvas></div>
       <ul class="checks" id="setupChecks"></ul>
-      <button class="btn" id="setupOk">위치 맞추기로</button>
+      <button class="btn" id="setupOk">시작하기</button>
+      <button class="btn ghost" id="setupAlt">네 칸에 서서 직접 맞추기</button>
     </div>
   </section>
 
@@ -214,7 +215,7 @@ video{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
       <div class="hud"><span>착지 <b id="chkCount">0</b>번</span><span id="chkLast"></span></div>
       <div class="mat" id="chkMat"><div class="tile t0">빨강</div><div class="tile t1">노랑</div><div class="tile t2">초록</div><div class="tile t3">파랑</div><canvas id="chkCanvas"></canvas></div>
       <p class="status" id="chkStatus"></p>
-      <button class="btn ghost" id="recalib1">칸 위치 다시 맞추기</button>
+      <button class="btn ghost" id="recalib1">매트 다시 찾기</button>
       <button class="btn ghost" id="home1">처음으로</button>
     </div>
   </section>
@@ -260,7 +261,7 @@ video{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 <div class="badge">Made by 음악적체육인</div>
 
 <script type="module">
-const VERSION = 'v0.2';
+const VERSION = 'v0.3';
 // 칸 번호: 0 왼위 빨강, 1 오위 노랑, 2 왼아래 초록, 3 오아래 파랑
 const TILE = ['빨강','노랑','초록','파랑'];
 const NAME = ['빨간색','노란색','초록색','파란색'];
@@ -415,9 +416,12 @@ function drawSelf(lm, canvas=selfC, w=320, guide=false){
   const P=p=>[p.x*w,p.y*h];
   if (S.Hinv){
     const c=[{x:0,y:0},{x:1,y:0},{x:1,y:1},{x:0,y:1}].map(p=>P(applyH(S.Hinv,p)));
-    sctx.strokeStyle='rgba(255,255,255,.8)'; sctx.lineWidth=2; sctx.beginPath(); c.forEach((p,i)=>i?sctx.lineTo(...p):sctx.moveTo(...p)); sctx.closePath(); sctx.stroke();
+    sctx.strokeStyle='rgba(255,255,255,.85)'; sctx.lineWidth=Math.max(2,w/130); sctx.beginPath(); c.forEach((p,i)=>i?sctx.lineTo(...p):sctx.moveTo(...p)); sctx.closePath(); sctx.stroke();
     for (const [a,b] of [[{x:.5,y:0},{x:.5,y:1}],[{x:0,y:.5},{x:1,y:.5}]]){ sctx.beginPath(); sctx.moveTo(...P(applyH(S.Hinv,a))); sctx.lineTo(...P(applyH(S.Hinv,b))); sctx.stroke(); }
   }
+  if (guide && !DET.found && DET.blobs) DET.blobs.forEach((b,i)=>{ if(!b) return;
+    const [x0,y0,x1,y1]=b.box; sctx.lineWidth=Math.max(3,w/110); sctx.strokeStyle='#fff'; sctx.strokeRect(x0*w-2,y0*h-2,(x1-x0)*w+4,(y1-y0)*h+4);
+    sctx.strokeStyle=TILE_COLOR[i]; sctx.strokeRect(x0*w,y0*h,(x1-x0)*w,(y1-y0)*h); });
   if (S.calibPts) S.calibPts.forEach((p,i)=>{ sctx.fillStyle=TILE_COLOR[i]; sctx.beginPath(); sctx.arc(...P(p),6,0,7); sctx.fill(); });
   if (lm){
     sctx.strokeStyle='rgba(255,255,255,.7)'; sctx.lineWidth=2;
@@ -426,7 +430,7 @@ function drawSelf(lm, canvas=selfC, w=320, guide=false){
     (TR.feet||[]).forEach(f=>{ if(!f) return; sctx.fillStyle='#ff6b5b'; sctx.beginPath(); sctx.arc(...P(f),w/45,0,7); sctx.fill(); });
   }
   sctx.restore();
-  if (guide){ // 매트가 들어올 자리(사다리꼴): 화면 아래쪽 절반
+  if (guide && !DET.found){ // 매트가 들어올 자리(사다리꼴): 화면 아래쪽 절반
     sctx.save(); sctx.setLineDash([10,8]); sctx.lineWidth=Math.max(3,w/150); sctx.strokeStyle='#ff6b5b'; sctx.fillStyle='rgba(255,107,91,.12)';
     const q=[[.3,.6],[.7,.6],[.9,.97],[.1,.97]].map(([x,y])=>[x*w,y*h]);
     sctx.beginPath(); q.forEach((p,i)=>i?sctx.lineTo(...p):sctx.moveTo(...p)); sctx.closePath(); sctx.fill(); sctx.stroke();
@@ -434,8 +438,66 @@ function drawSelf(lm, canvas=selfC, w=320, guide=false){
     sctx.fillText('매트 자리', w/2, h*.6-10); sctx.restore();
   }
 }
-// 배치 확인: 몸 전체가 보이는지, 크기가 알맞은지, 발이 화면 아래쪽에 있는지
-function setupFrame(lm){
+// ---------- 매트 자동 찾기 (네 색 덩어리) ----------
+// 0 빨강, 1 노랑, 2 초록, 3 파랑. 작은 그림으로 줄여 색을 나누고, 색마다 가장 큰 덩어리의 가운데를 칸 가운데로 씀
+const DET = { cv:document.createElement('canvas'), n:0, blobs:null, cand:null, since:0, found:null };
+function colorClass(r,g,b){
+  const mx=Math.max(r,g,b), mn=Math.min(r,g,b), v=mx/255, d=mx-mn, sat=mx?d/mx:0;
+  if (v<.22 || sat<.35) return -1;
+  let h = d===0?0 : mx===r ? 60*(((g-b)/d)%6) : mx===g ? 60*((b-r)/d+2) : 60*((r-g)/d+4);
+  if (h<0) h+=360;
+  if ((h<14||h>338) && sat>.45) return 0;
+  if (h>=38 && h<=68 && sat>.42 && v>.42) return 1;
+  if (h>=85 && h<=165) return 2;
+  if (h>=195 && h<=250 && sat>.38) return 3;
+  return -1;
+}
+function detectMat(v){
+  const W=160, H=Math.max(40,Math.round(W*v.videoHeight/v.videoWidth));
+  const cv=DET.cv; if (cv.width!==W||cv.height!==H){ cv.width=W; cv.height=H; }
+  const cx=cv.getContext('2d',{willReadFrequently:true}); cx.drawImage(v,0,0,W,H);
+  const px=cx.getImageData(0,0,W,H).data, N=W*H, lab=new Int8Array(N);
+  for (let i=0;i<N;i++) lab[i]=colorClass(px[i*4],px[i*4+1],px[i*4+2]);
+  const seen=new Uint8Array(N), best=[null,null,null,null], stack=new Int32Array(N);
+  for (let i=0;i<N;i++){
+    const c=lab[i]; if (c<0||seen[i]) continue;
+    let top=0, n=0, sx=0, sy=0, x0=W, y0=H, x1=0, y1=0; stack[top++]=i; seen[i]=1;
+    while (top){ const j=stack[--top], x=j%W, y=(j-x)/W; n++; sx+=x; sy+=y; if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y;
+      if (x>0 && !seen[j-1] && lab[j-1]===c){ seen[j-1]=1; stack[top++]=j-1; }
+      if (x<W-1 && !seen[j+1] && lab[j+1]===c){ seen[j+1]=1; stack[top++]=j+1; }
+      if (y>0 && !seen[j-W] && lab[j-W]===c){ seen[j-W]=1; stack[top++]=j-W; }
+      if (y<H-1 && !seen[j+W] && lab[j+W]===c){ seen[j+W]=1; stack[top++]=j+W; } }
+    if (!best[c] || n>best[c].n) best[c]={n,sx,sy,x0,y0,x1,y1};
+  }
+  return best.map(b => (b && b.n>=N*.002 && b.n<=N*.3) ? { x:(b.sx/b.n+.5)/W, y:(b.sy/b.n+.5)/H, n:b.n, box:[b.x0/W,b.y0/H,(b.x1+1)/W,(b.y1+1)/H] } : null);
+}
+// 빨강→노랑→파랑→초록 순서로 이으면 볼록한 네모가 되어야 매트 배치가 맞음
+function matShapeOk(bl){
+  if (bl.some(b=>!b)) return false;
+  const q=[bl[0],bl[1],bl[3],bl[2]]; let sign=0;
+  for (let i=0;i<4;i++){ const a=q[i], b=q[(i+1)%4], c=q[(i+2)%4];
+    const cr=(b.x-a.x)*(c.y-b.y)-(b.y-a.y)*(c.x-b.x); if (Math.abs(cr)<1e-4) return false;
+    if (!sign) sign=Math.sign(cr); else if (Math.sign(cr)!==sign) return false; }
+  const ns=bl.map(b=>b.n); if (Math.max(...ns)/Math.min(...ns)>8) return false;
+  for (let i=0;i<4;i++) for (let j=i+1;j<4;j++) if (Math.hypot(bl[i].x-bl[j].x,bl[i].y-bl[j].y)<.04) return false;
+  return true;
+}
+function scanMat(t){
+  if (DET.found) return;
+  if ((DET.n++)%3) return;
+  const bl=detectMat($('video')); DET.blobs=bl;
+  if (!matShapeOk(bl)){ DET.cand=null; return; }
+  const pts=bl.map(b=>({x:b.x,y:b.y}));
+  if (DET.cand && pts.every((p,i)=>Math.hypot(p.x-DET.cand[i].x,p.y-DET.cand[i].y)<.03)){
+    if (t-DET.since>900 && setCalibration(pts)){ DET.found=pts; sndOk(); }
+  } else { DET.cand=pts; DET.since=t; }
+}
+
+// 배치 확인: ① 매트 찾기 ② 몸 전체가 보이는지, 크기가 알맞은지, 발이 화면 아래쪽에 있는지
+function setupFrame(lm, t){
+  scanMat(t);
+  const got = DET.blobs ? DET.blobs.filter(Boolean).length : 0;
+  const mat = DET.found ? [true,'매트를 찾았어요'] : [false, got ? `매트 찾는 중… (${got}/4색)` + (got===4?' — 배치를 확인하고 있어요':'') : '매트를 찾는 중… 매트 위를 비워 주세요'];
   const ok=[false,false,false]; let hint=['머리부터 발끝까지 보여요','사람 크기가 알맞아요','발이 매트 자리(화면 아래쪽)에 있어요'];
   if (lm){
     const nose=vis(lm[0]), la=vis(lm[27]), ra=vis(lm[28]);
@@ -447,15 +509,30 @@ function setupFrame(lm){
       ok[1] = tall>.32 && tall<.7;
       if (!ok[1]) hint[1] = tall>=.7 ? '너무 가까워요 — 휴대폰을 뒤로' : '너무 멀어요 — 휴대폰을 앞으로';
       const fy=(la.y+ra.y)/2;
-      ok[2] = fy>.62 && fy<.95;
-      if (!ok[2]) hint[2] = fy<=.62 ? '발이 화면 위쪽에 있어요 — 휴대폰을 조금 위로 들거나 아래를 보게' : '발이 화면 맨 아래예요 — 휴대폰을 조금 뒤로';
+      if (S.H){ const m=applyH(S.H,{x:(la.x+ra.x)/2,y:fy}); ok[2] = m.x>-.05 && m.x<1.05 && m.y>-.05 && m.y<1.05;
+        if (!ok[2]) hint[2]='매트 밖에 서 있어요 — 매트 가운데로'; else hint[2]='매트 위에 서 있어요'; }
+      else { ok[2] = fy>.62 && fy<.95;
+        if (!ok[2]) hint[2] = fy<=.62 ? '발이 화면 위쪽에 있어요 — 휴대폰을 조금 위로 들거나 아래를 보게' : '발이 화면 맨 아래예요 — 휴대폰을 조금 뒤로'; }
     }
-  } else hint[0]='사람이 안 보여요 — 매트 가운데에 서 주세요';
-  $('setupChecks').innerHTML = hint.map((t,i)=>`<li class="${ok[i]?'ok':''}"><b>${ok[i]?'✓':i+1}</b>${t}</li>`).join('');
-  $('setupOk').textContent = ok.every(Boolean) ? '좋아요! 위치 맞추기로' : '이대로 위치 맞추기로';
+  } else hint=[DET.found?'이제 매트 가운데에 서 보세요':'사람이 안 보여요','',''];
+  const rows=[`<li class="${mat[0]?'ok':''}"><b>${mat[0]?'✓':'1'}</b>${mat[1]}</li>`];
+  hint.forEach((h,i)=>{ if (h) rows.push(`<li class="${ok[i]?'ok':''}"><b>${ok[i]?'✓':i+2}</b>${h}</li>`); });
+  $('setupChecks').innerHTML=rows.join('');
+  $('setupHelp').innerHTML = DET.found ? '매트를 찾았어요! 이제 <b>매트 가운데에 서서</b> 몸 전체가 잘 보이는지 확인해 주세요.'
+    : '먼저 <b>매트 위를 비우고</b> 매트 네 칸이 화면에 모두 보이게 해 주세요. 색깔 칸에 테두리가 그려지면 잡히고 있는 거예요.';
+  $('setupOk').textContent = DET.found ? (ok.every(Boolean)?'좋아요! 시작하기':'이대로 시작하기') : '매트를 찾으면 시작할 수 있어요';
+  $('setupOk').disabled = !DET.found;
+  $('setupAlt').textContent = DET.found ? '매트 다시 찾기' : '네 칸에 서서 직접 맞추기';
 }
-function startSetup(){ $('selfwrap').classList.add('hidden'); show('setup'); }
-$('setupOk').onclick = () => { $('selfwrap').classList.remove('hidden'); startCalib(); };
+function startSetup(){
+  Object.assign(DET,{n:0,blobs:null,cand:null,since:0,found:null}); S.H=null; S.Hinv=null; S.calibPts=null;
+  $('selfwrap').classList.add('hidden'); show('setup');
+}
+$('setupOk').onclick = () => { if (!DET.found) return; $('selfwrap').classList.remove('hidden'); enterMode(); };
+$('setupAlt').onclick = () => {
+  if (DET.found){ startSetup(); return; }
+  $('selfwrap').classList.remove('hidden'); startCalib();
+};
 function drawMat(matId, canvasId){
   const on = new Set(); const key = TR.stable || TR.cand;
   if (key){ on.add(+key[1]); if (key[0]==='p') on.add(+key[2]); }
@@ -504,7 +581,7 @@ $('useSavedBtn').onclick = () => { const p=store.get('matChecker.calib.'+S.facin
 // ---------- 칸 확인 연습 ----------
 let chkCount=0;
 function enterMode(){ resetTracker(); if (S.mode==='check'){ chkCount=0; $('chkCount').textContent='0'; $('chkLast').textContent=''; show('check'); } else startGame(); }
-$('recalib1').onclick = startCalib;
+$('recalib1').onclick = startSetup;
 
 // ---------- 색깔 스트룹 (놀이터 v1.9 규칙) ----------
 // 문제: m = 글자 뜻, k = 글자 색, t = 밟을 칸
@@ -638,7 +715,7 @@ function loop(){
       let lm=null; try{ lm=landmarker.detectForVideo(v,t).landmarks?.[0]||null; }catch(e){}
       let info;
       if (lm) info=track(lm,t); else { TR.feet=null; TR.mat=null; TR.cand=null; TR.stable=null; info={msg:'사람이 보이지 않아요'}; }
-      if (S.screen==='setup'){ drawSelf(lm, $('setupCanvas'), 640, true); setupFrame(lm); } else drawSelf(lm);
+      if (S.screen==='setup'){ setupFrame(lm,t); drawSelf(lm, $('setupCanvas'), 640, true); } else drawSelf(lm);
       if (S.screen==='calib') calibFrame(t);
       if (S.screen==='check'){ drawMat('chkMat','chkCanvas'); $('chkStatus').textContent=info.msg; }
       if (S.screen==='game'){ drawMat('gMat','gCanvas'); $('gStatus').textContent=info.msg; }
