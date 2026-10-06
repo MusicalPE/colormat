@@ -16,6 +16,7 @@
     { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
+    { "name": "놀이터", "url": "play/", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
     { "name": "카메라 판정기", "url": "checker/index.html", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
     { "name": "전국 현황판", "url": "board.html", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
   ]

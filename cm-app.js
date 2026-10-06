@@ -1,5 +1,5 @@
 /* 색깔 매트 놀이터 — 접속 QR · 바로가기(앱 설치) 공용 스크립트
-   놀이터(index.html) · 판정기(checker/) · 현황판(board.html)이 함께 씀.
+   우리 학교 메인(index.html) · 놀이터(play/) · 판정기(checker/) · 현황판(board.html)이 함께 씀.
    버튼 id: cmQrBtn(QR 보기), cmInstallBtn(바로가기 만들기) — 있으면 알아서 연결함 */
 (function () {
   var HOME = 'https://musicalpe.github.io/colormat/';
@@ -8,7 +8,7 @@
   var ROOT = (/^https?:/.test(location.protocol) && me) ? new URL('.', me).href : HOME;
   var TARGETS = [
     { key: 'checker', label: '📷 카메라 판정기', url: ROOT + 'checker/index.html', note: '휴대폰·태블릿으로 찍으면 판정기가 열려요. 매트 앞에 세워 두고 쓰세요.' },
-    { key: 'play', label: '🎮 놀이터', url: ROOT, note: '찍으면 색깔 매트 놀이터가 열려요.' },
+    { key: 'play', label: '🎮 놀이터', url: ROOT + 'play/', note: '찍으면 색깔 매트 놀이터(게임 모음)가 열려요.' },
     { key: 'board', label: '🏆 전국 현황판', url: ROOT + 'board.html', note: '찍으면 전국 매트 현황판이 열려요.' }
   ];
 

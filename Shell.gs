@@ -2,7 +2,7 @@
  * 색깔 매트 놀이터 — 학교 시트용 껍데기 (Shell.gs)
  * ------------------------------------------------------------
  * 이 파일 하나만 스프레드시트의 Apps Script 에 붙여넣고 웹앱으로 배포하면 됩니다.
- * 화면은 GitHub(musicalpe.github.io/colormat/app.html)에서 열리고, 이 파일은 뒤에서
+ * 화면은 GitHub(musicalpe.github.io/colormat/)에서 열리고, 이 파일은 뒤에서
  * 학생·기록·설정을 시트에 읽고 쓰는 일만 합니다. 화면이 새 판으로 바뀌어도
  * 이 파일은 그대로 두면 됩니다. (껍데기를 바꿔야 할 때는 화면이 알려줍니다)
  *
@@ -11,7 +11,7 @@
  *************************************************************/
 
 const SHELL_VERSION = 1;
-const APP_URL = 'https://musicalpe.github.io/colormat/app.html';
+const APP_URL = 'https://musicalpe.github.io/colormat/';
 
 const SHEET_STUDENTS = 'Students';
 const SHEET_RECORDS = 'Records';

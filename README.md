@@ -1,21 +1,11 @@
 # 색깔 매트 놀이터
 
-바닥에 4색 매트를 깔고 화면을 보며 뛰는 체육 게임 모음입니다.
+바닥에 4색 매트를 깔고 화면을 보며 뛰는 체육 놀이와, 카메라 판정 기록을 모으는 우리 학교 프로그램입니다.
 
-- **놀이터 (단독판 v1.9.1)**: https://musicalpe.github.io/colormat/
-- **카메라 판정기 (시제품)**: https://musicalpe.github.io/colormat/checker/index.html
-- **우리 학교 기록 (학교 시트 연결)**: https://musicalpe.github.io/colormat/app.html
+- **우리 학교 기록 (처음 화면)**: https://musicalpe.github.io/colormat/
+- **놀이터 (게임 모음, 단독판 v1.9.1)**: https://musicalpe.github.io/colormat/play/
+- **카메라 판정기**: https://musicalpe.github.io/colormat/checker/index.html
 - **전국 현황판**: https://musicalpe.github.io/colormat/board.html
-
-## 우리 학교 기록 (전국 현황판 참여)
-줄넘기 기록 관리 v2와 같은 방식이에요. 학교마다 구글 시트에 껍데기(`Shell.gs`) 하나만 붙여 웹 앱으로 배포하면,
-화면(`app.html`)은 이 저장소에서 자동으로 새 판이 됩니다.
-1. 새 구글 시트 → 확장 프로그램 → Apps Script → `Shell.gs` 내용 붙여넣기
-2. 배포 → 새 배포 → 웹 앱 (실행: 나 / 액세스: 모든 사용자)
-3. 나온 …/exec 주소를 `app.html` 첫 화면에 붙여넣기 (처음 관리자 비밀번호 1234)
-
-학생은 이름을 고르고 카메라 판정으로 뛰고, 선생님이 승인한 카메라 판정 기록만 전국 현황판에 올라가요.
-보내는 것: 가린 이름(김*늘)·학년·게임·난이도·정답/시도·플레이 시간·완주 (반·번호·실명은 안 보냄).
 
 ## 매트 배치
 왼쪽 위 빨강 · 오른쪽 위 노랑 · 왼쪽 아래 초록 · 오른쪽 아래 파랑
