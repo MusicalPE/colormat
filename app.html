@@ -437,7 +437,7 @@ function renderAdmin(msg){
       '<p class="hint">켜면 <b>승인한 카메라 판정 기록</b>을 전국 현황판으로 보내요. 보내는 것: 가린 이름(김*늘)·학년·게임·난이도·정답/시도·플레이 시간·완주. <b>반·번호·실명은 보내지 않아요.</b></p>' +
       (!d.approvalOn ? '<div class="msg err">전국 현황판은 승인 절차가 켜져 있어야 참여할 수 있어요.</div>' : '') +
       (NAT.moved() ? '<div class="msg err">다른 시트에서 복사했거나 새로 배포한 것 같아요. 아래 "참여 번호 새로 만들기"를 누르면 이 시트로 다시 참여해요.</div>' : '') +
-      '<div class="row"><label>학교 이름</label><input type="text" id="natName" value="' + esc(nat.name || '') + '" placeholder="예: 양화분교 4학년" style="flex:1;min-width:200px"></div>' +
+      '<div class="row"><label>학교 이름</label><input type="text" id="natName" value="' + esc(nat.name || '') + '" placeholder="예: 햇살초등학교 4학년" style="flex:1;min-width:200px"></div>' +
       '<label class="switch"><input type="checkbox" id="natShow" ' + (nat.showName ? 'checked' : '') + '> 현황판에 학교 이름 보이기 <span class="hint" style="margin:0">(끄면 "익명 학교"로 보여요)</span></label>' +
       '<div class="row" style="margin-top:10px">' + (nat.on ? '<button class="btn" id="natSave">저장하고 지금 보내기</button><button class="btn ghost" id="natOff">참여 끄기</button>' + (NAT.moved() ? '<button class="btn ghost" id="natNew">참여 번호 새로 만들기</button>' : '') : '<button class="btn" id="natOn" ' + (d.approvalOn ? '' : 'disabled') + '>참여하기</button>') +
       '<a class="btn ghost" href="board.html" target="_blank">현황판 보기</a></div>' +

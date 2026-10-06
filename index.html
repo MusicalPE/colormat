@@ -1304,7 +1304,7 @@ try {
       {id:'count',label:'문제 수',choices:[['10','10문제'],['15','15문제'],['20','20문제']],def:'15'},
       {id:'custom',type:'textarea',label:'직접 입력 문제',showIf:['set','custom'],
        help:'한 줄에 한 문제씩, "문제 / 정답 / 오답 / 오답 / 오답" 순서로 써요. 오답은 1~3개면 돼요. 보기 자리는 매번 섞여요.',
-       placeholder:'사과는 영어로? / apple / banana / grape / melon\n우리 학교 이름은? / 양화분교 / 봉동초 / 전주초\n한 발로 5초 버티기 성공하면? / 박수 / 점프 / 앉기'},
+       placeholder:'사과는 영어로? / apple / banana / grape / melon\n우리 학교 이름은? / 햇살초 / 무지개초 / 별빛초\n한 발로 5초 버티기 성공하면? / 박수 / 점프 / 앉기'},
     ],
     validate(o){
       if(o.set==='bank'){ if(bankList(o).length) return ''; return H.bank.length?'고른 학년군·교과에 맞는 승인 문제가 없어요. 학년군·교과를 "전체"로 해 보세요.':'문제 은행에 승인된 문제가 아직 없어요. 다른 종류를 골라 주세요.'; }
