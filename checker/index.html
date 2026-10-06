@@ -273,7 +273,7 @@ body.wide .wrap{max-width:1180px}
 <div class="badge">Made by 음악적체육인</div>
 
 <script type="module">
-const VERSION = 'v0.3.2';
+const VERSION = 'v0.4';
 // 칸 번호: 0 왼위 빨강, 1 오위 노랑, 2 왼아래 초록, 3 오아래 파랑
 const TILE = ['빨강','노랑','초록','파랑'];
 const NAME = ['빨간색','노란색','초록색','파란색'];
@@ -385,34 +385,64 @@ function footPoint(lm, side){
 }
 
 // ---------- 착지 추적 ----------
-// 자세 = 두 발이 한 칸(s) 또는 두 발이 서로 다른 두 칸(p). 같은 자세로 stableMs 머물면 착지 1번.
-const TR = { stable:null, cand:null, candSince:0, baseY:0, lastKey:null, lastBaseY:0, feet:null, mat:null, tiles:null };
-function resetTracker(){ Object.assign(TR,{stable:null,cand:null,lastKey:null}); }
-function poseKey(t){ if (typeof t[0]!=='number'||typeof t[1]!=='number') return null; return t[0]===t[1] ? 's'+t[0] : 'p'+t[0]+t[1]; }
+// 발마다 따로 본다: 한 자리에 stableMs 머문 발 = 디딘 발, 움직이거나 무릎을 굽혀 든 발 = 든 발(공중).
+// 자세: s(두 발 같은 칸) · p(두 발 서로 다른 칸) · o(한 발만 칸을 딛고 다른 발은 들었거나 칸 밖·경계)
+// 새 자세가 되면 착지 1번. 다만 공중에 뜨지 않고 원래 딛던 칸 안에서만 바뀐 것(발 하나 들기 등)은 착지로 안 셈.
+const TR = { stable:null, feet:null, mat:null, tiles:null, ft:[{},{}], air:false, lastTiles:[], lifted:[false,false] };
+function resetTracker(){ Object.assign(TR,{stable:null, ft:[{},{}], air:false, lastTiles:[]}); }
+const d2 = (a,b) => Math.hypot(a.x-b.x, a.y-b.y);
+function legBent(lm, side){ // 무릎을 굽혀 다리가 짧아졌는지
+  const h=vis(lm[23+side]), k=vis(lm[25+side]), a=vis(lm[27+side]);
+  if (!h||!k||!a) return false;
+  return d2(h,a) / (d2(h,k)+d2(k,a)) < .88;
+}
+function poseOf(pl){ // pl: 발마다 디딘 칸(숫자) / 'air' / 'edge' / 'out'
+  const n0=typeof pl[0]==='number', n1=typeof pl[1]==='number';
+  if (n0 && n1) return pl[0]===pl[1] ? 's'+pl[0] : 'p'+pl[0]+pl[1];
+  if (n0 && !n1 && pl[1]!=='moving') return 'o'+pl[0];
+  if (n1 && !n0 && pl[0]!=='moving') return 'o'+pl[1];
+  return null;
+}
+const tilesOfKey = k => !k ? [] : k[0]==='p' ? [+k[1],+k[2]] : [+k[1]];
 function track(lm, t){
   const f=[footPoint(lm,0), footPoint(lm,1)];
   TR.feet=f; TR.mat=null; TR.tiles=null;
-  if (!f[0]||!f[1]) { TR.cand=null; TR.stable=null; return {msg:'발이 보이지 않아요'}; }
-  const footY=(f[0].y+f[1].y)/2;
-  const hip = vis(lm[23])&&vis(lm[24]) ? (lm[23].y+lm[24].y)/2 : footY-.3;
-  const leg = Math.max(.08, footY-hip);
+  if (!f[0]&&!f[1]) { TR.stable=null; TR.air=true; return {msg:'발이 보이지 않아요'}; }
+  const hipY = vis(lm[23])&&vis(lm[24]) ? (lm[23].y+lm[24].y)/2 : null;
+  const footY = (f[0]&&f[1]) ? (f[0].y+f[1].y)/2 : (f[0]||f[1]).y;
+  const leg = Math.max(.08, hipY!=null ? footY-hipY : .3);
   if (!S.H) return {msg:''};
-  const m=f.map(p=>applyH(S.H,p)); TR.mat=m;
-  const tiles=m.map(tileOf); TR.tiles=tiles;
-  let cand=poseKey(tiles);
-  // 같은 자리에서 제자리로 뛰어오른 순간은 공중으로 봄 → 내려오면 새 착지
-  if (cand!==null && cand===TR.lastKey && footY < TR.lastBaseY - .08*leg) cand=null;
-  if (TR.stable!==null){
-    if (cand!==TR.stable || footY < TR.baseY - .12*leg){ TR.stable=null; TR.cand=null; }
-    else { TR.baseY = TR.baseY*.9 + footY*.1; TR.lastBaseY = TR.baseY; }
-  } else {
-    if (cand===null) TR.cand=null;
-    else if (cand!==TR.cand){ TR.cand=cand; TR.candSince=t; }
-    else if (t-TR.candSince >= S.stableMs){ TR.stable=cand; TR.baseY=footY; TR.lastKey=cand; TR.lastBaseY=footY; onLanding(tiles[0],tiles[1],t); }
-  }
+  TR.mat=f.map(p=>p?applyH(S.H,p):null);
+  // 발마다: 디뎠는지(머묾) · 들었는지
+  const pl=[0,1].map(i=>{
+    const p=f[i], st=TR.ft[i];
+    const mv = () => { if (st.moveStart==null) st.moveStart=t; return (t-st.moveStart > 1.5*S.stableMs) ? 'air' : 'moving'; }  // 오래 떠 있으면 든 발
+    if (!p){ st.anchor=null; return mv(); }
+    if (!st.anchor || d2(p,st.anchor) > .1*leg){ st.anchor={x:p.x,y:p.y}; st.since=t; }
+    const o=f[1-i];
+    const lifted = o && legBent(lm,i) && p.y < o.y - .05*leg;
+    TR.lifted[i]=!!lifted;
+    if (lifted){ st.moveStart=null; return 'air'; }
+    if (t-st.since < S.stableMs) return mv();
+    st.moveStart=null;
+    return tileOf(TR.mat[i]);
+  });
+  TR.tiles=pl;
+  if (pl[0]!=='edge' && pl[0]!=='out' && typeof pl[0]!=='number' && typeof pl[1]!=='number' && pl[1]!=='edge' && pl[1]!=='out') TR.air=true;   // 두 발 다 떠 있음 = 뛰는 중      // 두 발 다 움직임 = 뛰는 중
+  const key=poseOf(pl);
+  if (key && key!==TR.stable){
+    const tl=tilesOfKey(key);
+    const quiet = !TR.air && tl.every(x=>TR.lastTiles.includes(x));  // 원래 칸 안에서 발만 바꿈
+    TR.stable=key;
+    let used=true;
+    if (!quiet) used = onLanding({ kind:key[0], L:typeof pl[0]==='number'?pl[0]:null, R:typeof pl[1]==='number'?pl[1]:null, tiles:tl, prev:TR.lastTiles.slice() }, t) !== false;
+    if (used) TR.lastTiles=tl;
+    TR.air=false;
+  } else if (!key && TR.stable && !(pl[0]==='moving'||pl[1]==='moving')) TR.stable=null;
   let msg;
-  if (TR.stable) msg = TR.stable[0]==='s' ? `두 발 모두 ${TILE[tiles[0]]}` : `왼발 ${TILE[tiles[0]]} · 오른발 ${TILE[tiles[1]]}`;
-  else msg = tiles.includes('out') ? '매트 밖이에요' : tiles.includes('edge') ? '칸 경계에 있어요' : '…';
+  const k=TR.stable;
+  if (k) msg = k[0]==='s' ? `두 발 모두 ${TILE[+k[1]]}` : k[0]==='o' ? `한 발 ${TILE[+k[1]]} (다른 발은 들었어요)` : `왼발 ${TILE[pl[0]]} · 오른발 ${TILE[pl[1]]}`;
+  else msg = pl.includes('out') ? '매트 밖이에요' : pl.includes('edge') ? '칸 경계에 있어요' : '…';
   return {msg};
 }
 
@@ -546,8 +576,7 @@ $('setupAlt').onclick = () => {
   $('selfwrap').classList.remove('hidden'); startCalib();
 };
 function drawMat(matId, canvasId){
-  const on = new Set(); const key = TR.stable || TR.cand;
-  if (key){ on.add(+key[1]); if (key[0]==='p') on.add(+key[2]); }
+  const on = new Set(tilesOfKey(TR.stable));
   $(matId).querySelectorAll('.tile').forEach((el,i)=>el.classList.toggle('on', on.has(i)));
   const c=$(canvasId), r=c.getBoundingClientRect(), dpr=devicePixelRatio||1;
   if (c.width!==Math.round(r.width*dpr)){ c.width=Math.round(r.width*dpr); c.height=Math.round(r.height*dpr); }
@@ -625,11 +654,19 @@ function showPrompt(now){
     G.cur = { targets:[w.t], shown:now, done:false };
   }
 }
-function scoreLanding(L, R){
-  const t=G.cur.targets;
-  if (S.smode===1) return L===t[0] && R===t[0];
-  if (S.smode===2) return L!==R && t.includes(L) && t.includes(R);
-  return L===t[0] && R===t[1];                         // 익스퍼트: 왼발·오른발 칸이 정해짐
+// 채점: true/false = 정답/오답, null = 아직 판정하지 않음(옮겨 가는 중)
+function scoreLanding(e){
+  const t=G.cur.targets, came = x => e.prev.includes(x);
+  if (S.smode===1){
+    if (e.kind==='s' || e.kind==='o') return e.tiles[0]===t[0];   // 한 발이라도 정답 칸(다른 발은 들었거나 같은 칸)
+    // 두 발이 다른 칸: 한 발이 원래 있던 칸이면 옮겨 가는 중 → 기다림, 아니면 걸쳐 서기 → 오답
+    if (came(e.L) !== came(e.R)) return null;
+    return false;
+  }
+  if (e.kind==='o') return null;                                      // 하드·익스퍼트는 두 발이 다 디뎌야 판정
+  if (e.kind==='s') return false;
+  if (S.smode===2) return t.includes(e.L) && t.includes(e.R);
+  return e.L===t[0] && e.R===t[1];                                    // 익스퍼트: 왼발·오른발 칸이 정해짐
 }
 function mark(ok){ const el=$('mark'); el.textContent=ok?'⭕':'❌'; el.style.color=ok?'var(--ok)':'var(--bad)'; el.classList.add('show'); clearTimeout(mark.tm); mark.tm=setTimeout(()=>el.classList.remove('show'),450); }
 function miss(){ G.attempts++; G.cur.done=true; mark(false); sndBad(); updHud(); }
@@ -664,16 +701,24 @@ function gameFrame(now){
   $('gLeft').textContent=fmt(TOTAL-T);
   if (G.cur){ const span=LEVELS[li].gap*S.speed*(S.smode>=2?1.25:1)*1000; $('timeBar').style.width=Math.max(0,100-(now-G.cur.shown)/span*100)+'%'; }
 }
-function onLanding(L, R, t){
+function onLanding(e, t){
   if (S.screen==='check'){
+    if (e.kind==='p' && e.prev.includes(e.L)!==e.prev.includes(e.R)) return false;   // 걸어서 옮겨 가는 중
     chkCount++; $('chkCount').textContent=chkCount; beep(880,80);
-    $('chkLast').textContent = L===R ? `방금: 두 발 ${TILE[L]}` : `방금: 왼 ${TILE[L]} · 오 ${TILE[R]}`;
-    const tiles=$('chkMat').querySelectorAll('.tile'); for (const i of new Set([L,R])){ tiles[i].classList.add('flash'); setTimeout(()=>tiles[i].classList.remove('flash'),250); }
+    $('chkLast').textContent = e.kind==='s' ? `방금: 두 발 ${TILE[e.tiles[0]]}` : e.kind==='o' ? `방금: 한 발 ${TILE[e.tiles[0]]}` : `방금: 왼 ${TILE[e.L]} · 오 ${TILE[e.R]}`;
+    const tiles=$('chkMat').querySelectorAll('.tile'); for (const i of e.tiles){ tiles[i].classList.add('flash'); setTimeout(()=>tiles[i].classList.remove('flash'),250); }
+    return true;
   }
   // 문제마다 첫 착지 한 번만 채점
   if (S.screen==='game' && G.running && G.cur && !G.cur.done && t>G.cur.shown+120){
-    const ok=scoreLanding(L,R); G.attempts++; if(ok) G.correct++; G.cur.done=true; mark(ok); ok?sndOk():sndBad(); updHud();
+    const ok=scoreLanding(e);
+    if (ok===null) return false;
+    G.attempts++; if(ok) G.correct++; G.cur.done=true; mark(ok); ok?sndOk():sndBad(); updHud();
+    return true;
   }
+  if (S.screen==='game' && S.smode===1 && e.kind==='p' && e.prev.includes(e.L)!==e.prev.includes(e.R)) return false;
+  if (S.screen==='game' && S.smode>1 && e.kind==='o') return false;
+  return true;
 }
 $('stopBtn').onclick = () => { if (G.running) endGame(false); else show('home'); };
 
@@ -726,7 +771,7 @@ function loop(){
       lastVideoTime=v.currentTime;
       let lm=null; try{ lm=landmarker.detectForVideo(v,t).landmarks?.[0]||null; }catch(e){}
       let info;
-      if (lm) info=track(lm,t); else { TR.feet=null; TR.mat=null; TR.cand=null; TR.stable=null; info={msg:'사람이 보이지 않아요'}; }
+      if (lm) info=track(lm,t); else { TR.feet=null; TR.mat=null; TR.stable=null; TR.air=true; info={msg:'사람이 보이지 않아요'}; }
       if (S.screen==='setup'){ setupFrame(lm,t); drawSelf(lm, $('setupCanvas'), 1280, true); } else drawSelf(lm);
       if (S.screen==='calib') calibFrame(t);
       if (S.screen==='check'){ drawMat('chkMat','chkCanvas'); $('chkStatus').textContent=info.msg; }
