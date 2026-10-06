@@ -3,7 +3,8 @@
 바닥에 4색 매트를 깔고 화면을 보며 뛰는 체육 게임 모음입니다.
 
 - **놀이터 (단독판 v1.9.1)**: https://musicalpe.github.io/colormat/
-- **카메라 판정기 (시제품 v0.1)**: https://musicalpe.github.io/colormat/checker/
+- **카메라 판정기 (시제품)**: https://musicalpe.github.io/colormat/checker/index.html
+- **전국 현황판**: https://musicalpe.github.io/colormat/board.html
 
 ## 매트 배치
 왼쪽 위 빨강 · 오른쪽 위 노랑 · 왼쪽 아래 초록 · 오른쪽 아래 파랑

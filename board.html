@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>전국 매트 현황판</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root {
+    --bg: #F3F5F8; --surface: #FFFFFF; --ink: #1F2937; --ink-2: #374151; --muted: #6B7280; --faint: #9CA3AF;
+    --line: #E5E7EB; --line-2: #EEF0F3; --coral: #F26A3D; --coral-dark: #DC5B31; --coral-tint: #FFF1EC;
+    --gold: #F59E0B; --silver: #94A3B8; --bronze: #B45309;
+    --red: #F2392F; --yellow: #FFD21F; --green: #2FC653; --blue: #4C88FF;
+    --r-sm: 10px; --r-md: 14px; --r-lg: 18px;
+    --shadow: 0 1px 2px rgba(17,24,39,0.04), 0 4px 16px rgba(17,24,39,0.05);
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Pretendard', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background: var(--bg); margin: 0; color: var(--ink); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  .container { max-width: 980px; margin: 0 auto; padding: 22px 16px 70px; }
+  .mono { font-variant-numeric: tabular-nums; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .brand { font-weight: 800; font-size: 1.05em; color: var(--ink); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+  .logo { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; width: 22px; height: 22px; }
+  .logo i { border-radius: 3px; }
+  .nav { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn { display: inline-block; text-decoration: none; color: var(--ink-2); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 0.9em; }
+  .btn:hover, .btn.on { border-color: var(--coral); color: var(--coral-dark); background: var(--coral-tint); }
+  .hero { background: linear-gradient(135deg, #F2392F 0%, #FF8A3D 45%, #2FC653 120%); color: #fff; border-radius: var(--r-lg); padding: 22px 24px; box-shadow: var(--shadow); margin-bottom: 16px; }
+  .hero h1 { margin: 0 0 4px; font-size: 1.55em; }
+  .hero p { margin: 0; opacity: .94; }
+  .hero-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+  .hero select { font: inherit; font-weight: 700; border: 0; border-radius: 999px; padding: 8px 14px; color: var(--ink); background: #fff; }
+  .hero-sels { display: flex; gap: 8px; flex-wrap: wrap; }
+  .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .kpi { background: var(--surface); border-radius: var(--r-md); padding: 12px 14px; box-shadow: var(--shadow); }
+  .kpi span { color: var(--muted); font-size: 0.82em; font-weight: 700; }
+  .kpi b { display: block; font-size: 1.45em; }
+  .card { background: var(--surface); border-radius: var(--r-lg); padding: 18px 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+  .card h2 { margin: 0 0 4px; font-size: 1.15em; }
+  .card-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .seg { display: inline-flex; background: var(--bg); border-radius: 999px; padding: 3px; flex-wrap: wrap; }
+  .seg button { border: 0; background: transparent; font: inherit; font-weight: 700; font-size: 0.86em; padding: 6px 12px; border-radius: 999px; color: var(--muted); cursor: pointer; }
+  .seg button.on { background: var(--surface); color: var(--coral-dark); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .hint { color: var(--muted); font-size: 0.85em; margin: 0 0 8px; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; color: var(--muted); font-size: 0.8em; font-weight: 700; padding: 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  td { padding: 10px 8px; border-bottom: 1px solid var(--line-2); font-size: 0.93em; word-break: keep-all; }
+  th.num, td.num { text-align: right; white-space: nowrap; }
+  .rank { display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center; border-radius: 50%; font-weight: 800; background: var(--bg); color: var(--ink-2); font-size: 0.9em; }
+  .rank.r1 { background: var(--gold); color: #fff; } .rank.r2 { background: var(--silver); color: #fff; } .rank.r3 { background: var(--bronze); color: #fff; }
+  .sub { color: var(--faint); font-size: 0.8em; margin-left: 4px; }
+  .anon { color: var(--muted); }
+  .empty { text-align: center; color: var(--muted); padding: 30px 10px; }
+  .err { background: #FEF3C7; color: #92400E; border-radius: var(--r-sm); padding: 12px 14px; font-weight: 700; }
+  .loading { text-align: center; color: var(--muted); padding: 40px; }
+  .foot { text-align: center; color: var(--faint); font-size: 0.8em; margin-top: 24px; }
+  @media (max-width: 640px) {
+    .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .hide-sm { display: none; }
+    .hero h1 { font-size: 1.3em; }
+    td, th { padding-left: 5px; padding-right: 5px; }
+    td { font-size: 0.88em; }
+    td.num .sub { display: block; margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="brand" href="index.html"><span class="logo"><i style="background:var(--red)"></i><i style="background:var(--yellow)"></i><i style="background:var(--green)"></i><i style="background:var(--blue)"></i></span>색깔 매트 놀이터</a>
+    <nav class="nav">
+      <a class="btn on" href="#">전국 현황판</a>
+      <a class="btn" href="checker/index.html">📷 카메라 판정</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div class="hero-row">
+      <div>
+        <h1>전국 매트 현황판</h1>
+        <p id="heroSub">카메라가 판정하고 선생님이 확인한 기록만 모여요 · 매달 1일에 새로 시작</p>
+      </div>
+      <div class="hero-sels">
+        <select id="gameSel" aria-label="게임 고르기"></select>
+        <select id="diffSel" aria-label="난이도 고르기"><option value="">모든 난이도</option><option value="normal">노말</option><option value="hard">하드</option><option value="expert">익스퍼트</option></select>
+        <select id="bandSel" aria-label="학년군 고르기"><option value="">전체 학년</option><option value="1-2">1~2학년</option><option value="3-4">3~4학년</option><option value="5-6">5~6학년</option></select>
+        <select id="monthSel" aria-label="달 고르기"></select>
+      </div>
+    </div>
+  </div>
+
+  <div id="body"><div class="loading">현황판을 불러오는 중…</div></div>
+  <p class="foot">학생 이름은 가려서 보여 줍니다 (예: 김*늘) · 학교 이름은 학교가 공개를 켠 경우에만 보여요<br>Made by <b>음악적체육인</b></p>
+</div>
+
+<script>
+(function(){
+  const q = {}; new URLSearchParams(location.search).forEach(function(v, k){ q[k] = v; });
+  const GAMES = [['stroop','색깔 스트룹'],['basic','색깔 점프'],['memory','기억력 스텝'],['rhythm','리듬 스텝'],['dir','방향 점프'],['quiz','퀴즈 점프'],['assoc','연상 점프'],['twist','손발 트위스터'],['freeze','얼음 스텝'],['lava','용암 매트']];
+  const DIFF = { normal:'노말', hard:'하드', expert:'익스퍼트' };
+  const TABS = [['correct','정답 착지'],['time','플레이 시간'],['accuracy','정확도']];
+  const $ = function(id){ return document.getElementById(id); };
+  const esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+  const num = function(n){ return Number(n || 0).toLocaleString('ko-KR'); };
+  const dur = function(s){ s = Math.round(s || 0); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? h + '시간 ' + m + '분' : m ? m + '분' : s + '초'; };
+  const monthLabel = function(m){ return m ? Number(m.slice(0, 4)) + '년 ' + Number(m.slice(5, 7)) + '월' : ''; };
+  const rankHTML = function(r){ return '<span class="rank' + (r <= 3 ? ' r' + r : '') + '">' + r + '</span>'; };
+
+  let collector = '', data = null, tab = TABS.some(function(t){ return t[0] === q.tab; }) ? q.tab : 'correct';
+  $('gameSel').innerHTML = GAMES.map(function(g){ return '<option value="' + g[0] + '">' + g[1] + '</option>'; }).join('');
+  $('gameSel').value = GAMES.some(function(g){ return g[0] === q.game; }) ? q.game : 'stroop';
+  if (DIFF[q.diff]) $('diffSel').value = q.diff;
+  if (/^(1-2|3-4|5-6)$/.test(q.band || '')) $('bandSel').value = q.band;
+  let month = q.month || '';
+
+  function syncUrl(){
+    const p = new URLSearchParams();
+    if (q.c) p.set('c', q.c);
+    p.set('game', $('gameSel').value);
+    if ($('diffSel').value) p.set('diff', $('diffSel').value);
+    if ($('bandSel').value) p.set('band', $('bandSel').value);
+    if (month) p.set('month', month);
+    if (tab !== 'correct') p.set('tab', tab);
+    history.replaceState(null, '', '?' + p.toString());
+  }
+
+  function load(){
+    $('body').innerHTML = '<div class="loading">현황판을 불러오는 중…</div>';
+    syncUrl();
+    const url = collector + '?api=matBoard&game=' + encodeURIComponent($('gameSel').value) +
+      '&diff=' + encodeURIComponent($('diffSel').value) + '&band=' + encodeURIComponent($('bandSel').value) +
+      (month ? '&month=' + encodeURIComponent(month) : '');
+    fetch(url, { cache: 'no-store' }).then(function(r){ return r.json(); }).then(function(res){
+      if (!res || !res.ok) throw new Error((res && res.error) || '응답이 이상해요');
+      if (!('correct' in res.result)) throw new Error('중앙 수집기가 아직 예전 판이에요 (v6 필요)');
+      data = res.result; render();
+    }).catch(function(e){
+      $('body').innerHTML = '<div class="err">현황판을 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.<br><span style="font-weight:500">' + esc(e.message || e) + '</span></div>';
+    });
+  }
+
+  function render(){
+    const d = data;
+    // 달 고르기: 기록이 있는 달 + 이번 달
+    const months = (d.months || []).slice();
+    if (months.indexOf(d.current) < 0) months.unshift(d.current);
+    if (months.indexOf(d.month) < 0) months.push(d.month);
+    months.sort().reverse();
+    $('monthSel').innerHTML = months.map(function(m){ return '<option value="' + m + '">' + monthLabel(m) + (m === d.current ? ' (이번 달)' : '') + '</option>'; }).join('');
+    $('monthSel').value = d.month;
+
+    const gameName = ($('gameSel').selectedOptions[0] || {}).textContent || '';
+    const filt = [gameName, d.diff ? DIFF[d.diff] || d.diff : '', d.band ? d.band.replace('-', '~') + '학년' : ''].filter(Boolean).join(' · ');
+    const s = d.summary || {};
+    let h = '<div class="kpis">' +
+      '<div class="kpi"><span>참여 학교</span><b class="mono">' + num(s.schools) + '</b></div>' +
+      '<div class="kpi"><span>참여 학생</span><b class="mono">' + num(s.students) + '</b></div>' +
+      '<div class="kpi"><span>누적 정답 착지</span><b class="mono">' + num(s.correct) + '</b></div>' +
+      '<div class="kpi"><span>누적 플레이 시간</span><b class="mono">' + dur(s.sec) + '</b></div></div>';
+
+    if (!s.students) {
+      h += '<div class="card"><div class="empty">' + esc(monthLabel(d.month)) + ' ' + esc(filt) + ' 기록이 아직 없어요.<br>카메라 판정으로 뛰고 선생님이 확인하면 여기에 올라와요!</div></div>';
+      $('body').innerHTML = h; return;
+    }
+
+    h += '<div class="card"><div class="card-head"><div><h2>학생 순위</h2><span class="hint">' + esc(monthLabel(d.month)) + ' · ' + esc(filt) + '</span></div>' +
+      '<div class="seg" id="tabSeg">' + TABS.map(function(t){ return '<button data-t="' + t[0] + '" class="' + (t[0] === tab ? 'on' : '') + '">' + t[1] + '</button>'; }).join('') + '</div></div>';
+    if (tab === 'accuracy') h += '<p class="hint">5분 한 판을 끝까지 완주한 판만 정확도에 들어가요.</p>';
+    const list = d[tab] || [];
+    if (!list.length) h += '<div class="empty">' + (tab === 'accuracy' ? '아직 완주한 기록이 없어요. 끝까지 뛰어서 첫 주인공이 되어 보세요!' : '아직 기록이 없어요.') + '</div>';
+    else {
+      const valHead = tab === 'correct' ? '정답 착지' : tab === 'time' ? '플레이 시간' : '정확도';
+      h += '<div class="table-wrap"><table><thead><tr><th>순위</th><th>이름</th><th class="hide-sm">학년</th><th>학교</th><th class="num">' + valHead + '</th></tr></thead><tbody>' +
+        list.map(function(x){
+          const v = tab === 'correct' ? num(x.correct) + '<span class="sub">/ ' + num(x.attempts) + '번</span>'
+            : tab === 'time' ? dur(x.sec)
+            : x.acc + '%<span class="sub">완주 ' + num(x.runs) + '판</span>';
+          return '<tr><td>' + rankHTML(x.rank) + '</td><td><b>' + esc(x.n) + '</b></td><td class="hide-sm">' + esc(x.g) + '학년</td><td class="' + (/^익명 학교/.test(x.school) ? 'anon' : '') + '">' + esc(x.school) + '</td><td class="num mono">' + v + '</td></tr>';
+        }).join('') + '</tbody></table></div>';
+    }
+    h += '</div>';
+
+    const sc = d.schools || [];
+    h += '<div class="card"><div class="card-head"><div><h2>학교 순위</h2><span class="hint">학생들이 모은 정답 착지 합</span></div></div>' +
+      '<div class="table-wrap"><table><thead><tr><th>순위</th><th>학교</th><th class="num hide-sm">참여 학생</th><th class="num hide-sm">플레이 시간</th><th class="num">정답 착지</th></tr></thead><tbody>' +
+      sc.map(function(x){
+        return '<tr><td>' + rankHTML(x.rank) + '</td><td class="' + (x.named ? '' : 'anon') + '"><b>' + esc(x.label) + '</b></td><td class="num hide-sm mono">' + num(x.participants) + '명</td><td class="num hide-sm mono">' + dur(x.sec) + '</td><td class="num mono"><b>' + num(x.correct) + '</b></td></tr>';
+      }).join('') + '</tbody></table></div></div>';
+
+    $('body').innerHTML = h;
+    const seg = $('tabSeg');
+    if (seg) seg.querySelectorAll('button').forEach(function(b){ b.onclick = function(){ tab = b.dataset.t; syncUrl(); render(); }; });
+  }
+
+  ['gameSel', 'diffSel', 'bandSel'].forEach(function(id){ $(id).onchange = load; });
+  $('monthSel').onchange = function(){ month = $('monthSel').value; load(); };
+
+  fetch('national.json', { cache: 'no-store' }).then(function(r){ return r.json(); }).catch(function(){ return {}; }).then(function(cfg){
+    collector = q.c || (cfg && cfg.collector) || '';
+    if (!collector) { $('body').innerHTML = '<div class="err">전국 현황판이 아직 준비 중이에요. 곧 열립니다!</div>'; return; }
+    load();
+  });
+})();
+</script>
+</body>
+</html>
