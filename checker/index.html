@@ -276,7 +276,7 @@ body.wide .wrap{max-width:1180px}
 <div class="badge">Made by 음악적체육인</div>
 
 <script type="module">
-const VERSION = 'v0.5';
+const VERSION = 'v0.5.1';
 // 칸 번호: 0 왼위 빨강, 1 오위 노랑, 2 왼아래 초록, 3 오아래 파랑
 const TILE = ['빨강','노랑','초록','파랑'];
 const NAME = ['빨간색','노란색','초록색','파란색'];
@@ -577,12 +577,19 @@ function setupFrame(lm, t){
   $('setupChecks').innerHTML=rows.join('');
   $('setupHelp').innerHTML = DET.found ? '매트를 찾았어요! 이제 <b>매트 가운데에 서서</b> 몸 전체가 잘 보이는지 확인해 주세요.'
     : '먼저 <b>매트 위를 비우고</b> 매트 네 칸이 화면에 모두 보이게 해 주세요. 색깔 칸에 테두리가 그려지면 잡히고 있는 거예요.';
-  $('setupOk').textContent = DET.found ? (ok.every(Boolean)?'좋아요! 시작하기':'이대로 시작하기') : '매트를 찾으면 시작할 수 있어요';
+  // 자동 시작: 매트를 찾았고, 몸 전체가 보이고, 매트 위에 서 있으면 그대로 1.5초 → 시작
+  const ready = DET.found && ok[0] && ok[2];
+  if (ready){ if (!DET.readySince) DET.readySince=t; } else DET.readySince=0;
+  const left = ready ? Math.max(0, AUTO_MS-(t-DET.readySince)) : AUTO_MS;
+  if (ready && left<=0 && S.screen==='setup'){ DET.readySince=0; $('selfwrap').classList.remove('hidden'); enterMode(); return; }
+  $('setupOk').textContent = ready ? `그대로 서 있으면 ${Math.ceil(left/500)/2}초 뒤 시작해요` : DET.found ? '매트 위에 서면 자동으로 시작해요 (지금 시작하기)' : '매트를 찾으면 시작할 수 있어요';
+  if (ready) { const pct=Math.round((1-left/AUTO_MS)*100); $('setupOk').style.background=`linear-gradient(90deg,var(--ok) ${pct}%,var(--coral) ${pct}%)`; } else $('setupOk').style.background='';
   $('setupOk').disabled = !DET.found;
   $('setupAlt').textContent = DET.found ? '매트 다시 찾기' : '네 칸에 서서 직접 맞추기';
 }
+const AUTO_MS = 1500;
 function startSetup(){
-  Object.assign(DET,{n:0,blobs:null,cand:null,since:0,found:null}); S.H=null; S.Hinv=null; S.calibPts=null;
+  Object.assign(DET,{n:0,blobs:null,cand:null,since:0,found:null,readySince:0}); S.H=null; S.Hinv=null; S.calibPts=null;
   $('selfwrap').classList.add('hidden'); show('setup');
 }
 $('setupOk').onclick = () => { if (!DET.found) return; $('selfwrap').classList.remove('hidden'); enterMode(); };
@@ -596,7 +603,7 @@ function drawMat(matId, canvasId){
   const c=$(canvasId), r=c.getBoundingClientRect(), dpr=devicePixelRatio||1;
   if (c.width!==Math.round(r.width*dpr)){ c.width=Math.round(r.width*dpr); c.height=Math.round(r.height*dpr); }
   const x=c.getContext('2d'); x.clearRect(0,0,c.width,c.height);
-  (TR.mat||[]).forEach((m,i)=>{ const px=Math.min(1.1,Math.max(-.1,m.x))*c.width, py=Math.min(1.1,Math.max(-.1,m.y))*c.height;
+  (TR.mat||[]).forEach((m,i)=>{ if(!m) return; const px=Math.min(1.1,Math.max(-.1,m.x))*c.width, py=Math.min(1.1,Math.max(-.1,m.y))*c.height;
     x.fillStyle='#1f2937'; x.strokeStyle='#fff'; x.lineWidth=3*dpr; x.beginPath(); x.arc(px,py,11*dpr,0,7); x.fill(); x.stroke();
     x.fillStyle='#fff'; x.font=`800 ${11*dpr}px Pretendard,sans-serif`; x.textAlign='center'; x.textBaseline='middle'; x.fillText(i?'오':'왼',px,py); });
 }
@@ -795,15 +802,17 @@ function loop(){
     const v=$('video'), t=performance.now();
     if (landmarker && v.readyState>=2 && v.currentTime!==lastVideoTime){
       lastVideoTime=v.currentTime;
-      let lm=null; try{ lm=landmarker.detectForVideo(v,t).landmarks?.[0]||null; }catch(e){}
-      let info;
-      if (lm) info=track(lm,t); else { TR.feet=null; TR.mat=null; TR.stable=null; TR.air=true; info={msg:'사람이 보이지 않아요'}; }
-      if (S.screen==='setup'){ setupFrame(lm,t); drawSelf(lm, $('setupCanvas'), 1280, true); } else drawSelf(lm);
-      if (S.screen==='calib') calibFrame(t);
-      if (S.screen==='check'){ drawMat('chkMat','chkCanvas'); $('chkStatus').textContent=info.msg; }
-      if (S.screen==='game'){ drawMat('gMat','gCanvas'); $('gStatus').textContent=info.msg; }
+      try {
+        let lm=null; try{ lm=landmarker.detectForVideo(v,t).landmarks?.[0]||null; }catch(e){}
+        let info;
+        if (lm) info=track(lm,t); else { TR.feet=null; TR.mat=null; TR.stable=null; TR.air=true; info={msg:'사람이 보이지 않아요'}; }
+        if (S.screen==='setup'){ setupFrame(lm,t); drawSelf(lm, $('setupCanvas'), 1280, true); } else drawSelf(lm);
+        if (S.screen==='calib') calibFrame(t);
+        if (S.screen==='check'){ drawMat('chkMat','chkCanvas'); $('chkStatus').textContent=info.msg; }
+        if (S.screen==='game'){ drawMat('gMat','gCanvas'); $('gStatus').textContent=info.msg; }
+      } catch(err){ console.error(err); }
     }
-    if (S.screen==='game') gameFrame(t);
+    try { if (S.screen==='game') gameFrame(t); } catch(err){ console.error(err); }
     requestAnimationFrame(step);
   };
   requestAnimationFrame(step);
