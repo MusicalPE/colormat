@@ -93,6 +93,19 @@ input[type=range]{flex:1;accent-color:var(--coral)}
 #selfwrap .lab{position:absolute;left:6px;top:6px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;padding:2px 6px;border-radius:6px}
 video{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .badge{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;font-size:12px;color:var(--sub);background:#fff;border:1px solid var(--line);border-radius:20px;padding:4px 12px;z-index:10}
+.place{display:grid;grid-template-columns:minmax(140px,220px) 1fr;gap:14px;align-items:center;margin:4px 0 8px}
+.place svg{width:100%;height:auto}
+.tips{list-style:none;font-size:14px;line-height:1.55;color:var(--ink)}
+.tips li{padding:5px 0 5px 18px;position:relative}
+.tips li::before{content:"";position:absolute;left:4px;top:13px;width:6px;height:6px;border-radius:50%;background:var(--coral)}
+@media (max-width:520px){.place{grid-template-columns:1fr}.place svg{max-width:220px;margin:0 auto;display:block}}
+.bigview{background:#000;border-radius:14px;overflow:hidden;margin:10px auto;max-width:min(420px,34vh)}
+.bigview canvas{display:block;width:100%;height:auto}
+.checks{list-style:none;margin:8px 0 2px}
+.checks li{font-size:15px;padding:6px 0;display:flex;gap:8px;align-items:center}
+.checks li b{display:inline-flex;width:24px;height:24px;border-radius:50%;align-items:center;justify-content:center;font-size:13px;background:var(--bg);color:var(--sub)}
+.checks li.ok b{background:var(--ok);color:#fff}
+.checks li.ok{color:var(--ink)} .checks li:not(.ok){color:var(--sub)}
 .warn{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:12px;padding:10px 12px;font-size:14px;margin-bottom:12px;line-height:1.5}
 </style>
 </head>
@@ -109,7 +122,26 @@ video{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
     <div id="fileWarn" class="warn hidden">파일로 직접 열면 카메라가 막힐 수 있어요. GitHub Pages 주소(https)로 열어 주세요.</div>
     <div class="card">
       <h2>카메라로 어느 칸에 섰는지 판정해요</h2>
-      <p class="muted">휴대폰이나 태블릿을 매트 앞에 세워 <b>몸 전체와 4칸이 모두 보이게</b> 놓아 주세요. 영상은 저장하거나 보내지 않고 이 기기 안에서만 처리해요.</p>
+      <div class="place">
+        <svg viewBox="0 0 300 300" role="img" aria-label="위에서 본 휴대폰과 매트 배치">
+          <rect x="95" y="6" width="110" height="20" rx="6" fill="#1f2937"/><text x="150" y="20" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">화면 · 프로젝터 쪽</text>
+          <rect x="136" y="36" width="28" height="44" rx="6" fill="#fff" stroke="#1f2937" stroke-width="3"/><circle cx="150" cy="44" r="3" fill="#1f2937"/>
+          <path d="M150 84 L150 128" stroke="#9ca3af" stroke-width="2" stroke-dasharray="5 4"/><path d="M144 122 L150 130 L156 122" fill="none" stroke="#9ca3af" stroke-width="2"/>
+          <text x="160" y="110" font-size="13" fill="#6b7280" font-weight="700">2~3m</text>
+          <path d="M136 80 L70 140 M164 80 L230 140" stroke="#ff6b5b" stroke-width="1.5" stroke-dasharray="3 4" opacity=".7"/>
+          <rect x="80" y="140" width="68" height="68" rx="8" fill="#F2392F"/><rect x="152" y="140" width="68" height="68" rx="8" fill="#FFD21F"/>
+          <rect x="80" y="212" width="68" height="68" rx="8" fill="#2FC653"/><rect x="152" y="212" width="68" height="68" rx="8" fill="#4C88FF"/>
+          <text x="114" y="179" text-anchor="middle" font-size="14" fill="#fff" font-weight="800">빨강</text><text x="186" y="179" text-anchor="middle" font-size="14" fill="#5b4500" font-weight="800">노랑</text>
+          <text x="114" y="251" text-anchor="middle" font-size="14" fill="#fff" font-weight="800">초록</text><text x="186" y="251" text-anchor="middle" font-size="14" fill="#fff" font-weight="800">파랑</text>
+        </svg>
+        <ul class="tips">
+          <li><b>휴대폰은 화면 쪽</b>에 두고 매트를 바라보게 세워요. 아이들이 화면을 보며 뛸 때 몸 앞쪽이 잘 보여요.</li>
+          <li>매트 앞 끝에서 <b>2~3m</b>, 높이는 <b>허리쯤</b>(의자·거치대)이 알맞아요.</li>
+          <li>휴대폰은 <b>세로로</b>. 머리부터 발끝, 4칸이 모두 화면에 들어와야 해요.</li>
+          <li>카메라를 켜면 다음 화면에서 자리가 맞는지 바로 알려 줘요.</li>
+        </ul>
+      </div>
+      <p class="muted">영상은 저장하거나 보내지 않고 이 기기 안에서만 처리해요.</p>
       <div class="row"><label>학년</label>
         <select id="grade"><option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option><option value="4" selected>4학년</option><option value="5">5학년</option><option value="6">6학년</option></select>
       </div>
@@ -149,6 +181,17 @@ video{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
   <!-- 불러오는 중 -->
   <section id="loading" class="hidden">
     <div class="card"><p class="big">⏳</p><p class="status" id="loadMsg">카메라와 판정 모델을 준비하고 있어요…</p></div>
+  </section>
+
+  <!-- 배치 확인 -->
+  <section id="setup" class="hidden">
+    <div class="card">
+      <h2>휴대폰 자리 맞추기</h2>
+      <p class="muted">매트 가운데에 서서 화면을 보세요. 매트가 <b>주황 점선 안</b>에 들어오고 아래 세 가지가 모두 ✓가 되면 좋아요.</p>
+      <div class="bigview"><canvas id="setupCanvas"></canvas></div>
+      <ul class="checks" id="setupChecks"></ul>
+      <button class="btn" id="setupOk">위치 맞추기로</button>
+    </div>
   </section>
 
   <!-- 보정 -->
@@ -217,7 +260,7 @@ video{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 <div class="badge">Made by 음악적체육인</div>
 
 <script type="module">
-const VERSION = 'v0.1.1';
+const VERSION = 'v0.2';
 // 칸 번호: 0 왼위 빨강, 1 오위 노랑, 2 왼아래 초록, 3 오아래 파랑
 const TILE = ['빨강','노랑','초록','파랑'];
 const NAME = ['빨간색','노란색','초록색','파란색'];
@@ -256,7 +299,7 @@ $('stableMs').oninput = e => { S.stableMs=+e.target.value; showSettingVals(); sa
 $('band').oninput = e => { S.band=+e.target.value/100; showSettingVals(); saveSettings(); };
 
 // ---------- 화면 ----------
-function show(id){ for (const s of ['home','loading','calib','check','game','result']) $(s).classList.toggle('hidden', s!==id); S.screen=id; }
+function show(id){ for (const s of ['home','loading','setup','calib','check','game','result']) $(s).classList.toggle('hidden', s!==id); S.screen=id; }
 function seg(id, cb){ $(id).querySelectorAll('button').forEach(b=>b.onclick=()=>{ $(id).querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); cb(b.dataset.v); }); }
 seg('camSeg', v=>S.facing=v); seg('ruleSeg', v=>S.rule=v); seg('diffSeg', v=>S.smode=+v); seg('speedSeg', v=>S.speed=+v);
 document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('on',x===b)); S.mode=b.dataset.mode; $('stroopOpts').classList.toggle('hidden',S.mode!=='stroop'); });
@@ -361,11 +404,12 @@ function track(lm, t){
 }
 
 // ---------- 그리기 ----------
-const selfC=$('self'), sctx=selfC.getContext('2d');
-function drawSelf(lm){
+const selfC=$('self');
+function drawSelf(lm, canvas=selfC, w=320, guide=false){
   const v=$('video'); if(!v.videoWidth) return;
-  const w=320, h=Math.round(320*v.videoHeight/v.videoWidth);
-  if (selfC.width!==w||selfC.height!==h){ selfC.width=w; selfC.height=h; }
+  const sctx=canvas.getContext('2d');
+  const h=Math.round(w*v.videoHeight/v.videoWidth);
+  if (canvas.width!==w||canvas.height!==h){ canvas.width=w; canvas.height=h; }
   sctx.save(); if (S.facing==='user'){ sctx.translate(w,0); sctx.scale(-1,1); }
   sctx.drawImage(v,0,0,w,h);
   const P=p=>[p.x*w,p.y*h];
@@ -379,10 +423,39 @@ function drawSelf(lm){
     sctx.strokeStyle='rgba(255,255,255,.7)'; sctx.lineWidth=2;
     for (const [a,b] of [[11,12],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],[11,13],[13,15],[12,14],[14,16]])
       if(vis(lm[a])&&vis(lm[b])){ sctx.beginPath(); sctx.moveTo(...P(lm[a])); sctx.lineTo(...P(lm[b])); sctx.stroke(); }
-    (TR.feet||[]).forEach(f=>{ if(!f) return; sctx.fillStyle='#ff6b5b'; sctx.beginPath(); sctx.arc(...P(f),7,0,7); sctx.fill(); });
+    (TR.feet||[]).forEach(f=>{ if(!f) return; sctx.fillStyle='#ff6b5b'; sctx.beginPath(); sctx.arc(...P(f),w/45,0,7); sctx.fill(); });
   }
   sctx.restore();
+  if (guide){ // 매트가 들어올 자리(사다리꼴): 화면 아래쪽 절반
+    sctx.save(); sctx.setLineDash([10,8]); sctx.lineWidth=Math.max(3,w/150); sctx.strokeStyle='#ff6b5b'; sctx.fillStyle='rgba(255,107,91,.12)';
+    const q=[[.3,.6],[.7,.6],[.9,.97],[.1,.97]].map(([x,y])=>[x*w,y*h]);
+    sctx.beginPath(); q.forEach((p,i)=>i?sctx.lineTo(...p):sctx.moveTo(...p)); sctx.closePath(); sctx.fill(); sctx.stroke();
+    sctx.setLineDash([]); sctx.fillStyle='#fff'; sctx.font=`800 ${Math.round(w/24)}px Pretendard,sans-serif`; sctx.textAlign='center';
+    sctx.fillText('매트 자리', w/2, h*.6-10); sctx.restore();
+  }
 }
+// 배치 확인: 몸 전체가 보이는지, 크기가 알맞은지, 발이 화면 아래쪽에 있는지
+function setupFrame(lm){
+  const ok=[false,false,false]; let hint=['머리부터 발끝까지 보여요','사람 크기가 알맞아요','발이 매트 자리(화면 아래쪽)에 있어요'];
+  if (lm){
+    const nose=vis(lm[0]), la=vis(lm[27]), ra=vis(lm[28]);
+    const inside=p=>p && p.x>.02 && p.x<.98 && p.y>.02 && p.y<.98;
+    ok[0] = !!(inside(nose) && inside(la) && inside(ra));
+    if (!ok[0]) hint[0] = !nose ? '머리가 안 보여요 — 휴대폰을 조금 위로·뒤로' : (!la||!ra) ? '발이 안 보여요 — 휴대폰을 조금 뒤로·아래로' : '몸이 화면 끝에 걸려요 — 가운데로';
+    if (nose && la && ra){
+      const tall=((la.y+ra.y)/2)-nose.y;
+      ok[1] = tall>.32 && tall<.7;
+      if (!ok[1]) hint[1] = tall>=.7 ? '너무 가까워요 — 휴대폰을 뒤로' : '너무 멀어요 — 휴대폰을 앞으로';
+      const fy=(la.y+ra.y)/2;
+      ok[2] = fy>.62 && fy<.95;
+      if (!ok[2]) hint[2] = fy<=.62 ? '발이 화면 위쪽에 있어요 — 휴대폰을 조금 위로 들거나 아래를 보게' : '발이 화면 맨 아래예요 — 휴대폰을 조금 뒤로';
+    }
+  } else hint[0]='사람이 안 보여요 — 매트 가운데에 서 주세요';
+  $('setupChecks').innerHTML = hint.map((t,i)=>`<li class="${ok[i]?'ok':''}"><b>${ok[i]?'✓':i+1}</b>${t}</li>`).join('');
+  $('setupOk').textContent = ok.every(Boolean) ? '좋아요! 위치 맞추기로' : '이대로 위치 맞추기로';
+}
+function startSetup(){ $('selfwrap').classList.add('hidden'); show('setup'); }
+$('setupOk').onclick = () => { $('selfwrap').classList.remove('hidden'); startCalib(); };
 function drawMat(matId, canvasId){
   const on = new Set(); const key = TR.stable || TR.cand;
   if (key){ on.add(+key[1]); if (key[0]==='p') on.add(+key[2]); }
@@ -543,8 +616,7 @@ $('startBtn').onclick = async () => {
   try{
     $('loadMsg').textContent='카메라를 켜고 있어요…'; await startCamera();
     if (!landmarker){ $('loadMsg').textContent='판정 모델을 불러오고 있어요… (처음엔 조금 걸려요)'; await initPose(); }
-    $('selfwrap').classList.remove('hidden');
-    startCalib(); loop();
+    startSetup(); loop();
   }catch(e){
     console.error(e);
     const n = e && e.name;
@@ -566,7 +638,7 @@ function loop(){
       let lm=null; try{ lm=landmarker.detectForVideo(v,t).landmarks?.[0]||null; }catch(e){}
       let info;
       if (lm) info=track(lm,t); else { TR.feet=null; TR.mat=null; TR.cand=null; TR.stable=null; info={msg:'사람이 보이지 않아요'}; }
-      drawSelf(lm);
+      if (S.screen==='setup'){ drawSelf(lm, $('setupCanvas'), 640, true); setupFrame(lm); } else drawSelf(lm);
       if (S.screen==='calib') calibFrame(t);
       if (S.screen==='check'){ drawMat('chkMat','chkCanvas'); $('chkStatus').textContent=info.msg; }
       if (S.screen==='game'){ drawMat('gMat','gCanvas'); $('gStatus').textContent=info.msg; }
