@@ -276,7 +276,7 @@ body.wide .wrap{max-width:1180px}
 <div class="badge">Made by 음악적체육인</div>
 
 <script type="module">
-const VERSION = 'v0.6';
+const VERSION = 'v0.6.1';
 // 칸 번호: 0 왼위 빨강, 1 오위 노랑, 2 왼아래 초록, 3 오아래 파랑
 const TILE = ['빨강','노랑','초록','파랑'];
 const NAME = ['빨간색','노란색','초록색','파란색'];
@@ -360,9 +360,27 @@ function computeH(src,dst){ const A=[],b=[];
   return solve(A,b); }
 function applyH(H,p){ const w=H[6]*p.x+H[7]*p.y+1; return {x:(H[0]*p.x+H[1]*p.y+H[2])/w, y:(H[3]*p.x+H[4]*p.y+H[5])/w}; }
 function tileOf(m){
-  if (m.x<-.2||m.x>1.2||m.y<-.2||m.y>1.2) return 'out';
+  if (m.x<-.25||m.x>1.25||m.y<-.25||m.y>1.35) return 'out';
   if (Math.abs(m.x-.5)<S.band || Math.abs(m.y-.5)<S.band) return 'edge';
   return (m.y<.5?0:2) + (m.x<.5?0:1);
+}
+// 원근 때문에 화면에서 본 칸의 무게중심은 카메라 쪽(앞줄)으로 쏠림 → 펼친 매트 평면에서 칸 가운데를 다시 구해 맞춤
+function refineCenters(bl){
+  let pts=bl.map(b=>({x:b.x,y:b.y}));
+  for (let it=0; it<4; it++){
+    const H=computeH(pts,TILE_CENTER); if (!H) return pts;
+    const Hinv=computeH(TILE_CENTER,pts); if (!Hinv) return pts;
+    pts=bl.map(b=>{
+      let su=0, sv=0, sw=0;
+      for (const j of b.pix){
+        const x=(j%b.W+.5)/b.W, y=(Math.floor(j/b.W)+.5)/b.H;
+        const w=H[6]*x+H[7]*y+1, wt=1/Math.abs(w*w*w);          // 평면에서 차지하는 넓이만큼
+        su+=wt*(H[0]*x+H[1]*y+H[2])/w; sv+=wt*(H[3]*x+H[4]*y+H[5])/w; sw+=wt;
+      }
+      return applyH(Hinv,{x:su/sw,y:sv/sw});
+    });
+  }
+  return pts;
 }
 function setCalibration(pts){
   for (let i=0;i<4;i++) for (let j=i+1;j<4;j++) if (Math.hypot(pts[i].x-pts[j].x, pts[i].y-pts[j].y) < .03) return false;
@@ -394,9 +412,10 @@ async function startCamera(){
 const vis = l => (l && (l.visibility==null || l.visibility>.45)) ? l : null;
 // side 0 = 학생의 왼발, 1 = 오른발 (카메라 방향과 상관없이 몸 기준)
 function footPoint(lm, side){
-  const a=vis(lm[27+side]); if(!a) return null;
-  const pts=[a, vis(lm[29+side]), vis(lm[31+side])].filter(Boolean);
-  return { x:pts.reduce((s,p)=>s+p.x,0)/pts.length, y:pts.reduce((s,p)=>s+p.y,0)/pts.length };
+  const a=vis(lm[27+side]), h=vis(lm[29+side]), t=vis(lm[31+side]);
+  if (h && t) return { x:(h.x+t.x)/2, y:(h.y+t.y)/2 };          // 바닥에 닿는 곳
+  if (h || t) return { x:(h||t).x, y:(h||t).y };
+  return a ? { x:a.x, y:a.y } : null;
 }
 
 // ---------- 착지 추적 ----------
@@ -509,24 +528,25 @@ function colorClass(r,g,b){
   if (h>=195 && h<=250 && sat>.38) return 3;
   return -1;
 }
+function pixOf(comp,id,N){ const a=[]; for (let j=0;j<N;j++) if (comp[j]===id) a.push(j); return a; }
 function detectMat(v){
-  const W=160, H=Math.max(40,Math.round(W*v.videoHeight/v.videoWidth));
+  const W=220, H=Math.max(40,Math.round(W*v.videoHeight/v.videoWidth));
   const cv=DET.cv; if (cv.width!==W||cv.height!==H){ cv.width=W; cv.height=H; }
   const cx=cv.getContext('2d',{willReadFrequently:true}); cx.drawImage(v,0,0,W,H);
   const px=cx.getImageData(0,0,W,H).data, N=W*H, lab=new Int8Array(N);
   for (let i=0;i<N;i++) lab[i]=colorClass(px[i*4],px[i*4+1],px[i*4+2]);
-  const seen=new Uint8Array(N), best=[null,null,null,null], stack=new Int32Array(N);
+  const seen=new Uint8Array(N), best=[null,null,null,null], stack=new Int32Array(N), comp=new Int32Array(N); let cid=0;
   for (let i=0;i<N;i++){
     const c=lab[i]; if (c<0||seen[i]) continue;
-    let top=0, n=0, sx=0, sy=0, x0=W, y0=H, x1=0, y1=0; stack[top++]=i; seen[i]=1;
-    while (top){ const j=stack[--top], x=j%W, y=(j-x)/W; n++; sx+=x; sy+=y; if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y;
+    let top=0, n=0, sx=0, sy=0, x0=W, y0=H, x1=0, y1=0; cid++; stack[top++]=i; seen[i]=1;
+    while (top){ const j=stack[--top], x=j%W, y=(j-x)/W; comp[j]=cid; n++; sx+=x; sy+=y; if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y;
       if (x>0 && !seen[j-1] && lab[j-1]===c){ seen[j-1]=1; stack[top++]=j-1; }
       if (x<W-1 && !seen[j+1] && lab[j+1]===c){ seen[j+1]=1; stack[top++]=j+1; }
       if (y>0 && !seen[j-W] && lab[j-W]===c){ seen[j-W]=1; stack[top++]=j-W; }
       if (y<H-1 && !seen[j+W] && lab[j+W]===c){ seen[j+W]=1; stack[top++]=j+W; } }
-    if (!best[c] || n>best[c].n) best[c]={n,sx,sy,x0,y0,x1,y1};
+    if (!best[c] || n>best[c].n) best[c]={n,sx,sy,x0,y0,x1,y1,cid};
   }
-  return best.map(b => (b && b.n>=N*.002 && b.n<=N*.3) ? { x:(b.sx/b.n+.5)/W, y:(b.sy/b.n+.5)/H, n:b.n, box:[b.x0/W,b.y0/H,(b.x1+1)/W,(b.y1+1)/H] } : null);
+  return best.map(b => (b && b.n>=N*.002 && b.n<=N*.3) ? { x:(b.sx/b.n+.5)/W, y:(b.sy/b.n+.5)/H, n:b.n, box:[b.x0/W,b.y0/H,(b.x1+1)/W,(b.y1+1)/H], pix:pixOf(comp,b.cid,N), W, H } : null);
 }
 // 빨강→노랑→파랑→초록 순서로 이으면 볼록한 네모가 되어야 매트 배치가 맞음
 function matShapeOk(bl){
@@ -546,7 +566,7 @@ function scanMat(t){
   if (!matShapeOk(bl)){ DET.cand=null; return; }
   const pts=bl.map(b=>({x:b.x,y:b.y}));
   if (DET.cand && pts.every((p,i)=>Math.hypot(p.x-DET.cand[i].x,p.y-DET.cand[i].y)<.03)){
-    if (t-DET.since>900 && setCalibration(pts)){ DET.found=pts; sndOk(); }
+    if (t-DET.since>900 && setCalibration(refineCenters(bl))){ DET.found=pts; DET.bottom=Math.max(...bl.map(b=>b.box[3])); sndOk(); }
   } else { DET.cand=pts; DET.since=t; }
 }
 
@@ -554,7 +574,7 @@ function scanMat(t){
 function setupFrame(lm, t){
   scanMat(t);
   const got = DET.blobs ? DET.blobs.filter(Boolean).length : 0;
-  const mat = DET.found ? [true,'매트를 찾았어요'] : [false, got ? `매트 찾는 중… (${got}/4색)` + (got===4?' — 배치를 확인하고 있어요':'') : '매트를 찾는 중… 매트 위를 비워 주세요'];
+  const mat = DET.found ? [true, DET.bottom>.94 ? '매트를 찾았어요 — 다만 화면 맨 아래에 붙어 있어요. 앞줄(빨강·노랑) 판정이 흔들리면 휴대폰을 조금 뒤로 하거나 아래를 더 보게 기울여 주세요' : '매트를 찾았어요'] : [false, got ? `매트 찾는 중… (${got}/4색)` + (got===4?' — 배치를 확인하고 있어요':'') : '매트를 찾는 중… 매트 위를 비워 주세요'];
   const ok=[false,false,false]; let hint=['머리부터 발끝까지 보여요','사람 크기가 알맞아요','발이 매트 자리(화면 아래쪽)에 있어요'];
   if (lm){
     const nose=vis(lm[0]), la=vis(lm[27]), ra=vis(lm[28]);
