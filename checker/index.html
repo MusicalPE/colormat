@@ -175,7 +175,7 @@ body.wide .wrap{max-width:1180px}
         <div class="row"><label>속도</label>
           <div class="seg" id="speedSeg"><button data-v="1.25">천천히</button><button data-v="1" class="on">보통</button><button data-v="0.8">빠르게</button></div>
         </div>
-        <p class="muted">놀이터와 같은 규칙이에요: 10단계 × 30초(5분), 3단계부터 함정. 하드는 두 발로 두 칸, 익스퍼트는 왼발·오른발 칸이 정해져요. <b>5분을 끝까지 하면 완주 기록</b>이 돼요.</p>
+        <p class="muted">놀이터와 같은 규칙이에요: 10단계 × 30초(5분), 3단계부터 함정. <b>다음 글자가 나오기 전에 정답 칸에 있으면 정답</b>이에요(옮겨 가다 다른 칸을 밟아도 괜찮아요). 하드는 두 발로 두 칸, 익스퍼트는 왼발·오른발 칸이 정해져요. <b>5분을 끝까지 하면 완주 기록</b>이 돼요.</p>
       </div>
       <details>
         <summary>판정 세부 설정</summary>
@@ -276,7 +276,7 @@ body.wide .wrap{max-width:1180px}
 <div class="badge">Made by 음악적체육인</div>
 
 <script type="module">
-const VERSION = 'v0.5.1';
+const VERSION = 'v0.6';
 // 칸 번호: 0 왼위 빨강, 1 오위 노랑, 2 왼아래 초록, 3 오아래 파랑
 const TILE = ['빨강','노랑','초록','파랑'];
 const NAME = ['빨간색','노란색','초록색','파란색'];
@@ -707,8 +707,21 @@ function startGame(){
     else { clearInterval(iv); $('countdown').classList.add('hidden'); $('promptCard').classList.remove('hidden'); beep(1046,200);
       G.running=true; G.start=performance.now(); } },1000);
 }
+// 지금 디디고 있는 자세가 정답인지 (옮겨 가는 중에 잘못 잡힌 칸은 오답으로 치지 않음)
+function poseMatches(key){
+  if (!key || !G.cur) return false;
+  const t=G.cur.targets, k=key[0];
+  if (S.smode===1) return (k==='s'||k==='o') && +key[1]===t[0];      // 한 발이라도 정답 칸 (다른 발이 다른 칸이면 p 라서 아님)
+  if (k!=='p') return false;
+  const L=+key[1], R=+key[2];
+  if (S.smode===2) return t.includes(L) && t.includes(R);
+  return L===t[0] && R===t[1];
+}
 function gameFrame(now){
   if (!G.running) return;
+  if (G.cur && !G.cur.done && now>G.cur.shown+150 && poseMatches(TR.stable)){
+    G.attempts++; G.correct++; G.cur.done=true; mark(true); sndOk(); updHud();
+  }
   const T=(now-G.start)/1000;
   if (T>=TOTAL){ endGame(true); return; }
   const li=Math.min(9,Math.floor(T/LS));
@@ -731,13 +744,7 @@ function onLanding(e, t){
     const tiles=$('chkMat').querySelectorAll('.tile'); for (const i of e.tiles){ tiles[i].classList.add('flash'); setTimeout(()=>tiles[i].classList.remove('flash'),250); }
     return true;
   }
-  // 문제마다 첫 착지 한 번만 채점
-  if (S.screen==='game' && G.running && G.cur && !G.cur.done && t>G.cur.shown+120){
-    const ok=scoreLanding(e);
-    if (ok===null) return false;
-    G.attempts++; if(ok) G.correct++; G.cur.done=true; mark(ok); ok?sndOk():sndBad(); updHud();
-    return true;
-  }
+  // 채점은 gameFrame 에서: 시간 안에 정답 칸에 있으면 정답 (리듬 게임이 아니라 박자 맞추기는 안 봄)
   if (S.screen==='game' && S.smode===1 && e.kind==='p' && e.prev.includes(e.L)!==e.prev.includes(e.R)) return false;
   if (S.screen==='game' && S.smode>1 && e.kind==='o') return false;
   return true;
