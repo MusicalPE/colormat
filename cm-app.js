@@ -79,15 +79,16 @@
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { prompt('아래 주소를 복사하세요', text); });
     else prompt('아래 주소를 복사하세요', text);
   }
-  function showQr(startKey) {
-    var cur = TARGETS.filter(function (t) { return t.key === startKey; })[0] || TARGETS[0];
+  function showQr(startKey, list) {
+    list = list || TARGETS;
+    var cur = list.filter(function (t) { return t.key === startKey; })[0] || list[0];
     loadQr(function (ok) {
-      var tabs = '<div class="cmq-tabs">' + TARGETS.map(function (t) { return '<button data-cm="tab:' + t.key + '" class="' + (t === cur ? 'on' : '') + '">' + t.label + '</button>'; }).join('') + '</div>';
+      var tabs = list.length < 2 ? '' : '<div class="cmq-tabs">' + list.map(function (t) { return '<button data-cm="tab:' + t.key + '" class="' + (t === cur ? 'on' : '') + '">' + t.label + '</button>'; }).join('') + '</div>';
       var body = tabs + (ok ? '<div class="cmq-box">' + qrSvg(cur.url) + '</div>' : '<p class="cmq-note">QR을 만들 도구를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.</p>') +
         '<p class="cmq-note">' + cur.note + '</p><div class="cmq-url">' + cur.url + '</div>' +
         '<div class="cmq-act"><button data-cm="copy">주소 복사</button>' + (ok ? '<button data-cm="png">QR 그림 저장</button>' : '') + '<button data-cm="full">전체 화면</button><button data-cm="close" class="main">닫기</button></div>';
       open('휴대폰으로 찍어서 들어와요', '카메라 앱으로 QR을 비추면 바로 열려요', body, function (act, btn) {
-        if (act.indexOf('tab:') === 0) return showQr(act.slice(4));
+        if (act.indexOf('tab:') === 0) return showQr(act.slice(4), list);
         if (act === 'copy') return copy(cur.url, btn);
         if (act === 'png') { var a = document.createElement('a'); a.href = qrPng(cur.url); a.download = '매트놀이터_' + cur.key + '_QR.png'; document.body.appendChild(a); a.click(); setTimeout(function () { a.remove(); }, 300); }
         if (act === 'full') { try { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen(); } catch (e) {} }
@@ -117,9 +118,10 @@
 
   function wire() {
     var q = document.getElementById('cmQrBtn'), i = document.getElementById('cmInstallBtn');
-    if (q) q.onclick = function () { showQr(q.getAttribute('data-target') || 'checker'); };
+    if (q && !q.onclick) q.onclick = function () { showQr(q.getAttribute('data-target') || 'checker'); };
     if (i) { if (standalone) i.style.display = 'none'; else i.onclick = showInstall; }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire); else wire();
-  window.CMApp = { showQr: showQr, showInstall: showInstall };
+  // 원하는 주소 하나(또는 여러 개)로 QR 띄우기: [{key, label, url, note}]
+  window.CMApp = { showQr: showQr, showInstall: showInstall, showQrList: function (list) { showQr(list[0].key, list); }, ROOT: ROOT };
 })();
