@@ -94,6 +94,10 @@ input[type=range]{flex:1;accent-color:var(--coral)}
 .hist{font-size:13px;color:var(--sub);margin-top:6px;line-height:1.7}
 
 /* 자기 모습 */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:center}
+.split .mat{max-width:none}
+.selfslot #selfwrap{position:relative;right:auto;bottom:auto;width:100%;box-shadow:none}
+.selfslot #selfwrap canvas{max-height:48vh;width:auto;max-width:100%;margin:0 auto}
 #selfwrap{position:fixed;right:12px;bottom:46px;width:min(38vw,240px);border-radius:14px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.18);background:#000;z-index:20}
 #selfwrap canvas{display:block;width:100%;height:auto}
 #selfwrap .lab{position:absolute;left:6px;top:6px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;padding:2px 6px;border-radius:6px}
@@ -226,7 +230,7 @@ body.wide .wrap{max-width:1180px}
   <section id="check" class="hidden">
     <div class="card">
       <div class="hud"><span>착지 <b id="chkCount">0</b>번</span><span id="chkLast"></span></div>
-      <div class="mat" id="chkMat"><div class="tile t0">빨강</div><div class="tile t1">노랑</div><div class="tile t2">초록</div><div class="tile t3">파랑</div><canvas id="chkCanvas"></canvas></div>
+      <div class="split"><div><div class="mat" id="chkMat"><div class="tile t0">빨강</div><div class="tile t1">노랑</div><div class="tile t2">초록</div><div class="tile t3">파랑</div><canvas id="chkCanvas"></canvas></div></div><div class="selfslot" id="cSelfSlot"></div></div>
       <p class="status" id="chkStatus"></p>
       <button class="btn ghost" id="recalib1">매트 다시 찾기</button>
       <button class="btn ghost" id="home1">처음으로</button>
@@ -245,7 +249,7 @@ body.wide .wrap{max-width:1180px}
       <div class="mark" id="mark"></div>
     </div>
     <div class="card">
-      <div class="mat small" id="gMat"><div class="tile t0">빨강</div><div class="tile t1">노랑</div><div class="tile t2">초록</div><div class="tile t3">파랑</div><canvas id="gCanvas"></canvas></div>
+      <div class="split"><div><div class="mat" id="gMat"><div class="tile t0">빨강</div><div class="tile t1">노랑</div><div class="tile t2">초록</div><div class="tile t3">파랑</div><canvas id="gCanvas"></canvas></div></div><div class="selfslot" id="gSelfSlot"></div></div>
       <p class="status" id="gStatus"></p>
       <button class="btn ghost" id="stopBtn">그만하기</button>
     </div>
@@ -276,7 +280,7 @@ body.wide .wrap{max-width:1180px}
 <div class="badge">Made by 음악적체육인</div>
 
 <script type="module">
-const VERSION = 'v0.6.1';
+const VERSION = 'v0.6.2';
 // 칸 번호: 0 왼위 빨강, 1 오위 노랑, 2 왼아래 초록, 3 오아래 파랑
 const TILE = ['빨강','노랑','초록','파랑'];
 const NAME = ['빨간색','노란색','초록색','파란색'];
@@ -318,7 +322,10 @@ $('stableMs').oninput = e => { S.stableMs=+e.target.value; showSettingVals(); sa
 $('band').oninput = e => { S.band=+e.target.value/100; showSettingVals(); saveSettings(); };
 
 // ---------- 화면 ----------
-function show(id){ document.body.classList.toggle('wide', id==='setup'); for (const s of ['home','loading','setup','calib','check','game','result']) $(s).classList.toggle('hidden', s!==id); S.screen=id; }
+function show(id){ document.body.classList.toggle('wide', id==='setup');
+  // 게임·칸 확인: 아래 칸 왼쪽 매트, 오른쪽 내 모습 (겹치지 않게). 그 밖에는 오른쪽 아래에 띄움
+  const sw=$('selfwrap'), slot = id==='game' ? $('gSelfSlot') : id==='check' ? $('cSelfSlot') : document.body;
+  if (sw && sw.parentNode!==slot) slot.appendChild(sw); for (const s of ['home','loading','setup','calib','check','game','result']) $(s).classList.toggle('hidden', s!==id); S.screen=id; }
 function seg(id, cb){ $(id).querySelectorAll('button').forEach(b=>b.onclick=()=>{ $(id).querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); cb(b.dataset.v); }); }
 seg('camSeg', v=>S.facing=v); seg('ruleSeg', v=>S.rule=v); seg('diffSeg', v=>S.smode=+v); seg('speedSeg', v=>S.speed=+v);
 function preset(id, v){ const b=[...$(id).querySelectorAll('button')].find(x=>x.dataset.v===String(v)); if (b) b.click(); }
