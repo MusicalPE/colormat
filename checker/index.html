@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>매트 판정기</title>
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#F2392F">
+<link rel="icon" type="image/png" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="매트 놀이터">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
 :root{
@@ -17,7 +22,8 @@ html,body{height:100%}
 body{font-family:Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:var(--bg);color:var(--ink);-webkit-tap-highlight-color:transparent}
 .wrap{max-width:640px;margin:0 auto;padding:16px 16px 120px;min-height:100%}
 header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-header h1{font-size:20px;font-weight:800}
+header h1{font-size:20px;font-weight:800;white-space:nowrap}
+header{gap:8px;align-items:flex-start}
 header h1 small{font-size:12px;color:var(--sub);font-weight:600;margin-left:6px}
 .iconbtn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;font:inherit;font-size:14px;cursor:pointer}
 .card{background:var(--card);border-radius:18px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px}
@@ -116,7 +122,7 @@ body.wide .wrap{max-width:1180px}
 <div class="wrap">
   <header>
     <h1>매트 판정기<small id="ver"></small></h1>
-    <div style="display:flex;gap:6px"><a class="iconbtn" href="../index.html" style="text-decoration:none;color:inherit">← 놀이터</a><button class="iconbtn" id="fsBtn" title="전체 화면 (F)">⛶ 전체 화면</button></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="iconbtn" id="cmQrBtn" data-target="checker">📱 QR</button><button class="iconbtn" id="cmInstallBtn">📲 바로가기</button><a class="iconbtn" href="../index.html" style="text-decoration:none;color:inherit">← 놀이터</a><button class="iconbtn" id="fsBtn" title="전체 화면 (F)">⛶ 전체 화면</button></div>
   </header>
 
   <!-- 시작 -->
@@ -267,7 +273,7 @@ body.wide .wrap{max-width:1180px}
 <div class="badge">Made by 음악적체육인</div>
 
 <script type="module">
-const VERSION = 'v0.3.1';
+const VERSION = 'v0.3.2';
 // 칸 번호: 0 왼위 빨강, 1 오위 노랑, 2 왼아래 초록, 3 오아래 파랑
 const TILE = ['빨강','노랑','초록','파랑'];
 const NAME = ['빨간색','노란색','초록색','파란색'];
@@ -732,5 +738,6 @@ function loop(){
   requestAnimationFrame(step);
 }
 </script>
+<script src="../cm-app.js"></script>
 </body>
 </html>

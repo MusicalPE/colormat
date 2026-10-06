@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>색깔 매트 놀이터 단독판 v1.9.1</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#F2392F">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="매트 놀이터">
 <style>
   :root{--bg:#F3F5F8;--card:#fff;--ink:#1F2937;--ink-2:#4B5563;--ink-3:#6B7280;--line:#E5E7EB;--line-2:#EEF1F5;--soft:#F3F5F8;
         --accent:#F0881E;--accent-dk:#C96E0F;--accent-soft:#FFF3E6;--accent-ink:#9A5406;--sun:#F5C542;--coral:#FF6B4A;}
@@ -54,6 +59,8 @@
     <div class="logo"><i style="background:#F2392F"></i><i style="background:#FFD21F"></i><i style="background:#2FC653"></i><i style="background:#4C88FF"></i></div>
     <h1>색깔 매트 놀이터</h1><span class="v">단독판 v1.9.1</span>
     <div class="sp"></div>
+    <button type="button" id="cmQrBtn" data-target="checker" title="휴대폰으로 판정기·놀이터 열기">📱 QR</button>
+    <button type="button" id="cmInstallBtn" title="바탕화면·홈 화면에 아이콘 만들기">📲 바로가기</button>
     <a href="board.html" class="camlink" title="카메라 판정 기록을 모은 전국 순위">🏆 전국 현황판</a>
     <a href="checker/index.html" class="camlink" title="카메라가 어느 칸에 섰는지 판정해요 (시제품)">📷 카메라 판정</a>
     <button type="button" id="btnFull">전체 화면</button>
@@ -1896,5 +1903,6 @@ try {
   document.getElementById('btnFull').onclick = function () { try { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen(); } catch (e) {} };
 })();
 </script>
+<script src="cm-app.js"></script>
 </body>
 </html>
