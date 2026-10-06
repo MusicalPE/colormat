@@ -143,14 +143,14 @@
     var steps = CLIMB.slice(1).map(function (s) { var on = m >= s.m; return '<span class="cmc-step' + (on ? ' on' : '') + (c.next === s ? ' next' : '') + '" title="' + fmtM(s.m) + '">' + s.ico + '<small>' + s.name + '</small></span>'; }).join('');
     return '<div class="cmc"><div class="cmc-top"><div><div class="cmc-t">' + title + '</div><div class="cmc-h">' + fmtM(m) + '</div>' +
       '<div class="cmc-s">' + (c.next ? c.prev.ico + ' ' + (c.prev.m ? c.prev.name + eul(c.prev.name) + ' 넘었어요! ' : '') + '<b>' + c.next.name + '(' + fmtM(c.next.m) + ')</b>까지 <b>' + fmtM(c.next.m - m) + '</b> 남았어요' : '🌕 달에 도착했어요!') + '</div></div>' +
-      '<div class="cmc-jump" aria-hidden="true">🤸</div></div>' +
+      '<div class="cmc-jump" aria-hidden="true">🌕</div></div>' +
       '<div class="cmc-bar"><i style="width:' + (pct * 100).toFixed(1) + '%"></i><span>' + c.prev.ico + '</span><span>' + (c.next ? c.next.ico : '🌕') + '</span></div>' +
       '<div class="cmc-steps">' + steps + '</div>' +
       '<div class="cmc-f">정답 착지 1번 = 1m 위로 · 3월 1일마다 새로 출발' + (lastYear ? ' · 지난 학년도에는 ' + fmtM(lastYear) + '까지 올라갔어요' : '') + '</div></div>';
   }
   var climbCss = '.cmc{background:linear-gradient(180deg,#0B1B3F 0%,#1E3A8A 45%,#60A5FA 100%);color:#fff;border-radius:18px;padding:18px 20px;margin-bottom:16px;box-shadow:0 4px 16px rgba(17,24,39,.08);overflow:hidden}' +
     '.cmc-top{display:flex;justify-content:space-between;align-items:center;gap:10px}.cmc-t{font-weight:800;opacity:.9}.cmc-h{font-size:2.3em;font-weight:900;line-height:1.15;font-variant-numeric:tabular-nums}' +
-    '.cmc-s{opacity:.95;margin-top:2px}.cmc-s b{color:#FDE68A}.cmc-jump{font-size:3em;animation:cmcj 1.2s ease-in-out infinite}@keyframes cmcj{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}' +
+    '.cmc-s{opacity:.95;margin-top:2px}.cmc-s b{color:#FDE68A}.cmc-jump{font-size:3.2em;line-height:1;filter:drop-shadow(0 0 14px rgba(253,230,138,.75));animation:cmcj 4s ease-in-out infinite}@keyframes cmcj{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}' +
     '.cmc-bar{position:relative;height:14px;background:rgba(255,255,255,.22);border-radius:999px;margin:34px 0 6px}.cmc-bar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#FDE68A,#F59E0B);border-radius:999px}' +
     '.cmc-bar span{position:absolute;top:-24px;font-size:1.1em}.cmc-bar span:first-of-type{left:0}.cmc-bar span:last-of-type{right:0}' +
     '.cmc-steps{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.cmc-step{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.12);border-radius:999px;padding:3px 9px;font-size:.95em;opacity:.55}' +
