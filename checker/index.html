@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>매트 판정기</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{
+  --bg:#f3f4f6; --card:#ffffff; --ink:#1f2937; --sub:#6b7280; --line:#e5e7eb;
+  --coral:#ff6b5b; --coral-soft:#ffe8e5;
+  --red:#F2392F; --yellow:#FFD21F; --green:#2FC653; --blue:#4C88FF;
+  --ok:#16a34a; --bad:#dc2626;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:var(--bg);color:var(--ink);-webkit-tap-highlight-color:transparent}
+.wrap{max-width:640px;margin:0 auto;padding:16px 16px 120px;min-height:100%}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+header h1{font-size:20px;font-weight:800}
+header h1 small{font-size:12px;color:var(--sub);font-weight:600;margin-left:6px}
+.iconbtn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;font:inherit;font-size:14px;cursor:pointer}
+.card{background:var(--card);border-radius:18px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px}
+.card h2{font-size:17px;margin-bottom:10px}
+.muted{color:var(--sub);font-size:14px;line-height:1.55}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0}
+.row label{font-size:14px;color:var(--sub);min-width:64px}
+select{font:inherit;font-size:15px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.seg{display:inline-flex;background:var(--bg);border-radius:12px;padding:3px}
+.seg button{border:0;background:transparent;font:inherit;font-size:14px;padding:7px 12px;border-radius:9px;cursor:pointer;color:var(--sub)}
+.seg button.on{background:#fff;color:var(--ink);font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.btn{display:block;width:100%;border:0;border-radius:14px;padding:15px;font:inherit;font-size:17px;font-weight:800;cursor:pointer;background:var(--coral);color:#fff;margin-top:10px}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line);font-weight:700}
+.btn:disabled{opacity:.5}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mode{border:2px solid var(--line);border-radius:14px;padding:14px;background:#fff;cursor:pointer;text-align:left;font:inherit}
+.mode b{display:block;font-size:16px;margin-bottom:4px}
+.mode span{font-size:13px;color:var(--sub)}
+.mode.on{border-color:var(--coral);background:var(--coral-soft)}
+details summary{cursor:pointer;font-size:14px;color:var(--sub);margin-top:6px}
+input[type=range]{flex:1;accent-color:var(--coral)}
+.val{font-size:13px;color:var(--sub);min-width:52px;text-align:right}
+.hidden{display:none!important}
+
+/* 매트 그림 */
+.mat{display:grid;grid-template-columns:1fr 1fr;gap:8px;aspect-ratio:1/1;width:100%;max-width:420px;margin:0 auto;position:relative}
+.tile{border-radius:16px;opacity:.28;transition:opacity .12s, transform .12s;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+.tile.on{opacity:1;transform:scale(1.03)}
+.tile.flash{outline:6px solid var(--ink)}
+.t0{background:var(--red)}.t1{background:var(--yellow);color:#5b4500;text-shadow:none}.t2{background:var(--green)}.t3{background:var(--blue)}
+.mat canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.mat.small{max-width:200px;gap:5px}
+.mat.small .tile{font-size:14px;border-radius:10px}
+.status{text-align:center;font-size:15px;color:var(--sub);margin-top:10px;min-height:22px}
+.big{font-size:40px;font-weight:900;text-align:center}
+
+/* 보정 */
+.calib-step{display:flex;justify-content:center;gap:8px;margin:12px 0}
+.calib-step i{width:34px;height:34px;border-radius:10px;opacity:.3;display:block}
+.calib-step i.done{opacity:1}
+.calib-step i.now{opacity:1;outline:3px solid var(--ink);outline-offset:2px}
+.progress{height:10px;background:var(--bg);border-radius:6px;overflow:hidden;margin:12px 0}
+.progress>div{height:100%;width:0;background:var(--coral);transition:width .1s}
+
+/* 게임 */
+.hud{display:flex;justify-content:space-between;font-size:15px;color:var(--sub);margin-bottom:8px}
+.hud b{color:var(--ink);font-size:18px}
+.prompt{background:#fff;border-radius:22px;padding:26px 10px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:12px;position:relative;overflow:hidden}
+.word{font-size:min(26vw,140px);font-weight:900;line-height:1.1;letter-spacing:-2px}
+.rule{font-size:15px;color:var(--sub);margin-top:4px}
+.word .w{display:inline-block;margin:0 3vw}.word .w small{display:block;font-size:16px;color:var(--sub);letter-spacing:0;font-weight:700}
+.banner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff;font-size:44px;font-weight:900}
+.banner small{font-size:16px;color:var(--sub);font-weight:600;margin-top:8px}
+.mark{position:absolute;right:14px;top:10px;font-size:40px;font-weight:900;opacity:0;transition:opacity .15s}
+.mark.show{opacity:1}
+.feedback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:110px;font-weight:900;background:rgba(255,255,255,.85);opacity:0;transition:opacity .1s;pointer-events:none}
+.feedback.show{opacity:1}
+.timebar{height:8px;background:var(--bg);border-radius:6px;overflow:hidden;margin-top:14px}
+.timebar>div{height:100%;background:var(--coral);width:100%}
+.countdown{font-size:120px;font-weight:900;text-align:center;color:var(--coral);padding:40px 0}
+
+/* 결과 */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--bg);border-radius:14px;padding:14px;text-align:center}
+.stat b{display:block;font-size:30px;font-weight:900}
+.stat span{font-size:13px;color:var(--sub)}
+.tag{display:inline-block;background:var(--coral-soft);color:#c2410c;border-radius:20px;padding:4px 10px;font-size:13px;font-weight:700;margin-top:10px}
+.hist{font-size:13px;color:var(--sub);margin-top:6px;line-height:1.7}
+
+/* 자기 모습 */
+#selfwrap{position:fixed;right:12px;bottom:46px;width:min(38vw,240px);border-radius:14px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.18);background:#000;z-index:20}
+#selfwrap canvas{display:block;width:100%;height:auto}
+#selfwrap .lab{position:absolute;left:6px;top:6px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;padding:2px 6px;border-radius:6px}
+video{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.badge{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;font-size:12px;color:var(--sub);background:#fff;border:1px solid var(--line);border-radius:20px;padding:4px 12px;z-index:10}
+.warn{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:12px;padding:10px 12px;font-size:14px;margin-bottom:12px;line-height:1.5}
+</style>
+</head>
+<body>
+<video id="video" playsinline muted></video>
+<div class="wrap">
+  <header>
+    <h1>매트 판정기<small id="ver"></small></h1>
+    <div style="display:flex;gap:6px"><a class="iconbtn" href="../index.html" style="text-decoration:none;color:inherit">← 놀이터</a><button class="iconbtn" id="fsBtn" title="전체 화면 (F)">⛶ 전체 화면</button></div>
+  </header>
+
+  <!-- 시작 -->
+  <section id="home">
+    <div id="fileWarn" class="warn hidden">파일로 직접 열면 카메라가 막힐 수 있어요. GitHub Pages 주소(https)로 열어 주세요.</div>
+    <div class="card">
+      <h2>카메라로 어느 칸에 섰는지 판정해요</h2>
+      <p class="muted">휴대폰이나 태블릿을 매트 앞에 세워 <b>몸 전체와 4칸이 모두 보이게</b> 놓아 주세요. 영상은 저장하거나 보내지 않고 이 기기 안에서만 처리해요.</p>
+      <div class="row"><label>학년</label>
+        <select id="grade"><option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option><option value="4" selected>4학년</option><option value="5">5학년</option><option value="6">6학년</option></select>
+      </div>
+      <div class="row"><label>카메라</label>
+        <div class="seg" id="camSeg"><button data-v="user" class="on">앞 카메라</button><button data-v="environment">뒤 카메라</button></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>무엇을 할까요?</h2>
+      <div class="modes">
+        <button class="mode on" data-mode="stroop"><b>색깔 스트룹</b><span>놀이터 규칙 그대로, 카메라가 채점</span></button>
+        <button class="mode" data-mode="check"><b>칸 확인 연습</b><span>판정이 잘 되는지 자유롭게 뛰어 보기</span></button>
+      </div>
+      <div id="stroopOpts">
+        <div class="row"><label>보고 밟기</label>
+          <div class="seg" id="ruleSeg"><button data-v="ink" class="on">글자 색깔</button><button data-v="word">글자 읽기</button></div>
+        </div>
+        <div class="row"><label>모드</label>
+          <div class="seg" id="diffSeg"><button data-v="1" class="on">노말</button><button data-v="2">하드</button><button data-v="3">익스퍼트</button></div>
+        </div>
+        <div class="row"><label>속도</label>
+          <div class="seg" id="speedSeg"><button data-v="1.25">천천히</button><button data-v="1" class="on">보통</button><button data-v="0.8">빠르게</button></div>
+        </div>
+        <p class="muted">놀이터와 같은 규칙이에요: 10단계 × 30초(5분), 3단계부터 함정. 하드는 두 발로 두 칸, 익스퍼트는 왼발·오른발 칸이 정해져요. <b>5분을 끝까지 하면 완주 기록</b>이 돼요.</p>
+      </div>
+      <details>
+        <summary>판정 세부 설정</summary>
+        <div class="row"><label>머무는 시간</label><input type="range" id="stableMs" min="120" max="600" step="10" value="250"><span class="val" id="stableMsV"></span></div>
+        <div class="row"><label>경계 폭</label><input type="range" id="band" min="0" max="15" step="1" value="6"><span class="val" id="bandV"></span></div>
+        <p class="muted">머무는 시간: 두 발이 한 칸에 이만큼 머물러야 착지로 인정해요. 경계 폭: 칸 사이 선 근처는 판정하지 않는 폭이에요.</p>
+      </details>
+      <button class="btn" id="startBtn">카메라 켜고 시작</button>
+    </div>
+  </section>
+
+  <!-- 불러오는 중 -->
+  <section id="loading" class="hidden">
+    <div class="card"><p class="big">⏳</p><p class="status" id="loadMsg">카메라와 판정 모델을 준비하고 있어요…</p></div>
+  </section>
+
+  <!-- 보정 -->
+  <section id="calib" class="hidden">
+    <div class="card">
+      <h2>칸 위치 맞추기</h2>
+      <p class="muted" id="calibHelp">안내하는 색깔 칸 가운데에 <b>두 발로 서서</b> 잠깐 멈춰 주세요.</p>
+      <div class="calib-step" id="calibSteps"><i class="t0"></i><i class="t1"></i><i class="t2"></i><i class="t3"></i></div>
+      <p class="big" id="calibTarget">빨강 칸</p>
+      <div class="progress"><div id="calibBar"></div></div>
+      <p class="status" id="calibStatus">발이 보이지 않아요</p>
+      <button class="btn ghost hidden" id="useSavedBtn">지난번 위치 그대로 쓰기</button>
+      <button class="btn ghost" id="calibRestart">처음부터 다시</button>
+    </div>
+  </section>
+
+  <!-- 칸 확인 -->
+  <section id="check" class="hidden">
+    <div class="card">
+      <div class="hud"><span>착지 <b id="chkCount">0</b>번</span><span id="chkLast"></span></div>
+      <div class="mat" id="chkMat"><div class="tile t0">빨강</div><div class="tile t1">노랑</div><div class="tile t2">초록</div><div class="tile t3">파랑</div><canvas id="chkCanvas"></canvas></div>
+      <p class="status" id="chkStatus"></p>
+      <button class="btn ghost" id="recalib1">칸 위치 다시 맞추기</button>
+      <button class="btn ghost" id="home1">처음으로</button>
+    </div>
+  </section>
+
+  <!-- 스트룹 -->
+  <section id="game" class="hidden">
+    <div class="hud"><span><b id="gLevel">1단계</b> / 10</span><span>정답 <b id="gCorrect">0</b> / <b id="gAttempts">0</b></span><span>남은 <b id="gLeft">5:00</b></span></div>
+    <div id="countdown" class="countdown hidden">3</div>
+    <div class="prompt" id="promptCard">
+      <div class="word" id="word"></div>
+      <div class="rule" id="ruleText"></div>
+      <div class="timebar"><div id="timeBar"></div></div>
+      <div class="banner hidden" id="banner"></div>
+      <div class="mark" id="mark"></div>
+    </div>
+    <div class="card">
+      <div class="mat small" id="gMat"><div class="tile t0">빨강</div><div class="tile t1">노랑</div><div class="tile t2">초록</div><div class="tile t3">파랑</div><canvas id="gCanvas"></canvas></div>
+      <p class="status" id="gStatus"></p>
+      <button class="btn ghost" id="stopBtn">그만하기</button>
+    </div>
+  </section>
+
+  <!-- 결과 -->
+  <section id="result" class="hidden">
+    <div class="card">
+      <h2 id="rTitle">기록</h2>
+      <div class="stats">
+        <div class="stat"><b id="rCorrect">0</b><span>정답 착지</span></div>
+        <div class="stat"><b id="rAttempts">0</b><span>시도</span></div>
+        <div class="stat"><b id="rAcc">0%</b><span>정확도</span></div>
+        <div class="stat"><b id="rTime">0</b><span>플레이 시간</span></div>
+      </div>
+      <span class="tag">📷 카메라 판정 기록</span> <span class="tag" id="rDone"></span>
+      <p class="hist" id="rSent"></p>
+      <button class="btn" id="againBtn">한 번 더</button>
+      <button class="btn ghost" id="home2">처음으로</button>
+    </div>
+    <div class="card"><h2>이 기기 최근 기록</h2><div class="hist" id="history"></div></div>
+  </section>
+</div>
+
+<div id="selfwrap" class="hidden"><canvas id="self"></canvas><span class="lab">내 모습</span></div>
+<div class="badge">Made by 음악적체육인</div>
+
+<script type="module">
+const VERSION = 'v0.1.1';
+// 칸 번호: 0 왼위 빨강, 1 오위 노랑, 2 왼아래 초록, 3 오아래 파랑
+const TILE = ['빨강','노랑','초록','파랑'];
+const NAME = ['빨간색','노란색','초록색','파란색'];
+const TILE_COLOR = ['#F2392F','#FFD21F','#2FC653','#4C88FF'];
+const INK = ['#F2392F','#E6B800','#2FC653','#4C88FF'];   // 흰 바탕에서 노랑이 잘 보이게
+const TILE_CENTER = [{x:.25,y:.25},{x:.75,y:.25},{x:.25,y:.75},{x:.75,y:.75}];
+const MODE_KEY = {1:'normal',2:'hard',3:'expert'}, MODE_LABEL = {1:'노말',2:'하드',3:'익스퍼트'};
+// 놀이터 v1.9 색깔 스트룹과 같은 단계표
+const LEVELS=[{gap:3.0,trick:0},{gap:2.5,trick:0},{gap:2.2,trick:0.3},{gap:1.9,trick:0.45},{gap:1.65,trick:0.6},
+  {gap:1.45,trick:0.7},{gap:1.3,trick:0.8},{gap:1.15,trick:0.85},{gap:1.0,trick:0.9},{gap:0.85,trick:0.95}];
+const params = new URLSearchParams(location.search);
+const POST_MODE = params.get('mode') === 'post';
+const LS = params.get('test') ? 6 : 30, BN = 2.5, TOTAL = LS*10;   // ?test=1 이면 단계 6초(시험용)
+const $ = id => document.getElementById(id);
+const rnd = n => Math.floor(Math.random()*n);
+
+const S = { facing:'user', grade:+(params.get('grade')||4), mode:'stroop', rule:'ink', smode:1, speed:1,
+  stableMs:250, band:.06, H:null, Hinv:null, calibPts:null, screen:'home' };
+$('ver').textContent = VERSION;
+$('grade').value = String(Math.min(6,Math.max(1,S.grade||4)));
+if (location.protocol === 'file:') $('fileWarn').classList.remove('hidden');
+
+// ---------- 저장(막혀 있어도 동작) ----------
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+};
+const saved = store.get('matChecker.settings',{});
+if (saved.stableMs) S.stableMs = saved.stableMs;
+if (saved.band!=null) S.band = saved.band;
+$('stableMs').value = S.stableMs; $('band').value = Math.round(S.band*100);
+function showSettingVals(){ $('stableMsV').textContent=(S.stableMs/1000).toFixed(2)+'초'; $('bandV').textContent=Math.round(S.band*100)+'%'; }
+const saveSettings = () => store.set('matChecker.settings',{stableMs:S.stableMs,band:S.band});
+showSettingVals();
+$('stableMs').oninput = e => { S.stableMs=+e.target.value; showSettingVals(); saveSettings(); };
+$('band').oninput = e => { S.band=+e.target.value/100; showSettingVals(); saveSettings(); };
+
+// ---------- 화면 ----------
+function show(id){ for (const s of ['home','loading','calib','check','game','result']) $(s).classList.toggle('hidden', s!==id); S.screen=id; }
+function seg(id, cb){ $(id).querySelectorAll('button').forEach(b=>b.onclick=()=>{ $(id).querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); cb(b.dataset.v); }); }
+seg('camSeg', v=>S.facing=v); seg('ruleSeg', v=>S.rule=v); seg('diffSeg', v=>S.smode=+v); seg('speedSeg', v=>S.speed=+v);
+document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('on',x===b)); S.mode=b.dataset.mode; $('stroopOpts').classList.toggle('hidden',S.mode!=='stroop'); });
+$('grade').onchange = e => S.grade = +e.target.value;
+function toggleFs(){ if(!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(()=>{}); else document.exitFullscreen?.(); }
+$('fsBtn').onclick = toggleFs;
+addEventListener('keydown', e => { if ((e.key==='f'||e.key==='F') && !e.target.closest('input,select')) toggleFs(); });
+
+// ---------- 소리 ----------
+let actx=null;
+function beep(freq=880, ms=120, type='sine', vol=.18){
+  try{ actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(), g=actx.createGain(); o.type=type; o.frequency.value=freq;
+    g.gain.value=vol; o.connect(g); g.connect(actx.destination); o.start();
+    g.gain.exponentialRampToValueAtTime(.0001, actx.currentTime+ms/1000); o.stop(actx.currentTime+ms/1000+.02);
+  }catch(e){}
+}
+const sndOk = ()=>{ beep(784,80); setTimeout(()=>beep(1175,120),80); };
+const sndBad = ()=> beep(196,180,'square',.1);
+
+// ---------- 호모그래피(카메라 화면 → 매트 좌표) ----------
+function solve(A,b){ const n=b.length; A=A.map((r,i)=>[...r,b[i]]);
+  for(let c=0;c<n;c++){ let p=c; for(let r=c+1;r<n;r++) if(Math.abs(A[r][c])>Math.abs(A[p][c])) p=r;
+    if(Math.abs(A[p][c])<1e-12) return null; [A[c],A[p]]=[A[p],A[c]];
+    for(let r=0;r<n;r++){ if(r===c) continue; const f=A[r][c]/A[c][c]; for(let k=c;k<=n;k++) A[r][k]-=f*A[c][k]; } }
+  return A.map((r,i)=>r[n]/r[i]); }
+function computeH(src,dst){ const A=[],b=[];
+  for(let i=0;i<4;i++){ const {x,y}=src[i],{x:u,y:v}=dst[i];
+    A.push([x,y,1,0,0,0,-u*x,-u*y]); b.push(u); A.push([0,0,0,x,y,1,-v*x,-v*y]); b.push(v); }
+  return solve(A,b); }
+function applyH(H,p){ const w=H[6]*p.x+H[7]*p.y+1; return {x:(H[0]*p.x+H[1]*p.y+H[2])/w, y:(H[3]*p.x+H[4]*p.y+H[5])/w}; }
+function tileOf(m){
+  if (m.x<-.2||m.x>1.2||m.y<-.2||m.y>1.2) return 'out';
+  if (Math.abs(m.x-.5)<S.band || Math.abs(m.y-.5)<S.band) return 'edge';
+  return (m.y<.5?0:2) + (m.x<.5?0:1);
+}
+function setCalibration(pts){
+  for (let i=0;i<4;i++) for (let j=i+1;j<4;j++) if (Math.hypot(pts[i].x-pts[j].x, pts[i].y-pts[j].y) < .03) return false;
+  const H=computeH(pts,TILE_CENTER), Hinv=computeH(TILE_CENTER,pts);
+  if (!H||!Hinv) return false;
+  S.H=H; S.Hinv=Hinv; S.calibPts=pts; store.set('matChecker.calib.'+S.facing, pts); return true;
+}
+
+// ---------- 포즈 ----------
+let landmarker=null, stream=null, lastVideoTime=-1;
+async function initPose(){
+  const { PoseLandmarker, FilesetResolver } = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs');
+  const fs = await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');
+  const opts = d => ({ baseOptions:{ modelAssetPath:'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task', delegate:d }, runningMode:'VIDEO', numPoses:1 });
+  try { landmarker = await PoseLandmarker.createFromOptions(fs, opts('GPU')); }
+  catch(e){ landmarker = await PoseLandmarker.createFromOptions(fs, opts('CPU')); }
+}
+async function startCamera(){
+  if (stream) stream.getTracks().forEach(t=>t.stop());
+  try { stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:S.facing, width:{ideal:1280}, height:{ideal:720} }, audio:false }); }
+  catch(e){
+    if (e && (e.name==='NotAllowedError' || e.name==='SecurityError')) throw e;
+    // 조건을 빼고 한 번 더 (노트북 웹캠·다른 카메라 대비)
+    await new Promise(r=>setTimeout(r,600));
+    stream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false });
+  }
+  const v=$('video'); v.srcObject=stream; await v.play();
+}
+const vis = l => (l && (l.visibility==null || l.visibility>.45)) ? l : null;
+// side 0 = 학생의 왼발, 1 = 오른발 (카메라 방향과 상관없이 몸 기준)
+function footPoint(lm, side){
+  const a=vis(lm[27+side]); if(!a) return null;
+  const pts=[a, vis(lm[29+side]), vis(lm[31+side])].filter(Boolean);
+  return { x:pts.reduce((s,p)=>s+p.x,0)/pts.length, y:pts.reduce((s,p)=>s+p.y,0)/pts.length };
+}
+
+// ---------- 착지 추적 ----------
+// 자세 = 두 발이 한 칸(s) 또는 두 발이 서로 다른 두 칸(p). 같은 자세로 stableMs 머물면 착지 1번.
+const TR = { stable:null, cand:null, candSince:0, baseY:0, lastKey:null, lastBaseY:0, feet:null, mat:null, tiles:null };
+function resetTracker(){ Object.assign(TR,{stable:null,cand:null,lastKey:null}); }
+function poseKey(t){ if (typeof t[0]!=='number'||typeof t[1]!=='number') return null; return t[0]===t[1] ? 's'+t[0] : 'p'+t[0]+t[1]; }
+function track(lm, t){
+  const f=[footPoint(lm,0), footPoint(lm,1)];
+  TR.feet=f; TR.mat=null; TR.tiles=null;
+  if (!f[0]||!f[1]) { TR.cand=null; TR.stable=null; return {msg:'발이 보이지 않아요'}; }
+  const footY=(f[0].y+f[1].y)/2;
+  const hip = vis(lm[23])&&vis(lm[24]) ? (lm[23].y+lm[24].y)/2 : footY-.3;
+  const leg = Math.max(.08, footY-hip);
+  if (!S.H) return {msg:''};
+  const m=f.map(p=>applyH(S.H,p)); TR.mat=m;
+  const tiles=m.map(tileOf); TR.tiles=tiles;
+  let cand=poseKey(tiles);
+  // 같은 자리에서 제자리로 뛰어오른 순간은 공중으로 봄 → 내려오면 새 착지
+  if (cand!==null && cand===TR.lastKey && footY < TR.lastBaseY - .08*leg) cand=null;
+  if (TR.stable!==null){
+    if (cand!==TR.stable || footY < TR.baseY - .12*leg){ TR.stable=null; TR.cand=null; }
+    else { TR.baseY = TR.baseY*.9 + footY*.1; TR.lastBaseY = TR.baseY; }
+  } else {
+    if (cand===null) TR.cand=null;
+    else if (cand!==TR.cand){ TR.cand=cand; TR.candSince=t; }
+    else if (t-TR.candSince >= S.stableMs){ TR.stable=cand; TR.baseY=footY; TR.lastKey=cand; TR.lastBaseY=footY; onLanding(tiles[0],tiles[1],t); }
+  }
+  let msg;
+  if (TR.stable) msg = TR.stable[0]==='s' ? `두 발 모두 ${TILE[tiles[0]]}` : `왼발 ${TILE[tiles[0]]} · 오른발 ${TILE[tiles[1]]}`;
+  else msg = tiles.includes('out') ? '매트 밖이에요' : tiles.includes('edge') ? '칸 경계에 있어요' : '…';
+  return {msg};
+}
+
+// ---------- 그리기 ----------
+const selfC=$('self'), sctx=selfC.getContext('2d');
+function drawSelf(lm){
+  const v=$('video'); if(!v.videoWidth) return;
+  const w=320, h=Math.round(320*v.videoHeight/v.videoWidth);
+  if (selfC.width!==w||selfC.height!==h){ selfC.width=w; selfC.height=h; }
+  sctx.save(); if (S.facing==='user'){ sctx.translate(w,0); sctx.scale(-1,1); }
+  sctx.drawImage(v,0,0,w,h);
+  const P=p=>[p.x*w,p.y*h];
+  if (S.Hinv){
+    const c=[{x:0,y:0},{x:1,y:0},{x:1,y:1},{x:0,y:1}].map(p=>P(applyH(S.Hinv,p)));
+    sctx.strokeStyle='rgba(255,255,255,.8)'; sctx.lineWidth=2; sctx.beginPath(); c.forEach((p,i)=>i?sctx.lineTo(...p):sctx.moveTo(...p)); sctx.closePath(); sctx.stroke();
+    for (const [a,b] of [[{x:.5,y:0},{x:.5,y:1}],[{x:0,y:.5},{x:1,y:.5}]]){ sctx.beginPath(); sctx.moveTo(...P(applyH(S.Hinv,a))); sctx.lineTo(...P(applyH(S.Hinv,b))); sctx.stroke(); }
+  }
+  if (S.calibPts) S.calibPts.forEach((p,i)=>{ sctx.fillStyle=TILE_COLOR[i]; sctx.beginPath(); sctx.arc(...P(p),6,0,7); sctx.fill(); });
+  if (lm){
+    sctx.strokeStyle='rgba(255,255,255,.7)'; sctx.lineWidth=2;
+    for (const [a,b] of [[11,12],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],[11,13],[13,15],[12,14],[14,16]])
+      if(vis(lm[a])&&vis(lm[b])){ sctx.beginPath(); sctx.moveTo(...P(lm[a])); sctx.lineTo(...P(lm[b])); sctx.stroke(); }
+    (TR.feet||[]).forEach(f=>{ if(!f) return; sctx.fillStyle='#ff6b5b'; sctx.beginPath(); sctx.arc(...P(f),7,0,7); sctx.fill(); });
+  }
+  sctx.restore();
+}
+function drawMat(matId, canvasId){
+  const on = new Set(); const key = TR.stable || TR.cand;
+  if (key){ on.add(+key[1]); if (key[0]==='p') on.add(+key[2]); }
+  $(matId).querySelectorAll('.tile').forEach((el,i)=>el.classList.toggle('on', on.has(i)));
+  const c=$(canvasId), r=c.getBoundingClientRect(), dpr=devicePixelRatio||1;
+  if (c.width!==Math.round(r.width*dpr)){ c.width=Math.round(r.width*dpr); c.height=Math.round(r.height*dpr); }
+  const x=c.getContext('2d'); x.clearRect(0,0,c.width,c.height);
+  (TR.mat||[]).forEach((m,i)=>{ const px=Math.min(1.1,Math.max(-.1,m.x))*c.width, py=Math.min(1.1,Math.max(-.1,m.y))*c.height;
+    x.fillStyle='#1f2937'; x.strokeStyle='#fff'; x.lineWidth=3*dpr; x.beginPath(); x.arc(px,py,11*dpr,0,7); x.fill(); x.stroke();
+    x.fillStyle='#fff'; x.font=`800 ${11*dpr}px Pretendard,sans-serif`; x.textAlign='center'; x.textBaseline='middle'; x.fillText(i?'오':'왼',px,py); });
+}
+
+// ---------- 보정 ----------
+const CAL = { step:0, pts:[], samples:[], since:0 }, CAL_HOLD = 1200;
+function startCalib(){
+  CAL.step=0; CAL.pts=[]; CAL.samples=[]; S.H=null; S.Hinv=null; S.calibPts=null; resetTracker();
+  $('useSavedBtn').classList.toggle('hidden', !store.get('matChecker.calib.'+S.facing,null));
+  renderCalib(); show('calib');
+}
+function renderCalib(){
+  $('calibSteps').querySelectorAll('i').forEach((el,i)=>{ el.className='t'+i+(i<CAL.step?' done':'')+(i===CAL.step?' now':''); });
+  $('calibTarget').textContent=TILE[CAL.step]+' 칸'; $('calibTarget').style.color=INK[CAL.step];
+}
+function calibFrame(t){
+  const f=TR.feet;
+  if (!f||!f[0]||!f[1]){ CAL.samples=[]; $('calibBar').style.width='0'; $('calibStatus').textContent='발이 보이지 않아요. 몸 전체가 나오게 해 주세요'; return; }
+  const p={x:(f[0].x+f[1].x)/2, y:(f[0].y+f[1].y)/2};
+  if (CAL.pts.some(q=>Math.hypot(q.x-p.x,q.y-p.y)<.04)){ CAL.samples=[]; $('calibBar').style.width='0'; $('calibStatus').textContent=TILE[CAL.step]+' 칸으로 옮겨 주세요'; return; }
+  if (CAL.samples.length && Math.hypot(p.x-CAL.samples[0].x, p.y-CAL.samples[0].y) > .025) CAL.samples=[];
+  if (!CAL.samples.length) CAL.since=t;
+  CAL.samples.push(p);
+  const prog=Math.min(1,(t-CAL.since)/CAL_HOLD); $('calibBar').style.width=(prog*100)+'%';
+  $('calibStatus').textContent='그대로 멈춰 있어요…';
+  if (prog>=1){
+    const n=CAL.samples.length; CAL.pts.push({x:CAL.samples.reduce((s,q)=>s+q.x,0)/n, y:CAL.samples.reduce((s,q)=>s+q.y,0)/n});
+    CAL.samples=[]; beep(988,120); CAL.step++;
+    if (CAL.step>=4){
+      if (setCalibration(CAL.pts)){ sndOk(); enterMode(); }
+      else { $('calibStatus').textContent='위치가 이상해요. 처음부터 다시 맞춰 주세요'; sndBad(); CAL.step=0; CAL.pts=[]; renderCalib(); }
+    } else renderCalib();
+  }
+}
+$('calibRestart').onclick = startCalib;
+$('useSavedBtn').onclick = () => { const p=store.get('matChecker.calib.'+S.facing,null); if (p && setCalibration(p)) enterMode(); };
+
+// ---------- 칸 확인 연습 ----------
+let chkCount=0;
+function enterMode(){ resetTracker(); if (S.mode==='check'){ chkCount=0; $('chkCount').textContent='0'; $('chkLast').textContent=''; show('check'); } else startGame(); }
+$('recalib1').onclick = startCalib;
+
+// ---------- 색깔 스트룹 (놀이터 v1.9 규칙) ----------
+// 문제: m = 글자 뜻, k = 글자 색, t = 밟을 칸
+const G = { running:false, start:0, lvl:-1, nextAt:0, correct:0, attempts:0, cur:null, prev:{m:-1,k:-1,t:-1,key:''} };
+function pickOne(L, avoid){
+  for (let n=0;n<60;n++){
+    const m=rnd(4); let k=m;
+    if (Math.random()<L.trick){ do{ k=rnd(4); }while(k===m); }
+    const t = S.rule==='word' ? m : k;
+    if (avoid.includes(t)) continue;
+    if (S.smode===1 && m===G.prev.m && k===G.prev.k) continue;
+    return {m,k,t};
+  }
+  const t=[0,1,2,3].find(x=>!avoid.includes(x)); return {m:t,k:t,t};
+}
+const wHTML = (w,label) => `<span class="w" style="color:${INK[w.k]}">${NAME[w.m]}${label?`<small>${label}</small>`:''}</span>`;
+function showPrompt(now){
+  // 앞 문제에 착지하지 못했으면 놓친 것으로 셈
+  if (G.cur && !G.cur.done) miss();
+  const L=LEVELS[G.lvl], word=$('word');
+  word.style.fontSize = `calc(min(${S.smode>1?13:24}vw,${S.smode>1?90:140}px) * ${(1-0.5*G.lvl/9).toFixed(3)})`;
+  if (S.smode>=2){
+    let a,b;
+    for (let n=0;n<30;n++){ a=pickOne(L,[]); b=pickOne(L,[a.t]); const key=[a.t,b.t].sort().join(); if(key!==G.prev.key){ G.prev={key,m:-1,k:-1,t:-1}; break; } }
+    word.innerHTML = S.smode===3 ? wHTML(a,'왼발')+wHTML(b,'오른발') : wHTML(a)+wHTML(b);
+    G.cur = { targets:[a.t,b.t], shown:now, done:false };
+  } else {
+    const w=pickOne(L,[G.prev.t]); G.prev=w; word.innerHTML=wHTML(w);
+    G.cur = { targets:[w.t], shown:now, done:false };
+  }
+}
+function scoreLanding(L, R){
+  const t=G.cur.targets;
+  if (S.smode===1) return L===t[0] && R===t[0];
+  if (S.smode===2) return L!==R && t.includes(L) && t.includes(R);
+  return L===t[0] && R===t[1];                         // 익스퍼트: 왼발·오른발 칸이 정해짐
+}
+function mark(ok){ const el=$('mark'); el.textContent=ok?'⭕':'❌'; el.style.color=ok?'var(--ok)':'var(--bad)'; el.classList.add('show'); clearTimeout(mark.tm); mark.tm=setTimeout(()=>el.classList.remove('show'),450); }
+function miss(){ G.attempts++; G.cur.done=true; mark(false); sndBad(); updHud(); }
+function updHud(){ $('gCorrect').textContent=G.correct; $('gAttempts').textContent=G.attempts; }
+const fmt = s => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+function startGame(){
+  Object.assign(G,{running:false,lvl:-1,nextAt:0,correct:0,attempts:0,cur:null,prev:{m:-1,k:-1,t:-1,key:''}});
+  updHud(); $('gLevel').textContent='1단계'; $('gLeft').textContent=fmt(TOTAL);
+  $('ruleText').innerHTML = (S.rule==='word'?'글자를 <b>읽고</b> 밟아요':'글자 <b>색깔</b>을 보고 밟아요') + (S.smode===2?' · 두 발로 두 칸':S.smode===3?' · 왼발·오른발 칸 따로':'');
+  $('word').innerHTML=''; $('banner').classList.add('hidden');
+  $('promptCard').classList.add('hidden'); $('countdown').classList.remove('hidden');
+  show('game');
+  let n=3; $('countdown').textContent=n; beep(660,120);
+  const iv=setInterval(()=>{ if (S.screen!=='game'){ clearInterval(iv); return; } n--;
+    if(n>0){ $('countdown').textContent=n; beep(660,120); }
+    else { clearInterval(iv); $('countdown').classList.add('hidden'); $('promptCard').classList.remove('hidden'); beep(1046,200);
+      G.running=true; G.start=performance.now(); } },1000);
+}
+function gameFrame(now){
+  if (!G.running) return;
+  const T=(now-G.start)/1000;
+  if (T>=TOTAL){ endGame(true); return; }
+  const li=Math.min(9,Math.floor(T/LS));
+  if (li!==G.lvl){
+    if (G.cur && !G.cur.done) miss();
+    G.cur=null; G.lvl=li; G.prev={m:-1,k:-1,t:-1,key:''}; $('gLevel').textContent=(li+1)+'단계';
+    if (li>0){ const b=$('banner'); b.innerHTML=`${li+1}단계<small>${LEVELS[li].trick>0&&LEVELS[li-1].trick===0?'이제 함정이 나와요!':li===9?'마지막 단계! 최고 속도로!':'조금 더 빨라져요'}</small>`; b.classList.remove('hidden'); beep(988,160); }
+  }
+  const t=T-li*LS;
+  if (li>0 && t<BN) G.nextAt=li*LS+BN;
+  else { $('banner').classList.add('hidden'); if (T>=G.nextAt){ showPrompt(now); G.nextAt=T+LEVELS[li].gap*S.speed*(S.smode>=2?1.25:1); } }
+  $('gLeft').textContent=fmt(TOTAL-T);
+  if (G.cur){ const span=LEVELS[li].gap*S.speed*(S.smode>=2?1.25:1)*1000; $('timeBar').style.width=Math.max(0,100-(now-G.cur.shown)/span*100)+'%'; }
+}
+function onLanding(L, R, t){
+  if (S.screen==='check'){
+    chkCount++; $('chkCount').textContent=chkCount; beep(880,80);
+    $('chkLast').textContent = L===R ? `방금: 두 발 ${TILE[L]}` : `방금: 왼 ${TILE[L]} · 오 ${TILE[R]}`;
+    const tiles=$('chkMat').querySelectorAll('.tile'); for (const i of new Set([L,R])){ tiles[i].classList.add('flash'); setTimeout(()=>tiles[i].classList.remove('flash'),250); }
+  }
+  // 문제마다 첫 착지 한 번만 채점
+  if (S.screen==='game' && G.running && G.cur && !G.cur.done && t>G.cur.shown+120){
+    const ok=scoreLanding(L,R); G.attempts++; if(ok) G.correct++; G.cur.done=true; mark(ok); ok?sndOk():sndBad(); updHud();
+  }
+}
+$('stopBtn').onclick = () => { if (G.running) endGame(false); else show('home'); };
+
+function endGame(completed){
+  G.running=false; G.cur=null;
+  const playSeconds=Math.round(Math.min(TOTAL,(performance.now()-G.start)/1000));
+  const rec = { source:'mat-checker', version:VERSION, game:'stroop', difficulty:MODE_KEY[S.smode], rule:S.rule, speed:S.speed,
+    grade:S.grade, levelReached:G.lvl+1, correct:G.correct, attempts:G.attempts,
+    accuracy: G.attempts ? Math.round(G.correct/G.attempts*1000)/10 : 0,
+    playSeconds, completed: !!completed && !params.get('test'), cameraJudged:true, endedAt:new Date().toISOString() };
+  const hist=store.get('matChecker.history',[]); hist.unshift(rec); store.set('matChecker.history',hist.slice(0,20));
+  $('rTitle').textContent=`색깔 스트룹 · ${MODE_LABEL[S.smode]} · ${S.grade}학년`;
+  $('rCorrect').textContent=rec.correct; $('rAttempts').textContent=rec.attempts; $('rAcc').textContent=rec.accuracy+'%';
+  $('rTime').textContent = playSeconds>=60 ? `${Math.floor(playSeconds/60)}분 ${playSeconds%60}초` : playSeconds+'초';
+  $('rDone').textContent = rec.completed ? '🏁 완주 (정확도 순위 대상)' : `${rec.levelReached}단계에서 멈춤`;
+  $('rSent').textContent='';
+  if (POST_MODE){ const target = window.opener || (window.parent!==window ? window.parent : null);
+    if (target){ try{ target.postMessage({type:'matResult', ...rec}, '*'); $('rSent').textContent='✅ 기록을 프로그램으로 보냈어요'; }catch(e){} } }
+  $('history').innerHTML = hist.slice(0,10).map(h=>{ const d=new Date(h.endedAt);
+    return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} · ${MODE_LABEL[{normal:1,hard:2,expert:3}[h.difficulty]]||h.difficulty} · 정답 ${h.correct}/${h.attempts} (${h.accuracy}%) · ${h.playSeconds}초${h.completed?' · 🏁':''}`; }).join('<br>') || '아직 없어요';
+  sndOk(); show('result');
+}
+$('againBtn').onclick = () => startGame();
+for (const id of ['home1','home2']) $(id).onclick = () => { G.running=false; show('home'); };
+
+// ---------- 시작 ----------
+$('startBtn').onclick = async () => {
+  show('loading');
+  try{
+    $('loadMsg').textContent='카메라를 켜고 있어요…'; await startCamera();
+    if (!landmarker){ $('loadMsg').textContent='판정 모델을 불러오고 있어요… (처음엔 조금 걸려요)'; await initPose(); }
+    $('selfwrap').classList.remove('hidden');
+    startCalib(); loop();
+  }catch(e){
+    console.error(e);
+    const n = e && e.name;
+    $('loadMsg').innerHTML =
+      (n==='NotAllowedError'||n==='SecurityError') ? (location.protocol==='file:' ? '파일로 열면 카메라를 쓸 수 없어요.<br>GitHub Pages 주소(https)로 열어 주세요.' : '카메라 권한이 막혀 있어요.<br>주소창 왼쪽 자물쇠 → 카메라 → 허용으로 바꿔 주세요.')
+      : (n==='NotReadableError'||n==='AbortError') ? '카메라를 다른 곳에서 쓰고 있어요.<br>줌·카메라 앱이나 카메라를 쓰는 다른 탭(줄넘기 판정기 등)을 닫고 다시 시도해 주세요.'
+      : (n==='NotFoundError'||n==='OverconstrainedError') ? '카메라를 찾지 못했어요. 카메라가 연결돼 있는지 확인해 주세요.'
+      : '준비하지 못했어요: '+((e&&e.message)||e);
+    setTimeout(()=>show('home'),6000);
+  }
+};
+let looping=false;
+function loop(){
+  if (looping) return; looping=true;
+  const step=()=>{
+    const v=$('video'), t=performance.now();
+    if (landmarker && v.readyState>=2 && v.currentTime!==lastVideoTime){
+      lastVideoTime=v.currentTime;
+      let lm=null; try{ lm=landmarker.detectForVideo(v,t).landmarks?.[0]||null; }catch(e){}
+      let info;
+      if (lm) info=track(lm,t); else { TR.feet=null; TR.mat=null; TR.cand=null; TR.stable=null; info={msg:'사람이 보이지 않아요'}; }
+      drawSelf(lm);
+      if (S.screen==='calib') calibFrame(t);
+      if (S.screen==='check'){ drawMat('chkMat','chkCanvas'); $('chkStatus').textContent=info.msg; }
+      if (S.screen==='game'){ drawMat('gMat','gCanvas'); $('gStatus').textContent=info.msg; }
+    }
+    if (S.screen==='game') gameFrame(t);
+    requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+</script>
+</body>
+</html>
