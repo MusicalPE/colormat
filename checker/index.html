@@ -118,6 +118,30 @@ body.wide .wrap{max-width:1180px}
 .checks li b{display:inline-flex;width:24px;height:24px;border-radius:50%;align-items:center;justify-content:center;font-size:13px;background:var(--bg);color:var(--sub)}
 .checks li.ok b{background:var(--ok);color:#fff}
 .checks li.ok{color:var(--ink)} .checks li:not(.ok){color:var(--sub)}
+/* 게임 화면 */
+.seg{flex-wrap:wrap}
+.modes{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.mode{padding:11px 12px}.mode b{font-size:15px}.mode span{font-size:12px}
+.stage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:150px}
+.hmat{display:grid;grid-template-columns:1fr 1fr;gap:6px;width:min(52vw,250px);aspect-ratio:1/1}
+.hmat i{border-radius:12px;opacity:.18;display:flex;align-items:center;justify-content:center;font-style:normal;transition:opacity .12s}
+.hmat i.on{opacity:1}.hmat i.now{opacity:.55;outline:3px dashed var(--ink);outline-offset:-3px}
+.hmat .h0{background:var(--red)}.hmat .h1{background:var(--yellow)}.hmat .h2{background:var(--green)}.hmat .h3{background:var(--blue)}
+.hmat b{background:rgba(17,24,39,.72);color:#fff;border-radius:8px;padding:2px 8px;font-size:14px;text-align:center;word-break:keep-all}.hmat b:empty{display:none}
+.hmat.ans{width:min(80vw,420px)}.hmat.ans i{opacity:1}.hmat.ans i.off{opacity:.15}
+.hmat.ans b{background:rgba(255,255,255,.92);color:var(--ink);font-size:clamp(17px,5.4vw,34px);font-weight:900;padding:4px 10px;line-height:1.15}
+.hmat.lava i{opacity:1}.hmat.lava i.hot{background:radial-gradient(circle at 30% 35%,#ffd23a 0,#ff7a1a 22%,#c22a00 52%,#3a0800 85%)!important}
+.hmat.lava i.warn{animation:lvw .25s ease-in-out infinite alternate}@keyframes lvw{from{transform:scale(1)}to{transform:scale(.94)}}
+.blk{display:flex;gap:8px;width:100%;height:min(30vh,240px)}.blk div{flex:1;border-radius:18px;background:#111;display:flex;justify-content:center;padding-top:10px}
+.blk small{font-size:18px;font-weight:900;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.big2{font-size:min(15vw,86px);font-weight:900;line-height:1.1;text-align:center;word-break:keep-all}
+.sub2{font-size:18px;font-weight:700;color:var(--sub);text-align:center}
+.qtext{font-size:min(9vw,50px);font-weight:900;text-align:center;word-break:keep-all;line-height:1.2}
+.cap{font-size:24px;font-weight:900}
+.slots{display:flex;gap:6px}.slots span{width:28px;height:28px;border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px}.slots span.done{background:var(--ink);color:#fff}
+.pics{display:flex;gap:6vw;justify-content:center}.pic{text-align:center}.pic .e{font-size:min(26vw,140px);line-height:1.05}.pic .n{font-size:20px;font-weight:800}.pic .n small{color:var(--bad);font-size:14px;margin-left:4px}
+.arrowbox{position:relative;display:flex;flex-direction:column;align-items:center}.arrowbox svg{width:min(38vw,190px);height:auto}
+.arrowbox .trick,.arrowbox .stay{font-size:30px;font-weight:900;color:var(--bad)}
 .warn{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:12px;padding:10px 12px;font-size:14px;margin-bottom:12px;line-height:1.5}
 </style>
 </head>
@@ -131,7 +155,7 @@ body.wide .wrap{max-width:1180px}
 
   <!-- 시작 -->
   <section id="home">
-    <div id="whoCard" class="card hidden" style="background:#FFF1EE"><h2 id="whoName"></h2><p class="muted">이 기록은 <b>우리 학교 시트</b>에 저장돼요. 끝까지(5분) 뛰면 완주 기록이에요.</p></div>
+    <div id="whoCard" class="card hidden" style="background:#FFF1EE"><h2 id="whoName"></h2><p class="muted">이 기록은 <b>우리 학교 시트</b>에 저장돼요. 끝까지 하면 <b>완주 기록</b>이에요.</p></div>
     <div id="fileWarn" class="warn hidden">파일로 직접 열면 카메라가 막힐 수 있어요. GitHub Pages 주소(https)로 열어 주세요.</div>
     <div class="card">
       <h2>카메라로 어느 칸에 섰는지 판정해요</h2>
@@ -165,22 +189,8 @@ body.wide .wrap{max-width:1180px}
 
     <div class="card">
       <h2>무엇을 할까요?</h2>
-      <div class="modes">
-        <button class="mode on" data-mode="stroop"><b>색깔 스트룹</b><span>놀이터 규칙 그대로, 카메라가 채점</span></button>
-        <button class="mode" data-mode="check"><b>칸 확인 연습</b><span>판정이 잘 되는지 자유롭게 뛰어 보기</span></button>
-      </div>
-      <div id="stroopOpts">
-        <div class="row"><label>보고 밟기</label>
-          <div class="seg" id="ruleSeg"><button data-v="ink" class="on">글자 색깔</button><button data-v="word">글자 읽기</button></div>
-        </div>
-        <div class="row"><label>모드</label>
-          <div class="seg" id="diffSeg"><button data-v="1" class="on">노말</button><button data-v="2">하드</button><button data-v="3">익스퍼트</button></div>
-        </div>
-        <div class="row"><label>속도</label>
-          <div class="seg" id="speedSeg"><button data-v="1.25">천천히</button><button data-v="1" class="on">보통</button><button data-v="0.8">빠르게</button></div>
-        </div>
-        <p class="muted">놀이터와 같은 규칙이에요: 10단계 × 30초(5분), 3단계부터 함정. <b>다음 글자가 나오기 전에 정답 칸에 있으면 정답</b>이에요(옮겨 가다 다른 칸을 밟아도 괜찮아요). 하드는 두 발로 두 칸, 익스퍼트는 왼발·오른발 칸이 정해져요. <b>5분을 끝까지 하면 완주 기록</b>이 돼요.</p>
-      </div>
+      <div class="modes" id="modes"></div>
+      <div id="gameOpts"></div>
       <details>
         <summary>판정 세부 설정</summary>
         <div class="row"><label>머무는 시간</label><input type="range" id="stableMs" min="120" max="600" step="10" value="250"><span class="val" id="stableMsV"></span></div>
@@ -239,10 +249,10 @@ body.wide .wrap{max-width:1180px}
 
   <!-- 스트룹 -->
   <section id="game" class="hidden">
-    <div class="hud"><span><b id="gLevel">1단계</b> / 10</span><span>정답 <b id="gCorrect">0</b> / <b id="gAttempts">0</b></span><span>남은 <b id="gLeft">5:00</b></span></div>
+    <div class="hud"><span><b id="gLevel">1단계</b> <span id="gOf"></span></span><span>정답 <b id="gCorrect">0</b> / <b id="gAttempts">0</b></span><span><b id="gLeft"></b></span></div>
     <div id="countdown" class="countdown hidden">3</div>
     <div class="prompt" id="promptCard">
-      <div class="word" id="word"></div>
+      <div class="stage" id="stage"></div>
       <div class="rule" id="ruleText"></div>
       <div class="timebar"><div id="timeBar"></div></div>
       <div class="banner hidden" id="banner"></div>
@@ -280,14 +290,13 @@ body.wide .wrap{max-width:1180px}
 <div class="badge">Made by 음악적체육인</div>
 
 <script type="module">
-const VERSION = 'v0.6.3';
+const VERSION = 'v0.7.0';
 // 칸 번호: 0 왼위 빨강, 1 오위 노랑, 2 왼아래 초록, 3 오아래 파랑
 const TILE = ['빨강','노랑','초록','파랑'];
 const NAME = ['빨간색','노란색','초록색','파란색'];
 const TILE_COLOR = ['#F2392F','#FFD21F','#2FC653','#4C88FF'];
 const INK = ['#F2392F','#E6B800','#2FC653','#4C88FF'];   // 흰 바탕에서 노랑이 잘 보이게
 const TILE_CENTER = [{x:.25,y:.25},{x:.75,y:.25},{x:.25,y:.75},{x:.75,y:.75}];
-const MODE_KEY = {1:'normal',2:'hard',3:'expert'}, MODE_LABEL = {1:'노말',2:'하드',3:'익스퍼트'};
 // 놀이터 v1.9 색깔 스트룹과 같은 단계표
 const LEVELS=[{gap:3.0,trick:0},{gap:2.5,trick:0},{gap:2.2,trick:0.3},{gap:1.9,trick:0.45},{gap:1.65,trick:0.6},
   {gap:1.45,trick:0.7},{gap:1.3,trick:0.8},{gap:1.15,trick:0.85},{gap:1.0,trick:0.9},{gap:0.85,trick:0.95}];
@@ -296,11 +305,11 @@ const POST_MODE = params.get('mode') === 'post';
 // 우리 학교 프로그램(맨 앞 주소)에서 열었을 때: s = 학교 시트 껍데기 주소, sid = 학생, who = 이름
 const SCHOOL = (params.get('s') && params.get('sid')) ? { s: params.get('s'), sid: params.get('sid'), who: params.get('who') || '' } : null;
 const BACK = (() => { try { const u = new URL(params.get('back') || '', location.href); return u.origin === location.origin ? u.href : ''; } catch (e) { return ''; } })();
-const LS = params.get('test') ? 6 : 30, BN = 2.5, TOTAL = LS*10;   // ?test=1 이면 단계 6초(시험용)
+const TEST = !!params.get('test');   // ?test=1 이면 단계를 아주 짧게(시험용)
 const $ = id => document.getElementById(id);
 const rnd = n => Math.floor(Math.random()*n);
 
-const S = { facing:'user', grade:+(params.get('grade')||4), mode:'stroop', rule:'ink', smode:1, speed:1,
+const S = { facing:'user', grade:+(params.get('grade')||4), mode:'stroop', opts:{},
   stableMs:250, band:.06, H:null, Hinv:null, calibPts:null, screen:'home' };
 $('ver').textContent = VERSION;
 $('grade').value = String(Math.min(6,Math.max(1,S.grade||4)));
@@ -327,17 +336,12 @@ function show(id){ document.body.classList.toggle('wide', id==='setup');
   const sw=$('selfwrap'), slot = id==='game' ? $('gSelfSlot') : id==='check' ? $('cSelfSlot') : document.body;
   if (sw && sw.parentNode!==slot) slot.appendChild(sw); for (const s of ['home','loading','setup','calib','check','game','result']) $(s).classList.toggle('hidden', s!==id); S.screen=id; }
 function seg(id, cb){ $(id).querySelectorAll('button').forEach(b=>b.onclick=()=>{ $(id).querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); cb(b.dataset.v); }); }
-seg('camSeg', v=>S.facing=v); seg('ruleSeg', v=>S.rule=v); seg('diffSeg', v=>S.smode=+v); seg('speedSeg', v=>S.speed=+v);
-function preset(id, v){ const b=[...$(id).querySelectorAll('button')].find(x=>x.dataset.v===String(v)); if (b) b.click(); }
-if (/^(ink|word)$/.test(params.get('rule')||'')) preset('ruleSeg', params.get('rule'));
-if (/^[123]$/.test(params.get('mode')||'')) preset('diffSeg', params.get('mode'));
-if (/^(1\.25|1|0\.8)$/.test(params.get('speed')||'')) preset('speedSeg', params.get('speed'));
+seg('camSeg', v=>S.facing=v);
 if (SCHOOL){
   $('whoCard').classList.remove('hidden'); $('whoName').textContent = '🙋 ' + SCHOOL.who + ' 학생으로 기록돼요';
   $('gradeRow').classList.add('hidden');
 }
 if (BACK){ $('backBtn').href = BACK; $('backBtn').classList.remove('hidden'); }
-document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('on',x===b)); S.mode=b.dataset.mode; $('stroopOpts').classList.toggle('hidden',S.mode!=='stroop'); });
 $('grade').onchange = e => S.grade = +e.target.value;
 function toggleFs(){ if(!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(()=>{}); else document.exitFullscreen?.(); }
 $('fsBtn').onclick = toggleFs;
@@ -429,8 +433,8 @@ function footPoint(lm, side){
 // 발마다 따로 본다: 한 자리에 stableMs 머문 발 = 디딘 발, 움직이거나 무릎을 굽혀 든 발 = 든 발(공중).
 // 자세: s(두 발 같은 칸) · p(두 발 서로 다른 칸) · o(한 발만 칸을 딛고 다른 발은 들었거나 칸 밖·경계)
 // 새 자세가 되면 착지 1번. 다만 공중에 뜨지 않고 원래 딛던 칸 안에서만 바뀐 것(발 하나 들기 등)은 착지로 안 셈.
-const TR = { stable:null, feet:null, mat:null, tiles:null, ft:[{},{}], air:false, lastTiles:[], lifted:[false,false] };
-function resetTracker(){ Object.assign(TR,{stable:null, ft:[{},{}], air:false, lastTiles:[]}); }
+const TR = { stable:null, lastKey:null, feet:null, mat:null, tiles:null, raw:[null,null], lm:null, ft:[{},{}], air:false, lastTiles:[], lifted:[false,false] };
+function resetTracker(){ Object.assign(TR,{stable:null, lastKey:null, ft:[{},{}], air:false, lastTiles:[], raw:[null,null]}); }
 const d2 = (a,b) => Math.hypot(a.x-b.x, a.y-b.y);
 function legBent(lm, side){ // 무릎을 굽혀 다리가 짧아졌는지
   const h=vis(lm[23+side]), k=vis(lm[25+side]), a=vis(lm[27+side]);
@@ -447,7 +451,7 @@ function poseOf(pl){ // pl: 발마다 디딘 칸(숫자) / 'air' / 'edge' / 'out
 const tilesOfKey = k => !k ? [] : k[0]==='p' ? [+k[1],+k[2]] : [+k[1]];
 function track(lm, t){
   const f=[footPoint(lm,0), footPoint(lm,1)];
-  TR.feet=f; TR.mat=null; TR.tiles=null;
+  TR.feet=f; TR.mat=null; TR.tiles=null; TR.raw=[null,null]; TR.lm=lm;
   if (!f[0]&&!f[1]) { TR.stable=null; TR.air=true; return {msg:'발이 보이지 않아요'}; }
   const hipY = vis(lm[23])&&vis(lm[24]) ? (lm[23].y+lm[24].y)/2 : null;
   const footY = (f[0]&&f[1]) ? (f[0].y+f[1].y)/2 : (f[0]||f[1]).y;
@@ -464,6 +468,7 @@ function track(lm, t){
     const lifted = o && legBent(lm,i) && p.y < o.y - .05*leg;
     TR.lifted[i]=!!lifted;
     if (lifted){ st.moveStart=null; return 'air'; }
+    if (t-st.since >= 100){ const r=tileOf(TR.mat[i]); TR.raw[i]=typeof r==='number'?r:null; }   // 잠깐(0.1초)만 머물러도 보는 칸 (용암 매트)
     if (t-st.since < S.stableMs) return mv();
     st.moveStart=null;
     return tileOf(TR.mat[i]);
@@ -474,7 +479,7 @@ function track(lm, t){
   if (key && key!==TR.stable){
     const tl=tilesOfKey(key);
     const quiet = !TR.air && tl.every(x=>TR.lastTiles.includes(x));  // 원래 칸 안에서 발만 바꿈
-    TR.stable=key;
+    TR.stable=key; TR.lastKey=key;
     let used=true;
     if (!quiet) used = onLanding({ kind:key[0], L:typeof pl[0]==='number'?pl[0]:null, R:typeof pl[1]==='number'?pl[1]:null, tiles:tl, prev:TR.lastTiles.slice() }, t) !== false;
     if (used) TR.lastTiles=tl;
@@ -698,95 +703,533 @@ let chkCount=0;
 function enterMode(){ resetTracker(); if (S.mode==='check'){ chkCount=0; $('chkCount').textContent='0'; $('chkLast').textContent=''; show('check'); } else startGame(); }
 $('recalib1').onclick = startSetup;
 
-// ---------- 색깔 스트룹 (놀이터 v1.9 규칙) ----------
-// 문제: m = 글자 뜻, k = 글자 색, t = 밟을 칸
-const G = { running:false, start:0, lvl:-1, nextAt:0, correct:0, attempts:0, cur:null, prev:{m:-1,k:-1,t:-1,key:''} };
-function pickOne(L, avoid){
-  for (let n=0;n<60;n++){
-    const m=rnd(4); let k=m;
-    if (Math.random()<L.trick){ do{ k=rnd(4); }while(k===m); }
-    const t = S.rule==='word' ? m : k;
-    if (avoid.includes(t)) continue;
-    if (S.smode===1 && m===G.prev.m && k===G.prev.k) continue;
-    return {m,k,t};
-  }
-  const t=[0,1,2,3].find(x=>!avoid.includes(x)); return {m:t,k:t,t};
-}
-const wHTML = (w,label) => `<span class="w" style="color:${INK[w.k]}">${NAME[w.m]}${label?`<small>${label}</small>`:''}</span>`;
-function showPrompt(now){
-  // 앞 문제에 착지하지 못했으면 놓친 것으로 셈
-  if (G.cur && !G.cur.done) miss();
-  const L=LEVELS[G.lvl], word=$('word');
-  word.style.fontSize = `calc(min(${S.smode>1?13:24}vw,${S.smode>1?90:140}px) * ${(1-0.5*G.lvl/9).toFixed(3)})`;
-  if (S.smode>=2){
-    let a,b;
-    for (let n=0;n<30;n++){ a=pickOne(L,[]); b=pickOne(L,[a.t]); const key=[a.t,b.t].sort().join(); if(key!==G.prev.key){ G.prev={key,m:-1,k:-1,t:-1}; break; } }
-    word.innerHTML = S.smode===3 ? wHTML(a,'왼발')+wHTML(b,'오른발') : wHTML(a)+wHTML(b);
-    G.cur = { targets:[a.t,b.t], shown:now, done:false };
-  } else {
-    const w=pickOne(L,[G.prev.t]); G.prev=w; word.innerHTML=wHTML(w);
-    G.cur = { targets:[w.t], shown:now, done:false };
-  }
-}
-// 채점: true/false = 정답/오답, null = 아직 판정하지 않음(옮겨 가는 중)
-function scoreLanding(e){
-  const t=G.cur.targets, came = x => e.prev.includes(x);
-  if (S.smode===1){
-    if (e.kind==='s' || e.kind==='o') return e.tiles[0]===t[0];   // 한 발이라도 정답 칸(다른 발은 들었거나 같은 칸)
-    // 두 발이 다른 칸: 한 발이 원래 있던 칸이면 옮겨 가는 중 → 기다림, 아니면 걸쳐 서기 → 오답
-    if (came(e.L) !== came(e.R)) return null;
-    return false;
-  }
-  if (e.kind==='o') return null;                                      // 하드·익스퍼트는 두 발이 다 디뎌야 판정
-  if (e.kind==='s') return false;
-  if (S.smode===2) return t.includes(e.L) && t.includes(e.R);
-  return e.L===t[0] && e.R===t[1];                                    // 익스퍼트: 왼발·오른발 칸이 정해짐
-}
+// ---------- 게임 공통 ----------
+// 칸 번호: 0 빨강(왼위) 1 노랑(오위) 2 초록(왼아래) 3 파랑(오아래)
+// 문제(cur): kind = one(한 발이라도 그 칸) · pair(두 발로 두 칸, 어느 발이든) · lr(왼발·오른발 칸이 정해짐)
+//            judge = any(시간 안에 한 번이라도 맞으면 정답) · end(시간이 끝날 때 서 있는 칸으로 판정)
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle = a => { a=a.slice(); for (let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const fmt = s => `${Math.floor(Math.max(0,s)/60)}:${String(Math.floor(Math.max(0,s)%60)).padStart(2,'0')}`;
+const MATCH = {
+  one: (c,k) => !!k && (k[0]==='s'||k[0]==='o') && +k[1]===c.t[0],
+  pair:(c,k) => !!k && k[0]==='p' && c.t.includes(+k[1]) && c.t.includes(+k[2]),
+  lr:  (c,k) => !!k && k[0]==='p' && +k[1]===c.t[0] && +k[2]===c.t[1],
+};
+const GM = { def:null, inst:null, o:null, running:false, start:0, T:0, correct:0, attempts:0, cur:null, level:1 };
 function mark(ok){ const el=$('mark'); el.textContent=ok?'⭕':'❌'; el.style.color=ok?'var(--ok)':'var(--bad)'; el.classList.add('show'); clearTimeout(mark.tm); mark.tm=setTimeout(()=>el.classList.remove('show'),450); }
-function miss(){ G.attempts++; G.cur.done=true; mark(false); sndBad(); updHud(); }
-function updHud(){ $('gCorrect').textContent=G.correct; $('gAttempts').textContent=G.attempts; }
-const fmt = s => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+function updHud(){ $('gCorrect').textContent=GM.correct; $('gAttempts').textContent=GM.attempts; }
+function score(ok){ GM.attempts++; if (ok) GM.correct++; mark(ok); (ok?sndOk:sndBad)(); updHud(); }
+function closeCur(){
+  const c=GM.cur; GM.cur=null; if (!c || c.done) return; c.done=true;
+  // 끝날 때 판정: 지금 디딘 자세 (마침 뛰어오른 순간이면 바로 앞 자세)
+  score(c.judge==='end' ? MATCH[c.kind](c, TR.stable || ((TR.tiles||[]).includes('moving') ? TR.lastKey : null)) : false);
+}
+function pop(el){ if (!el) return; el.animate?.([{transform:'scale(.82)'},{transform:'scale(1.06)'},{transform:'scale(1)'}],{duration:260,easing:'ease-out'}); }
+const hintMat = (cls='') => `<div class="hmat ${cls}">${[0,1,2,3].map(i=>`<i class="h${i}"><b></b></i>`).join('')}</div>`;
+// list: null = 모두 밝게, [] = 모두 흐리게, [{c, label, style}] = 그 칸만 밝게 (style 'off'면 글자만 보이고 흐리게)
+function hintShow(el, list){
+  if (!el) return;
+  [...el.children].forEach((cell,i)=>{
+    const its = list ? list.filter(x=>x.c===i) : [];
+    const lit = list===null || its.some(x=>x.style!=='off');
+    cell.className = 'h'+i + (lit?' on':'') + its.map(x=>x.style&&x.style!=='off'?' '+x.style:'').join('') + (its.some(x=>x.style==='off')?' off':'');
+    cell.querySelector('b').textContent = its.map(x=>x.label||'').filter(Boolean).join(' · ');
+  });
+}
+const api = {
+  stage(html){ const s=$('stage'); s.innerHTML=html; return s; },
+  hud(a,b){ $('gLevel').textContent=a; $('gOf').textContent=b||''; },
+  left(t){ $('gLeft').textContent=t; },
+  level(n){ GM.level=n; },
+  banner(t,sub){ const b=$('banner'); b.innerHTML=esc(t)+(sub?`<small>${esc(sub)}</small>`:''); if (b.classList.contains('hidden')){ b.classList.remove('hidden'); beep(988,160); } },
+  hideBanner(){ $('banner').classList.add('hidden'); },
+  ask(spec){ closeCur(); GM.cur=Object.assign({ judge:'any', done:false, at:GM.now, from:GM.T }, spec); },
+  close: closeCur, score,
+  bar(f){ $('timeBar').style.width = Math.max(0,Math.min(1,f))*100+'%'; },
+  finish(){ endGame(true); },
+};
+
+// 놀이터 단계 진행(30초 단계 · 단계 사이 안내)을 함께 쓰는 게임용
+function leveled(T, st, NL, LS, BN, note){
+  const li=Math.min(NL-1,Math.floor(T/LS));
+  if (li!==st.lvl){ st.lvl=li; api.level(li+1); api.hud(`${li+1}단계`,`/ ${NL}`); if (li>0) api.banner(`${li+1}단계`, note(li)); if (st.onLevel) st.onLevel(li); }
+  const t=T-li*LS;
+  if ((li>0 || st.bnAll) && t<BN){ st.nextAt=li*LS+BN; return {li, ready:false}; }
+  api.hideBanner();
+  return {li, ready:T>=st.nextAt};
+}
+
+// ================= 게임들 (놀이터 v1.9 규칙 그대로) =================
+const NAME_SHORT = TILE;
+const CK = [1,2,3,0];   // 놀이터 색 번호(노랑0 초록1 파랑2 빨강3) → 판정기 칸 번호
+const GDEF = {};
+
+// ----- 색깔 점프 -----
+GDEF.basic = { name:'색깔 점프', sub:'화면 색 칸으로 점프',
+  desc:'화면이 한 가지 색으로 바뀌면 그 색 칸으로 점프해요. 8단계 × 30초(4분). <b>다음 색이 나오기 전에 그 칸에 있으면 정답</b>. "2개"는 왼쪽 색 = 왼발, 오른쪽 색 = 오른발.',
+  options:[{id:'mode',label:'나오는 색',choices:[['1','1개'],['2','2개 (왼발·오른발)']]},
+           {id:'diff',label:'빠르기',choices:[['easy','천천히'],['normal','보통'],['hard','빠르게']],def:'normal'}],
+  diffKey:o=>o.diff+(o.mode==='2'?'2':''), ruleKey:o=>'c'+o.mode,
+  rule:o=>o.mode==='2'?'왼쪽 색은 <b>왼발</b>, 오른쪽 색은 <b>오른발</b>':'화면 색 칸으로 점프',
+  create(o){
+    const GAPS={easy:[3.0,2.7,2.4,2.2,2.0,1.8,1.6,1.4],normal:[2.5,2.2,1.9,1.7,1.5,1.3,1.1,0.95],hard:[2.0,1.7,1.5,1.3,1.1,0.95,0.85,0.75]}[o.diff];
+    const two=o.mode==='2', NL=8, LS=TEST?6:30, BN=2.5, TOTAL=NL*LS;
+    const st=api.stage(`<div class="blk">${two?'<div><small>왼발</small></div><div><small>오른발</small></div>':'<div></div>'}</div>`);
+    const halves=[...st.querySelectorAll('.blk>div')], S0={lvl:-1,nextAt:0}; let prev=[];
+    return { update(T){
+      if (T>=TOTAL) return api.finish();
+      const {li,ready}=leveled(T,S0,NL,LS,BN,i=>i===NL-1?'마지막 단계! 최고 속도로!':'조금 더 빨라져요');
+      if (ready){
+        let cs;
+        for (let n=0;n<40;n++){ cs=two?[rnd(4),rnd(4)]:[rnd(4)]; if (two&&cs[0]===cs[1]) continue; if (cs.some((c,i)=>c===prev[i])) continue; break; }
+        if (two && cs[0]===cs[1]) cs[1]=(cs[0]+1)%4;
+        prev=cs; cs.forEach((c,i)=>{ halves[i].style.background=TILE_COLOR[c]; pop(halves[i]); });
+        S0.nextAt=T+GAPS[li]*(two?1.2:1);
+        api.ask({ kind:two?'lr':'one', t:cs, until:S0.nextAt });
+      }
+      api.left(fmt(TOTAL-T));
+    } };
+  } };
+
+// ----- 색깔 스트룹 -----
+GDEF.stroop = { name:'색깔 스트룹', sub:'글자 색깔·뜻 보고 밟기',
+  desc:'10단계 × 30초(5분), 3단계부터 함정. <b>다음 글자가 나오기 전에 정답 칸에 있으면 정답</b>이에요(옮겨 가다 다른 칸을 밟아도 괜찮아요). 하드는 두 발로 두 칸, 익스퍼트는 왼발·오른발 칸이 정해져요.',
+  options:[{id:'rule',label:'보고 밟기',choices:[['ink','글자 색깔'],['word','글자 읽기']]},
+           {id:'mode',label:'모드',choices:[['1','노말'],['2','하드'],['3','익스퍼트']]},
+           {id:'speed',label:'속도',choices:[['1.25','천천히'],['1','보통'],['0.8','빠르게']],def:'1'}],
+  diffKey:o=>({1:'normal',2:'hard',3:'expert'})[o.mode], ruleKey:o=>o.rule, speedOf:o=>+o.speed,
+  rule:o=>(o.rule==='word'?'글자를 <b>읽고</b> 밟아요':'글자 <b>색깔</b>을 보고 밟아요')+(o.mode==='2'?' · 두 발로 두 칸':o.mode==='3'?' · 왼발·오른발 칸 따로':''),
+  create(o){
+    const mode=+o.mode, speed=+o.speed, rule=o.rule, NL=10, LS=TEST?6:30, BN=2.5, TOTAL=NL*LS;
+    const word=api.stage('<div class="word"></div>').firstChild, S0={lvl:-1,nextAt:0};
+    let prev={m:-1,k:-1,t:-1,key:''};
+    S0.onLevel=()=>{ prev={m:-1,k:-1,t:-1,key:''}; };
+    function pickOne(L,avoid){
+      for (let n=0;n<60;n++){
+        const m=rnd(4); let k=m;
+        if (Math.random()<L.trick){ do{ k=rnd(4); }while(k===m); }
+        const t = rule==='word' ? m : k;
+        if (avoid.includes(t)) continue;
+        if (mode===1 && m===prev.m && k===prev.k) continue;
+        return {m,k,t};
+      }
+      const t=[0,1,2,3].find(x=>!avoid.includes(x)); return {m:t,k:t,t};
+    }
+    const wHTML = (w,label) => `<span class="w" style="color:${INK[w.k]}">${NAME[w.m]}${label?`<small>${label}</small>`:''}</span>`;
+    return { update(T){
+      if (T>=TOTAL) return api.finish();
+      const {li,ready}=leveled(T,S0,NL,LS,BN,i=>LEVELS[i].trick>0&&LEVELS[i-1].trick===0?'이제 함정이 나와요!':i===9?'마지막 단계! 최고 속도로!':'조금 더 빨라져요');
+      if (ready){
+        const L=LEVELS[li];
+        word.style.fontSize = `calc(min(${mode>1?13:24}vw,${mode>1?90:140}px) * ${(1-0.5*li/9).toFixed(3)})`;
+        S0.nextAt=T+L.gap*speed*(mode>=2?1.25:1);
+        if (mode>=2){
+          let a,b;
+          for (let n=0;n<30;n++){ a=pickOne(L,[]); b=pickOne(L,[a.t]); const key=[a.t,b.t].sort().join(); if (key!==prev.key){ prev={key,m:-1,k:-1,t:-1}; break; } }
+          word.innerHTML = mode===3 ? wHTML(a,'왼발')+wHTML(b,'오른발') : wHTML(a)+wHTML(b);
+          api.ask({ kind:mode===3?'lr':'pair', t:[a.t,b.t], until:S0.nextAt });
+        } else {
+          const w=pickOne(L,[prev.t]); prev=w; word.innerHTML=wHTML(w);
+          api.ask({ kind:'one', t:[w.t], until:S0.nextAt });
+        }
+        pop(word);
+      }
+      api.left(fmt(TOTAL-T));
+    } };
+  } };
+
+// ----- 기억력 스텝 -----
+GDEF.memory = { name:'기억력 스텝', sub:'반짝인 순서대로 밟기',
+  desc:'"잘 보세요!" 동안 매트에 반짝이는 순서를 외워요(움직이지 않기). "따라 밟아요!"가 나오면 <b>삐 소리에 맞춰 하나씩</b> 순서대로 밟아요. 한 칸마다 그 박자 안에 그 칸에 있으면 정답. 라운드를 모두 마치면 완주.',
+  options:[{id:'diff',label:'난이도',choices:[['easy','쉬움 (2개부터)'],['normal','보통 (3개부터)'],['hard','어려움 (4개부터)']],def:'normal'},
+           {id:'rounds',label:'라운드',choices:[['6','6'],['8','8'],['10','10']],def:'8'}],
+  diffKey:o=>o.diff, ruleKey:o=>'r'+o.rounds,
+  rule:()=>'순서를 기억해서 밟기',
+  create(o){
+    const cfg={easy:{start:2,show:0.95},normal:{start:3,show:0.75},hard:{start:4,show:0.58}}[o.diff];
+    const R=TEST?2:+o.rounds, lenOf=r=>cfg.start+Math.floor(r/2), stepDo=cfg.show*1.7;
+    const st=api.stage(`<div class="cap"></div>${hintMat()}<div class="slots"></div>`);
+    const cap=st.querySelector('.cap'), hm=st.querySelector('.hmat'), slots=st.querySelector('.slots');
+    let r=0, seq=[], phase='', p0=0, shown=-999;
+    function newSeq(n){ const s=[]; for (let i=0;i<n;i++){ let c; do{ c=rnd(4); }while(c===s[i-1]); s.push(c); } return s; }
+    function setSlots(n,filled,numbers){ slots.innerHTML=Array.from({length:n},(_,i)=>`<span class="${i<filled?'done':''}">${numbers&&i<filled?i+1:''}</span>`).join(''); }
+    function startRound(T){ seq=newSeq(lenOf(r)); phase='intro'; p0=T; shown=-999;
+      api.banner(`${r+1}라운드`,`${seq.length}개를 기억해요`); api.level(r+1); api.hud(`${r+1}라운드`,`/ ${R}`); api.left(`${seq.length}개 기억하기`);
+      cap.textContent=''; hintShow(hm,[]); setSlots(seq.length,0); api.bar(1); }
+    const go=(ph,T)=>{ phase=ph; p0=T; shown=-999; };
+    const D=()=>({intro:2.2, show:0.5+seq.length*cfg.show, ready:1.3, do:seq.length*stepDo+0.9, check:0.4+seq.length*0.5+2.2});
+    return { update(T){
+      if (!phase) startRound(T);
+      const el=T-p0, d=D();
+      if (phase==='intro'){ if (el>=d.intro){ api.hideBanner(); go('show',T); cap.textContent='잘 보세요! (움직이지 않아요)'; } }
+      else if (phase==='show'){
+        const k=Math.floor((el-0.5)/cfg.show), on=el>=0.5 && ((el-0.5)%cfg.show)<cfg.show*0.7, key=on?k:-1000-k;
+        if (k<seq.length && key!==shown){ shown=key; if (on){ hintShow(hm,[{c:seq[k]}]); beep([523,659,784,1046][seq[k]],140,'triangle',.14); setSlots(seq.length,k+1); } else hintShow(hm,[]); }
+        api.bar(1-el/d.show);
+        if (el>=d.show){ go('ready',T); hintShow(hm,null); cap.textContent='따라 밟아요!'; setSlots(seq.length,0); beep(660,200,'triangle'); }
+      }
+      else if (phase==='ready'){ if (el>=d.ready) go('do',T); }
+      else if (phase==='do'){
+        const k=Math.floor(el/stepDo);
+        if (k!==shown && k<seq.length){ shown=k; setSlots(seq.length,k+1,true); beep(880,70,'triangle'); api.ask({ kind:'one', t:[seq[k]], until:p0+(k+1)*stepDo }); }
+        if (el>=d.do){ api.close(); go('check',T); cap.textContent='정답 확인'; hintShow(hm,[]); }
+      }
+      else if (phase==='check'){
+        const k=Math.min(seq.length,Math.floor((el-0.4)/0.5)+1);
+        if (el>=0.4 && k!==shown){ shown=k; hintShow(hm,seq.slice(0,k).map((c,i)=>({c,label:String(i+1)}))); }
+        if (el>=d.check){ r++; if (r>=R) return api.finish(); startRound(T); }
+      }
+    } };
+  } };
+
+// ----- 방향 점프 -----
+const DIRS=[{dr:-1,dc:0,ang:-90},{dr:1,dc:0,ang:90},{dr:0,dc:-1,ang:180},{dr:0,dc:1,ang:0},
+  {dr:-1,dc:-1,ang:-135},{dr:-1,dc:1,ang:-45},{dr:1,dc:-1,ang:135},{dr:1,dc:1,ang:45}];
+GDEF.dir = { name:'방향 점프', sub:'화살표 방향 옆 칸으로',
+  desc:'단계마다 알려 주는 칸에서 출발해, 화살표 방향의 옆 칸으로 점프해요. 8단계 × 30초(4분). <b>다음 화살표 전에 그 칸에 있으면 정답</b>. "제자리!"는 화살표가 바뀔 때 그 칸에 그대로 있으면 정답.',
+  options:[{id:'diff',label:'난이도',choices:[['easy','쉬움 (도착 칸 표시)'],['normal','보통 (대각선)'],['hard','어려움 (함정)']],def:'normal'}],
+  diffKey:o=>o.diff, rule:()=>'화살표 방향으로 한 칸 점프',
+  create(o){
+    const D={easy:{gaps:[3.4,3.1,2.8,2.6,2.4,2.2,2.0,1.8],diag:false,hint:'full',trick:false},
+             normal:{gaps:[3.0,2.7,2.4,2.2,2.0,1.8,1.6,1.45],diag:true,hint:'pos',trick:false},
+             hard:{gaps:[2.6,2.3,2.1,1.9,1.7,1.55,1.4,1.25],diag:true,hint:'none',trick:true}}[o.diff];
+    const NL=8, LS=TEST?8:30, BN=3, TOTAL=NL*LS;
+    const st=api.stage(`<div class="arrowbox"><div class="trick" hidden>반대로!</div><div class="stay" hidden>제자리!</div><svg viewBox="-50 -50 100 100" aria-hidden="true"><path d="M-40,-13 H8 V-32 L44,0 L8,32 V13 H-40 Z" fill="#1f2937"/></svg></div>${D.hint!=='none'?hintMat():''}`);
+    const svg=st.querySelector('svg'), path=svg.querySelector('path'), trickEl=st.querySelector('.trick'), stayEl=st.querySelector('.stay'), hm=st.querySelector('.hmat');
+    const S0={lvl:-1,nextAt:0,bnAll:true}; let pos=0, lastStart=-1;
+    const rc=p=>[Math.floor(p/2),p%2];
+    S0.onLevel=li=>{ let s; do{ s=rnd(4); }while(s===lastStart); lastStart=s; pos=s;
+      api.banner(li===0?'출발!':`${li+1}단계`,`${TILE[s]} 칸에서 시작해요`); svg.style.visibility='hidden'; trickEl.hidden=true; stayEl.hidden=true;
+      hintShow(hm,[{c:s,label:'출발'}]); };
+    function next(T){
+      const [r,c]=rc(pos);
+      if (D.trick && S0.lvl>=4 && Math.random()<0.12){
+        svg.style.visibility='hidden'; trickEl.hidden=true; stayEl.hidden=false; pop(stayEl);
+        hintShow(hm, D.hint==='full'?[{c:pos,label:'제자리'}]:[{c:pos,label:'지금',style:'now'}]);
+        api.ask({ kind:'one', t:[pos], until:S0.nextAt, judge:'end' }); return;
+      }
+      const valid=DIRS.filter((d,i)=>(D.diag||i<4) && r+d.dr>=0 && r+d.dr<2 && c+d.dc>=0 && c+d.dc<2);
+      const m=valid[rnd(valid.length)], trick=D.trick && S0.lvl>=2 && Math.random()<0.3;
+      const from=pos; pos=(r+m.dr)*2+(c+m.dc);
+      path.setAttribute('transform',`rotate(${trick?m.ang+180:m.ang})`);
+      svg.style.visibility='visible'; stayEl.hidden=true; trickEl.hidden=!trick; pop(svg);
+      if (D.hint==='full') hintShow(hm,[{c:from,label:'지금',style:'now'},{c:pos,label:'여기!'}]);
+      else if (D.hint==='pos') hintShow(hm,[{c:from,label:'지금',style:'now'}]);
+      api.ask({ kind:'one', t:[pos], until:S0.nextAt });
+    }
+    return { update(T){
+      if (T>=TOTAL) return api.finish();
+      const {li,ready}=leveled(T,S0,NL,LS,BN,()=>'');
+      if (ready){ S0.nextAt=T+D.gaps[li]; next(T); }
+      api.left(fmt(TOTAL-T));
+    } };
+  } };
+
+// ----- 퀴즈 점프 -----
+const PE_QUIZ=[
+  ['축구는 한 팀에 몇 명이 경기해요?','11명','9명','10명','12명'],['농구는 한 팀에 몇 명이 코트에서 경기해요?','5명','4명','6명','7명'],
+  ['배구는 한 팀에 몇 명이 코트에서 경기해요?','6명','5명','7명','9명'],['야구에서 수비하는 선수는 몇 명이에요?','9명','7명','8명','11명'],
+  ['핸드볼은 한 팀에 몇 명이 코트에서 경기해요?','7명','5명','6명','9명'],['올림픽 오륜기의 고리는 몇 개예요?','5개','4개','6개','7개'],
+  ['올림픽은 몇 년마다 열려요?','4년','2년','3년','5년'],['마라톤의 거리는?','42.195km','40km','21km','50km'],
+  ['태권도가 처음 시작된 나라는?','대한민국','일본','중국','태국'],['배드민턴에서 치는 공의 이름은?','셔틀콕','테니스공','탁구공','배구공'],
+  ['탁구 한 게임은 몇 점을 먼저 내면 이겨요?','11점','15점','21점','25점'],['배드민턴 한 게임은 몇 점을 먼저 내면 이겨요?','21점','11점','15점','25점'],
+  ['농구에서 3점 선 밖에서 넣은 슛은 몇 점?','3점','1점','2점','4점'],['농구 자유투를 넣으면 몇 점?','1점','2점','3점','0점'],
+  ['2단 뛰기는 한 번 뛸 때 줄이 몇 번 돌아요?','2번','1번','3번','4번'],['달리기에서 손을 땅에 짚고 하는 출발은?','크라우칭 스타트','스탠딩 스타트','점프 스타트','롤링 스타트'],
+  ['PAPS에서 심폐지구력을 재는 종목은?','왕복오래달리기','50m 달리기','윗몸말아올리기','제자리멀리뛰기'],['PAPS에서 유연성을 재는 종목은?','앉아윗몸앞으로굽히기','왕복오래달리기','악력','50m 달리기'],
+  ['운동 전에 준비운동을 하는 가장 큰 이유는?','다치지 않으려고','배가 고파서','점수를 받으려고','시간이 남아서'],['운동하고 나서 몸을 천천히 푸는 운동은?','정리운동','준비운동','본운동','달리기'],
+];
+function numOpts(ans,cands){ const set=new Set(); cands.concat([ans+1,ans-1,ans+2,ans-2,ans+10,ans-10,ans+3]).forEach(v=>{ if (v!==ans && v>=0 && set.size<3) set.add(v); }); return [...set].map(String); }
+const RR=(lo,hi)=>lo+rnd(hi-lo+1);
+const QGEN={
+  add:L=>{ const plus=Math.random()<.5; let a,b;
+    if (L===1){ if (plus){ a=RR(1,9); b=RR(1,10-a); } else { a=RR(2,10); b=RR(1,a-1); } }
+    else if (L===2){ if (plus){ a=RR(2,9); b=RR(11-a,9); } else { a=RR(11,18); b=RR(a-9,9); } }
+    else { if (plus){ a=RR(12,89); b=RR(11,99-a>11?99-a:11); } else { a=RR(30,99); b=RR(11,a-5); } }
+    const ans=plus?a+b:a-b; return [`${a} ${plus?'+':'−'} ${b} = ?`,String(ans),...numOpts(ans,[ans+1,ans-1,ans+10,ans-10,plus?a-b:a+b])]; },
+  times:L=>{ const a=L===1?[2,3,4,5][rnd(4)]:L===2?RR(2,9):RR(6,9), b=L===3?RR(3,9):RR(1,9), p=a*b;
+    if (L===3 && Math.random()<.4) return [`${a} × ? = ${p}`,String(b),...numOpts(b,[b+1,b-1,a])];
+    return [`${a} × ${b} = ?`,String(p),...numOpts(p,[a*(b+1),(a+1)*b,a*(b-1),p+1])]; },
+  muldiv:L=>{ if (Math.random()<.5){ const a=L===1?RR(11,30):L===2?RR(12,99):RR(12,40), b=L===1?RR(2,5):L===2?RR(2,9):RR(11,25), p=a*b; return [`${a} × ${b} = ?`,String(p),...numOpts(p,[p+b,p-b,p+10,p-10,p+a])]; }
+    const d=L===1?RR(2,9):L===2?RR(2,9):RR(3,9), q=L===1?RR(2,9):L===2?RR(11,30):RR(Math.ceil(100/d),99), n=d*q; return [`${n} ÷ ${d} = ?`,String(q),...numOpts(q,[q+1,q-1,q+10,q-10,d])]; },
+};
+GDEF.quiz = { name:'퀴즈 점프', sub:'정답 칸으로 점프',
+  desc:'문제와 함께 네 칸에 보기가 나와요. <b>생각 시간이 끝날 때 정답 칸에 서 있으면 정답</b>(한 발이라도 정답 칸). 문제를 모두 풀면 완주.',
+  options:[{id:'set',label:'문제',choices:[['add','덧셈·뺄셈'],['times','구구단'],['muldiv','곱셈·나눗셈'],['pe','체육 상식']],def:'times'},
+           {id:'mlevel',label:'수학 난이도',choices:[['1','쉬움'],['2','보통'],['3','어려움']],def:'2',showIf:o=>o.set!=='pe'},
+           {id:'think',label:'생각 시간',choices:[['8','8초'],['6','6초'],['4','4초']],def:'6'},
+           {id:'count',label:'문제 수',choices:[['10','10'],['15','15'],['20','20']],def:'15'}],
+  diffKey:o=>o.set==='pe'?'pe':o.set+(o.mlevel||'2'), ruleKey:o=>'t'+o.think, rule:()=>'생각 시간이 끝날 때 정답 칸에!',
+  create(o){
+    const think=+o.think, count=TEST?3:+o.count;
+    let list;
+    if (o.set==='pe') list=shuffle(PE_QUIZ).slice(0,count);
+    else { list=[]; const seen=new Set(); for (let n=0;list.length<count && n<500;n++){ const q=QGEN[o.set](+o.mlevel||2); if (!seen.has(q[0])){ seen.add(q[0]); list.push(q); } } }
+    const N=list.length;
+    const st=api.stage(`<div class="qtext"></div>${hintMat('ans')}<div class="sub2"></div>`);
+    const qtext=st.querySelector('.qtext'), hm=st.querySelector('.hmat'), qans=st.querySelector('.sub2');
+    let qi=-1, phase='', p0=0, correct=0, opts=[], lastSec=-1;
+    function load(i,T){
+      qi=i; phase='think'; p0=T; lastSec=-1;
+      const q=list[i]; opts=shuffle([{t:q[1],ok:true},...q.slice(2,5).map(t=>({t,ok:false}))]); while (opts.length<4) opts.push({t:'',ok:false});
+      correct=opts.findIndex(x=>x.ok);
+      qtext.textContent=q[0]; pop(qtext); qans.textContent='';
+      hintShow(hm, opts.map((x,c)=>({c,label:x.t})));
+      api.level(i+1); api.hud(`${i+1}번`,`/ ${N}`);
+      api.ask({ kind:'one', t:[correct], until:T+think, judge:'end' });
+    }
+    return { update(T){
+      if (!phase) load(0,T);
+      const el=T-p0;
+      if (phase==='think'){
+        const s=Math.ceil(think-el); if (s!==lastSec){ lastSec=s; if (s>0&&s<=3) beep(990,60,'square',.1); }
+        api.left(`${Math.max(0,s)}초`);
+        if (el>=think){ phase='reveal'; p0=T; hintShow(hm, opts.map((x,c)=>({c,label:x.t,style:c===correct?'':'off'}))); qans.textContent=`정답은 ${TILE[correct]} 칸!`; api.left(''); }
+      } else if (phase==='reveal' && el>=2.8){
+        if (qi+1>=N) return api.finish();
+        load(qi+1,T);
+      }
+    } };
+  } };
+
+// ----- 연상 점프 -----
+const ITEMS=[
+  ['🍌','바나나',0],['🐥','병아리',0],['🌻','해바라기',0],['🍋','레몬',0],['🌽','옥수수',0],['🧀','치즈',0],['⭐','별',0],
+  ['🐸','개구리',1],['🥒','오이',1],['🍀','네잎클로버',1],['🥦','브로콜리',1],['🐢','거북이',1],['🌲','나무',1],['🦖','공룡',1],
+  ['🐳','고래',2],['🌊','파도',2],['💧','물방울',2],['👖','청바지',2],['🐬','돌고래',2],['🦋','파란 나비',2],['🧢','파란 모자',2],
+  ['🍎','사과',3],['🍓','딸기',3],['🍅','토마토',3],['🌶️','고추',3],['🚒','소방차',3],['🍒','체리',3],['❤️','하트',3],
+];
+const ITEMS2=[
+  ['🍉','수박',[1,3]],['🌍','지구',[2,1]],['🌷','튤립',[3,1]],['🌹','장미',[3,1]],['🎄','크리스마스 트리',[1,3]],['🍍','파인애플',[0,1]],
+  ['🏖️','바닷가',[2,0]],['🇰🇷','태극기',[3,2]],['🦜','앵무새',[3,1]],['🐠','열대어',[0,2]],['🌻','해바라기 꽃과 줄기',[0,1]],['🚦','신호등',[3,1]],
+  ['🍋','레몬과 잎',[0,1]],['🐝','꿀벌',[0,3]],['🌈','무지개 끝',[3,2]],['🥝','키위',[1,3]],['🍑','복숭아',[0,3]],['🧜','인어',[2,1]],
+];
+GDEF.assoc = { name:'연상 점프', sub:'그림 보고 떠오르는 색',
+  desc:'바나나를 보면 노랑, 개구리를 보면 초록처럼 떠오르는 색 칸을 밟아요. 8단계 × 30초(4분). <b>다음 그림 전에 그 칸에 있으면 정답</b>. 그림 2개나 두 색 물건은 두 발로 두 칸.',
+  options:[{id:'diff',label:'난이도',choices:[['easy','쉬움 (칸 표시)'],['normal','보통'],['hard','어려움 (2개 동시)']],def:'easy'},
+           {id:'speed',label:'속도',choices:[['1.25','천천히'],['1','보통'],['0.8','빠르게']],def:'1'},
+           {id:'multi',label:'두 색 물건',choices:[['off','안 넣기'],['on','넣기']],def:'off'}],
+  diffKey:o=>o.diff, ruleKey:o=>'m'+o.multi, speedOf:o=>+o.speed, rule:()=>'그림을 보고 떠오르는 색 칸으로',
+  create(o){
+    const GAPS=[3.6,3.2,2.9,2.6,2.3,2.0,1.8,1.6], NL=8, LS=TEST?6:30, BN=2.5, TOTAL=NL*LS, speed=+o.speed;
+    const POOL=(o.multi==='on'?ITEMS.concat(ITEMS2):ITEMS).map(it=>({e:it[0],n:it[1],cs:(Array.isArray(it[2])?it[2]:[it[2]]).map(c=>CK[c])}));
+    const easy=o.diff==='easy', two=o.diff==='hard';
+    const st=api.stage(`<div class="pics"></div>${easy?hintMat():''}`), pics=st.querySelector('.pics'), hm=st.querySelector('.hmat');
+    const S0={lvl:-1,nextAt:0}; let prevKey='', recent=[];
+    S0.onLevel=li=>pics.style.setProperty('--s',(1-0.4*li/(NL-1)).toFixed(3));
+    function pickItem(avoidC, single){
+      for (let n=0;n<80;n++){ const it=POOL[rnd(POOL.length)]; if ((single&&it.cs.length>1)||it.cs.some(c=>avoidC.includes(c))||recent.includes(it.n)) continue; recent.push(it.n); if (recent.length>8) recent.shift(); return it; }
+      return POOL.find(it=>!it.cs.some(c=>avoidC.includes(c))&&(!single||it.cs.length===1));
+    }
+    return { update(T){
+      if (T>=TOTAL) return api.finish();
+      const {li,ready}=leveled(T,S0,NL,LS,BN,i=>i===NL-1?'마지막 단계!':'조금 더 빨라져요');
+      if (ready){
+        let its;
+        for (let n=0;n<30;n++){ const a=pickItem([]); its=(two&&a.cs.length===1)?[a,pickItem(a.cs,true)]:[a]; const key=its.map(i=>i.cs.join('+')).sort().join(); if (key!==prevKey||n>20){ prevKey=key; break; } recent.pop(); }
+        pics.innerHTML=its.map(it=>`<div class="pic"><div class="e" style="font-size:calc(min(${its.length>1?20:26}vw,${its.length>1?110:140}px) * var(--s,1))">${it.e}</div><div class="n">${esc(it.n)}${it.cs.length>1?' <small>두 발!</small>':''}</div></div>`).join('');
+        const tiles=its.flatMap(it=>it.cs);
+        if (easy) hintShow(hm, tiles.map(c=>({c,label:'여기!'})));
+        pop(pics);
+        S0.nextAt=T+GAPS[li]*speed*(two?1.25:1);
+        api.ask({ kind:tiles.length>1?'pair':'one', t:tiles, until:S0.nextAt });
+      }
+      api.left(fmt(TOTAL-T));
+    } };
+  } };
+
+// ----- 손발 트위스터 -----
+const LIMBS=['왼발','오른발','왼손','오른손'];
+function limbTile(l){
+  const lm=TR.lm; if (!lm || !S.H) return null;
+  let p;
+  if (l<2) p=footPoint(lm,l);
+  else { const w=vis(lm[15+l-2]), f=vis(lm[19+l-2]); p = w&&f ? {x:(w.x+f.x)/2, y:(w.y+f.y)/2} : (f||w); }
+  if (!p) return null;
+  const t=tileOf(applyH(S.H,p)); return typeof t==='number'?t:null;
+}
+GDEF.twist = { name:'손발 트위스터', sub:'손발을 칸에 놓고 버티기',
+  desc:'"왼손 → 빨강"처럼 손과 발을 놓을 칸이 하나씩 나와요. 이미 놓은 손발은 그대로 두고 버텨요. <b>버티는 시간 안에 그 손(발)이 그 칸에 잠깐(1초 남짓) 머물면 정답</b>. 손은 매트 바닥을 짚어야 잘 잡혀요.',
+  options:[{id:'diff',label:'난이도',choices:[['easy','쉬움 (두 발만)'],['normal','보통 (두 손 두 발)'],['hard','어려움 (옮기기 추가)']],def:'normal'},
+           {id:'rounds',label:'라운드',choices:[['4','4'],['6','6'],['8','8']],def:'6'}],
+  diffKey:o=>o.diff, ruleKey:o=>'r'+o.rounds, rule:()=>'손발을 칸에 놓고 버티기',
+  create(o){
+    const D={easy:{limbs:[0,1],hold:6,extra:0},normal:{limbs:[0,1,2,3],hold:5,extra:0},hard:{limbs:[0,1,2,3],hold:4,extra:2}}[o.diff];
+    const R=TEST?1:+o.rounds, REST=4, INTRO=2, NEED=Math.min(1.2,D.hold*0.3);
+    const st=api.stage(`<div class="big2"></div><div class="sub2"></div>${hintMat()}`);
+    const limbEl=st.querySelector('.big2'), toEl=st.querySelector('.sub2'), hm=st.querySelector('.hmat');
+    let r=0, plan=[], k=-1, phase='', p0=0, placed={}, on=0, lastT=0, scored=false;
+    function makePlan(){ const cols=shuffle([0,1,2,3]), p=[], cur={};
+      D.limbs.forEach((l,i)=>{ p.push({l,c:cols[i]}); cur[l]=cols[i]; });
+      for (let n=0;n<D.extra;n++){ const l=D.limbs[rnd(D.limbs.length)]; let c; do{ c=rnd(4); }while(c===cur[l]); cur[l]=c; p.push({l,c,move:true}); }
+      return p; }
+    function startRound(T){ plan=makePlan(); k=-1; placed={}; phase='intro'; p0=T;
+      api.banner(`${r+1}라운드`, o.diff==='easy'?'두 발을 준비해요':'두 손 두 발을 준비해요'); api.level(r+1); api.hud(`${r+1}라운드`,`/ ${R}`);
+      limbEl.textContent=''; toEl.textContent=''; hintShow(hm,null); }
+    function step(T){
+      k++; phase='hold'; p0=T; on=0; scored=false; const s=plan[k]; placed[s.l]=s.c;
+      limbEl.textContent=(s.move?'옮겨요! ':'')+LIMBS[s.l];
+      toEl.innerHTML=`→ <b style="color:${INK[s.c]};font-size:1.6em">${TILE[s.c]}</b>`;
+      hintShow(hm, Object.entries(placed).map(([l,c])=>({c,label:LIMBS[l],style:+l===s.l?'':'now'})));
+      pop(limbEl); beep([523,659,784,1046][s.c],140,'triangle',.14);
+    }
+    return { update(T){
+      if (!phase) startRound(T);
+      const el=T-p0, dt=Math.min(.25,T-lastT); lastT=T;
+      if (phase==='intro'){ if (el>=INTRO){ api.hideBanner(); step(T); } }
+      else if (phase==='hold'){
+        const s=plan[k];
+        if (limbTile(s.l)===s.c) on+=dt;
+        if (!scored && on>=NEED){ scored=true; score(true); }
+        const left=D.hold-el; api.left(`버텨요 ${Math.max(0,Math.ceil(left))}`); api.bar(left/D.hold);
+        if (left<=0){ if (!scored) score(false);
+          if (k+1<plan.length) step(T); else { phase='rest'; p0=T; limbEl.textContent='풀고 쉬어요'; toEl.textContent=''; hintShow(hm,null); api.left(''); api.bar(0); beep(1046,200,'triangle'); } }
+      } else if (phase==='rest' && el>=REST){ r++; if (r>=R) return api.finish(); startRound(T); }
+    } };
+  } };
+
+// ----- 얼음 스텝 -----
+const POSES=['한 발로 서기','두 팔 옆으로 쭉','쪼그려 앉기','양손 머리 위로','비행기 자세','까치발 들기','한 손으로 무릎 잡기','동상처럼 멋진 자세'];
+GDEF.freeze = { name:'얼음 스텝', sub:'소리가 멈추면 색 칸으로',
+  desc:'박자 소리가 나오는 동안 <b>매트 밖에서</b> 춤추다가, 호루라기가 울리면 나온 색 칸으로 뛰어가 "얼음!" 해요. <b>얼음이 끝나기 전에 그 칸에 서 있으면 정답</b>. 어려움은 두 색 = 두 발.',
+  options:[{id:'diff',label:'난이도',choices:[['easy','쉬움 (칸 표시 · 4초)'],['normal','보통 (자세 미션 · 3초)'],['hard','어려움 (두 발 · 2.5초)']],def:'normal'},
+           {id:'rounds',label:'라운드',choices:[['6','6'],['10','10'],['14','14']],def:'10'}],
+  diffKey:o=>o.diff, ruleKey:o=>'r'+o.rounds, rule:()=>'소리가 멈추면 색 칸으로!',
+  create(o){
+    const D={easy:{dance:[6,10],go:4,hold:4,pose:false,two:false,hint:true},normal:{dance:[4,9],go:3,hold:4,pose:true,two:false,hint:false},hard:{dance:[3,7],go:2.5,hold:5,pose:true,two:true,hint:false}}[o.diff];
+    const R=TEST?2:+o.rounds, MELT=1.4;
+    const st=api.stage(`<div class="big2"></div><div class="sub2"></div>${D.hint?hintMat():''}`);
+    const big=st.querySelector('.big2'), sub=st.querySelector('.sub2'), hm=st.querySelector('.hmat');
+    let r=0, phase='', p0=0, danceLen=0, targets=[], lastBeat=-1, prevKey='';
+    const bpm=()=>112+Math.min(r,9)*3;
+    function dance(T){ phase='dance'; p0=T; danceLen=TEST?2:D.dance[0]+Math.random()*(D.dance[1]-D.dance[0]); lastBeat=-1;
+      big.style.fontSize=''; big.textContent='춤춰요!'; sub.textContent='매트 밖에서 신나게! 소리가 멈추면…'; if (hm) hm.style.visibility='hidden';
+      api.level(r+1); api.hud(`${r+1}라운드`,`/ ${R}`); api.left(''); api.bar(0); }
+    function go(T){ phase='go'; p0=T; beep(2200,180,'square',.12); setTimeout(()=>beep(2200,380,'square',.12),220);
+      let t; for (let n=0;n<20;n++){ const a=rnd(4); t=D.two?[a,(a+1+rnd(3))%4]:[a]; const key=t.slice().sort().join(); if (key!==prevKey){ prevKey=key; break; } }
+      targets=t; big.style.color=''; big.style.fontSize=t.length>1?'min(12vw,70px)':'';
+      big.innerHTML=t.map(c=>`<span style="color:${INK[c]}">${TILE[c]}</span>`).join(' + ');
+      sub.textContent=D.two?'두 발로 두 칸에!':'이 색 칸으로 뛰어가요!';
+      if (hm){ hm.style.visibility='visible'; hintShow(hm,t.map(c=>({c,label:'여기!'}))); }
+      pop(big); api.ask({ kind:t.length>1?'pair':'one', t, until:T+D.go+D.hold });
+    }
+    return { update(T){
+      if (!phase) dance(T);
+      const el=T-p0;
+      if (phase==='dance'){
+        const beat=Math.floor(el*bpm()/60);
+        if (beat!==lastBeat){ lastBeat=beat; big.style.color=TILE_COLOR[beat%4]; beep(beat%4?520:700,60,'triangle',.08); }
+        if (el>=danceLen) go(T);
+      } else if (phase==='go'){
+        if (el>=D.go){ phase='freeze'; p0=T; big.innerHTML='얼음!'; big.style.fontSize=''; sub.textContent=D.pose&&r>=1?POSES[rnd(POSES.length)]:'움직이지 마요!'; beep(1400,400,'triangle'); }
+      } else if (phase==='freeze'){
+        if (el>=D.hold){ phase='melt'; p0=T; big.textContent='땡!'; sub.textContent=r+1<R?'다시 춤출 준비!':'마지막 라운드 끝!'; if (hm) hm.style.visibility='hidden'; }
+      } else if (phase==='melt' && el>=MELT){ r++; if (r>=R) return api.finish(); dance(T); }
+    } };
+  } };
+
+// ----- 용암 매트 -----
+GDEF.lava = { name:'용암 매트', sub:'용암 칸 피해서 콩콩',
+  desc:'용암으로 변한 칸은 밟으면 안 돼요! 안전한 칸에서 계속 콩콩 뛰다가 용암이 바뀌면 재빨리 옮겨요. 8단계 × 30초(4분). <b>용암이 바뀌고 1초가 지나도 용암 칸을 밟고 있으면 오답</b>, 다음에 바뀔 때까지 안전한 칸에서 버티면 정답.',
+  options:[{id:'diff',label:'빠르기',choices:[['easy','천천히'],['normal','보통'],['hard','빠르게']],def:'normal'}],
+  diffKey:o=>o.diff, rule:()=>'안전한 칸에서 계속 콩콩!',
+  create(o){
+    const GAPS={easy:[5,4.6,4.2,4.4,4,3.6,3.4,3],normal:[4,3.6,3.2,3.4,3,2.6,2.5,2.2],hard:[3.2,2.8,2.5,2.7,2.3,2,1.8,1.6]}[o.diff];
+    const STAGE=[{n:1,map:1,ink:1},{n:1,map:1,ink:1},{n:2,map:1,ink:1},{n:2,map:1,ink:1},{n:0,map:0,ink:1},{n:0,map:0,ink:1},{n:2,map:0,ink:0},{n:2,map:0,ink:0}];
+    const NL=8, LS=TEST?6:30, BN=2.5, TOTAL=NL*LS, WARN=0.7;
+    const st=api.stage(`<div class="big2" style="font-size:min(11vw,60px)"></div>${hintMat('lava')}<div class="sub2"></div>`);
+    const title=st.querySelector('.big2'), hm=st.querySelector('.hmat'), note=st.querySelector('.sub2');
+    const S0={lvl:-1,nextAt:0}; let lava=[], warned=false, iv=null, gap=3;
+    function draw(){
+      const sg=STAGE[S0.lvl];
+      [...hm.children].forEach((cell,c)=>{ const hot=lava.includes(c); cell.className='h'+c+' on'+(hot?' hot':''); cell.querySelector('b').textContent=hot?'용암':'안전'; });
+      hm.style.display=sg.map?'':'none';
+      title.innerHTML='용암: '+lava.map(c=>`<span style="color:${sg.ink?INK[c]:'var(--ink)'}">${TILE[c]}</span>`).join(' · ');
+      note.textContent=!sg.map?'매트 그림이 없어요! 글자를 보고 피해요':lava.length===2?'안전한 두 칸 사이를 오가며 콩콩!':'용암만 피해서 콩콩!';
+    }
+    function endIv(){ if (iv && !iv.failed && iv.lava.length) score(iv.safe); iv=null; }
+    function change(T){
+      endIv();
+      const n=STAGE[S0.lvl].n||(1+rnd(2)); let next;
+      for (let k=0;k<40;k++){ next=shuffle([0,1,2,3]).slice(0,n).sort(); if (next.join()!==lava.join()) break; }
+      lava=next; draw(); pop(hm); warned=false; [...hm.children].forEach(c=>c.classList.remove('warn'));
+      beep(90,300,'sawtooth',.12);
+      iv={ from:T, lava:lava.slice(), failed:false, safe:false, grace:Math.min(1.0,gap*0.45) };
+    }
+    S0.onLevel=li=>{ if (li>0){ const a=STAGE[li-1], b=STAGE[li]; api.banner(`${li+1}단계`, a.map&&!b.map?'이제 매트 그림 없이 글자만 나와요!':a.ink&&!b.ink?'글자 색도 사라져요!':(b.n===2&&a.n===1)?'용암이 2칸으로 늘어나요!':'용암이 더 빨리 바뀌어요'); } };
+    return { update(T){
+      if (T>=TOTAL){ endIv(); return api.finish(); }
+      const {li,ready}=leveled(T,S0,NL,LS,BN,()=>'');
+          if (!warned && lava.length && T>=S0.nextAt-WARN && T-li*LS>=BN){ warned=true; [...hm.children].forEach((c,i)=>{ if (lava.includes(i)) c.classList.add('warn'); }); beep(620,120,'square',.1); }
+      if (ready){ gap=GAPS[li]; S0.nextAt=T+gap; change(T); }
+      // 판정: 바뀐 뒤 잠깐(grace)이 지나면 디딘 발이 용암 칸에 있는지 봄
+      if (iv && !iv.failed && T-iv.from>=iv.grace){
+        const pl=TR.raw.filter(x=>typeof x==='number');
+        if (pl.some(x=>iv.lava.includes(x))){ iv.failed=true; score(false); }
+        else if (pl.length) iv.safe=true;
+      }
+      if (lava.length) api.bar((S0.nextAt-T)/gap);
+      api.left(fmt(TOTAL-T));
+    } };
+  } };
+
+const GAME_ORDER = ['basic','stroop','memory','dir','quiz','assoc','twist','freeze','lava'];
+
+// ---------- 처음 화면: 게임 · 옵션 ----------
+const optStore = store.get('matChecker.opts', {});
+function optsFor(id){
+  const def=GDEF[id]; if (!def) return {};
+  const o = S.opts[id] || (S.opts[id] = {});
+  def.options.forEach(op=>{
+    if (o[op.id]!=null) return;
+    const ok = v => v!=null && op.choices.some(c=>c[0]===String(v));
+    const fromUrl = params.get('game')===id || (!params.get('game') && id==='stroop') ? params.get(op.id) : null;
+    o[op.id] = ok(fromUrl) ? String(fromUrl) : ok((optStore[id]||{})[op.id]) ? optStore[id][op.id] : (op.def || op.choices[0][0]);
+  });
+  return o;
+}
+function renderModes(){
+  const list = GAME_ORDER.map(id=>[id,GDEF[id].name,GDEF[id].sub]).concat([['check','칸 확인 연습','판정이 잘 되는지 자유롭게']]);
+  $('modes').innerHTML = list.map(([id,n,sub])=>`<button class="mode${S.mode===id?' on':''}" data-mode="${id}"><b>${esc(n)}</b><span>${esc(sub)}</span></button>`).join('');
+  $('modes').querySelectorAll('.mode').forEach(b=>b.onclick=()=>{ S.mode=b.dataset.mode; store.set('matChecker.game',S.mode); renderModes(); });
+  renderOpts();
+}
+function renderOpts(){
+  const def=GDEF[S.mode], box=$('gameOpts');
+  if (!def){ box.innerHTML='<p class="muted" style="margin-top:10px">점수 없이 자유롭게 뛰면서, 착지할 때마다 어느 칸으로 잡히는지 확인해요.</p>'; return; }
+  const o=optsFor(S.mode);
+  box.innerHTML = def.options.filter(op=>!op.showIf||op.showIf(o)).map(op=>`<div class="row"><label>${esc(op.label)}</label><div class="seg" data-o="${op.id}">${op.choices.map(([v,l])=>`<button data-v="${v}" class="${o[op.id]===v?'on':''}">${esc(l)}</button>`).join('')}</div></div>`).join('') +
+    `<p class="muted">${def.desc}</p>`;
+  box.querySelectorAll('.seg').forEach(sg=>sg.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    o[sg.dataset.o]=b.dataset.v; optStore[S.mode]=Object.assign({},o); store.set('matChecker.opts',optStore); renderOpts(); }));
+}
+{ const g=params.get('game'), last=store.get('matChecker.game',null);
+  S.mode = GDEF[g] ? g : params.get('rule') ? 'stroop' : (GDEF[last]||last==='check') ? last : 'stroop';
+  if (SCHOOL && S.mode==='check') S.mode='stroop';
+  renderModes(); }
+
+// ---------- 게임 진행 ----------
 function startGame(){
-  Object.assign(G,{running:false,lvl:-1,nextAt:0,correct:0,attempts:0,cur:null,prev:{m:-1,k:-1,t:-1,key:''}});
-  updHud(); $('gLevel').textContent='1단계'; $('gLeft').textContent=fmt(TOTAL);
-  $('ruleText').innerHTML = (S.rule==='word'?'글자를 <b>읽고</b> 밟아요':'글자 <b>색깔</b>을 보고 밟아요') + (S.smode===2?' · 두 발로 두 칸':S.smode===3?' · 왼발·오른발 칸 따로':'');
-  $('word').innerHTML=''; $('banner').classList.add('hidden');
+  const def=GDEF[S.mode]; if (!def) return;
+  const o=Object.assign({},optsFor(S.mode));
+  Object.assign(GM,{ def, o, inst:null, running:false, correct:0, attempts:0, cur:null, level:1, T:0 });
+  updHud(); api.hud('',''); api.left(''); api.bar(1);
+  $('ruleText').innerHTML = def.rule(o);
+  $('stage').innerHTML=''; $('banner').classList.add('hidden');
   $('promptCard').classList.add('hidden'); $('countdown').classList.remove('hidden');
   show('game');
   let n=3; $('countdown').textContent=n; beep(660,120);
   const iv=setInterval(()=>{ if (S.screen!=='game'){ clearInterval(iv); return; } n--;
-    if(n>0){ $('countdown').textContent=n; beep(660,120); }
+    if (n>0){ $('countdown').textContent=n; beep(660,120); }
     else { clearInterval(iv); $('countdown').classList.add('hidden'); $('promptCard').classList.remove('hidden'); beep(1046,200);
-      G.running=true; G.start=performance.now(); } },1000);
-}
-// 지금 디디고 있는 자세가 정답인지 (옮겨 가는 중에 잘못 잡힌 칸은 오답으로 치지 않음)
-function poseMatches(key){
-  if (!key || !G.cur) return false;
-  const t=G.cur.targets, k=key[0];
-  if (S.smode===1) return (k==='s'||k==='o') && +key[1]===t[0];      // 한 발이라도 정답 칸 (다른 발이 다른 칸이면 p 라서 아님)
-  if (k!=='p') return false;
-  const L=+key[1], R=+key[2];
-  if (S.smode===2) return t.includes(L) && t.includes(R);
-  return L===t[0] && R===t[1];
+      GM.start=GM.now=performance.now(); GM.inst=def.create(o); GM.running=true; } },1000);
 }
 function gameFrame(now){
-  if (!G.running) return;
-  if (G.cur && !G.cur.done && now>G.cur.shown+150 && poseMatches(TR.stable)){
-    G.attempts++; G.correct++; G.cur.done=true; mark(true); sndOk(); updHud();
-  }
-  const T=(now-G.start)/1000;
-  if (T>=TOTAL){ endGame(true); return; }
-  const li=Math.min(9,Math.floor(T/LS));
-  if (li!==G.lvl){
-    if (G.cur && !G.cur.done) miss();
-    G.cur=null; G.lvl=li; G.prev={m:-1,k:-1,t:-1,key:''}; $('gLevel').textContent=(li+1)+'단계';
-    if (li>0){ const b=$('banner'); b.innerHTML=`${li+1}단계<small>${LEVELS[li].trick>0&&LEVELS[li-1].trick===0?'이제 함정이 나와요!':li===9?'마지막 단계! 최고 속도로!':'조금 더 빨라져요'}</small>`; b.classList.remove('hidden'); beep(988,160); }
-  }
-  const t=T-li*LS;
-  if (li>0 && t<BN) G.nextAt=li*LS+BN;
-  else { $('banner').classList.add('hidden'); if (T>=G.nextAt){ showPrompt(now); G.nextAt=T+LEVELS[li].gap*S.speed*(S.smode>=2?1.25:1); } }
-  $('gLeft').textContent=fmt(TOTAL-T);
-  if (G.cur){ const span=LEVELS[li].gap*S.speed*(S.smode>=2?1.25:1)*1000; $('timeBar').style.width=Math.max(0,100-(now-G.cur.shown)/span*100)+'%'; }
+  if (!GM.running || !GM.inst) return;
+  GM.now=now; const T = GM.T = (now-GM.start)/1000, c=GM.cur;
+  if (c && !c.done && c.judge==='any' && now>c.at+150 && MATCH[c.kind](c, TR.stable)){ c.done=true; score(true); }
+  if (c && c.until!=null && T>=c.until) closeCur();
+  GM.inst.update(T, now);
+  const cc=GM.cur; if (GM.running && cc && cc.until!=null) api.bar((cc.until-T)/(cc.until-cc.from));
 }
 function onLanding(e, t){
   if (S.screen==='check'){
@@ -796,34 +1239,46 @@ function onLanding(e, t){
     const tiles=$('chkMat').querySelectorAll('.tile'); for (const i of e.tiles){ tiles[i].classList.add('flash'); setTimeout(()=>tiles[i].classList.remove('flash'),250); }
     return true;
   }
-  // 채점은 gameFrame 에서: 시간 안에 정답 칸에 있으면 정답 (리듬 게임이 아니라 박자 맞추기는 안 봄)
-  if (S.screen==='game' && S.smode===1 && e.kind==='p' && e.prev.includes(e.L)!==e.prev.includes(e.R)) return false;
-  if (S.screen==='game' && S.smode>1 && e.kind==='o') return false;
+  // 채점은 gameFrame 에서: 시간 안에 정답 칸에 있으면 정답 (박자 맞추기는 안 봄)
+  if (S.screen==='game'){
+    const kind = GM.cur && GM.cur.kind;
+    if (kind==='one' && e.kind==='p' && e.prev.includes(e.L)!==e.prev.includes(e.R)) return false;
+    if ((kind==='pair'||kind==='lr') && e.kind==='o') return false;
+  }
   return true;
 }
-$('stopBtn').onclick = () => { if (G.running) endGame(false); else show('home'); };
+$('stopBtn').onclick = () => { if (GM.running) endGame(false); else show('home'); };
 
 function endGame(completed){
-  G.running=false; G.cur=null;
-  const playSeconds=Math.round(Math.min(TOTAL,(performance.now()-G.start)/1000));
-  const rec = { source:'mat-checker', version:VERSION, game:'stroop', difficulty:MODE_KEY[S.smode], rule:S.rule, speed:S.speed,
-    grade:S.grade, levelReached:G.lvl+1, correct:G.correct, attempts:G.attempts,
-    accuracy: G.attempts ? Math.round(G.correct/G.attempts*1000)/10 : 0,
-    playSeconds, completed: !!completed && !params.get('test'), cameraJudged:true, endedAt:new Date().toISOString() };
-  const hist=store.get('matChecker.history',[]); hist.unshift(rec); store.set('matChecker.history',hist.slice(0,20));
-  $('rTitle').textContent=`색깔 스트룹 · ${MODE_LABEL[S.smode]} · ${S.grade}학년`;
+  if (!GM.running) return;
+  GM.running=false; GM.cur=null;
+  const def=GM.def, o=GM.o;
+  const playSeconds=Math.round(Math.min(3600,GM.T));
+  const diff=def.diffKey(o), dn=(window.CMApp&&CMApp.diffName)?CMApp.diffName(S.mode,diff):diff;
+  const rec = { source:'mat-checker', version:VERSION, game:S.mode, difficulty:diff, rule:def.ruleKey?def.ruleKey(o):'', speed:def.speedOf?def.speedOf(o):1,
+    grade:S.grade, levelReached:GM.level, correct:GM.correct, attempts:GM.attempts,
+    accuracy: GM.attempts ? Math.round(GM.correct/GM.attempts*1000)/10 : 0,
+    playSeconds, completed: !!completed && !TEST, cameraJudged:true, endedAt:new Date().toISOString() };
+  const hist=store.get('matChecker.history',[]); hist.unshift(Object.assign({diffName:dn, gameName:def.name},rec)); store.set('matChecker.history',hist.slice(0,20));
+  $('rTitle').textContent=`${def.name} · ${dn}${SCHOOL?'':' · '+S.grade+'학년'}`;
   $('rCorrect').textContent=rec.correct; $('rAttempts').textContent=rec.attempts; $('rAcc').textContent=rec.accuracy+'%';
   $('rTime').textContent = playSeconds>=60 ? `${Math.floor(playSeconds/60)}분 ${playSeconds%60}초` : playSeconds+'초';
-  $('rDone').textContent = rec.completed ? '🏁 완주 (정확도 순위 대상)' : `${rec.levelReached}단계에서 멈춤`;
+  $('rDone').textContent = rec.completed ? '🏁 완주 (정확도 순위 대상)' : `${GM.level}${/memory|twist|freeze/.test(S.mode)?'라운드':S.mode==='quiz'?'번째 문제':'단계'}에서 멈춤`;
   $('rSent').textContent='';
   if (SCHOOL) saveToSchool(rec);
   if (POST_MODE){ const target = window.opener || (window.parent!==window ? window.parent : null);
     if (target){ try{ target.postMessage({type:'matResult', ...rec}, '*'); $('rSent').textContent='✅ 기록을 프로그램으로 보냈어요'; }catch(e){} } }
+  const OLD={normal:'노말',hard:'하드',expert:'익스퍼트'};
   $('history').innerHTML = hist.slice(0,10).map(h=>{ const d=new Date(h.endedAt);
-    return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} · ${MODE_LABEL[{normal:1,hard:2,expert:3}[h.difficulty]]||h.difficulty} · 정답 ${h.correct}/${h.attempts} (${h.accuracy}%) · ${h.playSeconds}초${h.completed?' · 🏁':''}`; }).join('<br>') || '아직 없어요';
+    return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} · ${esc(h.gameName||'색깔 스트룹')} ${esc(h.diffName||OLD[h.difficulty]||h.difficulty)} · 정답 ${h.correct}/${h.attempts} (${h.accuracy}%) · ${h.playSeconds}초${h.completed?' · 🏁':''}`; }).join('<br>') || '아직 없어요';
   sndOk(); show('result');
 }
 $('againBtn').onclick = () => startGame();
+// 시험용(?test=1): 카메라 없이 게임을 돌려 보는 손잡이
+if (TEST) window.__ck = { S, TR, GM, GDEF, optsFor, show, gameFrame, applyH,
+  begin(mode, o){ S.mode=mode; const def=GDEF[mode]; o=Object.assign({},optsFor(mode),o||{});
+    Object.assign(GM,{ def, o, correct:0, attempts:0, cur:null, level:1, T:0, now:0, start:0 }); updHud(); $('ruleText').innerHTML=def.rule(o);
+    show('game'); $('countdown').classList.add('hidden'); $('promptCard').classList.remove('hidden'); GM.inst=def.create(o); GM.running=true; } };
 let lastRec=null;
 function saveToSchool(rec){
   lastRec=rec; $('retrySave').classList.add('hidden');
@@ -834,7 +1289,7 @@ function saveToSchool(rec){
     .catch(e=>{ $('rSent').textContent='❌ 저장하지 못했어요: '+e.message; $('retrySave').classList.remove('hidden'); });
 }
 $('retrySave').onclick = () => { if (lastRec) saveToSchool(lastRec); };
-for (const id of ['home1','home2']) $(id).onclick = () => { G.running=false; show('home'); };
+for (const id of ['home1','home2']) $(id).onclick = () => { GM.running=false; show('home'); };
 
 // ---------- 시작 ----------
 $('startBtn').onclick = async () => {
@@ -864,7 +1319,7 @@ function loop(){
       try {
         let lm=null; try{ lm=landmarker.detectForVideo(v,t).landmarks?.[0]||null; }catch(e){}
         let info;
-        if (lm) info=track(lm,t); else { TR.feet=null; TR.mat=null; TR.stable=null; TR.air=true; info={msg:'사람이 보이지 않아요'}; }
+        if (lm) info=track(lm,t); else { TR.feet=null; TR.mat=null; TR.stable=null; TR.lm=null; TR.raw=[null,null]; TR.air=true; info={msg:'사람이 보이지 않아요'}; }
         if (S.screen==='setup'){ setupFrame(lm,t); drawSelf(lm, $('setupCanvas'), 1280, true); } else drawSelf(lm);
         if (S.screen==='calib') calibFrame(t);
         if (S.screen==='check'){ drawMat('chkMat','chkCanvas'); $('chkStatus').textContent=info.msg; }

@@ -157,6 +157,28 @@
     '.cmc-step small{font-size:.72em;font-weight:700}.cmc-step.on{opacity:1;background:rgba(253,230,138,.25)}.cmc-step.next{opacity:1;outline:2px dashed #FDE68A}' +
     '.cmc-f{font-size:.78em;opacity:.8;margin-top:10px}';
   function addClimbCss() { if (document.getElementById('cmc-css')) return; var st = document.createElement('style'); st.id = 'cmc-css'; st.textContent = climbCss; document.head.appendChild(st); }
+  // ---------- 카메라 판정 게임 목록 · 난이도 이름 (판정기·우리 학교·현황판이 함께 씀) ----------
+  var E3 = [['easy', '쉬움'], ['normal', '보통'], ['hard', '어려움']];
+  var CAM_GAMES = [
+    ['basic', '색깔 점프', [['easy', '천천히'], ['normal', '보통'], ['hard', '빠르게'], ['easy2', '2색 천천히'], ['normal2', '2색 보통'], ['hard2', '2색 빠르게']]],
+    ['stroop', '색깔 스트룹', [['normal', '노말'], ['hard', '하드'], ['expert', '익스퍼트']]],
+    ['memory', '기억력 스텝', E3],
+    ['dir', '방향 점프', E3],
+    ['quiz', '퀴즈 점프', [['add1', '덧셈·뺄셈 쉬움'], ['add2', '덧셈·뺄셈 보통'], ['add3', '덧셈·뺄셈 어려움'], ['times1', '구구단 쉬움'], ['times2', '구구단 보통'], ['times3', '구구단 어려움'],
+      ['muldiv1', '곱셈·나눗셈 쉬움'], ['muldiv2', '곱셈·나눗셈 보통'], ['muldiv3', '곱셈·나눗셈 어려움'], ['pe', '체육 상식']]],
+    ['assoc', '연상 점프', E3],
+    ['twist', '손발 트위스터', E3],
+    ['freeze', '얼음 스텝', E3],
+    ['lava', '용암 매트', E3]
+  ];
+  var GAME_NAMES = { rhythm: '리듬 스텝' };
+  CAM_GAMES.forEach(function (g) { GAME_NAMES[g[0]] = g[1]; });
+  function gameName(g) { return GAME_NAMES[g] || g || ''; }
+  function diffName(g, d) {
+    for (var i = 0; i < CAM_GAMES.length; i++) if (CAM_GAMES[i][0] === g)
+      for (var j = 0; j < CAM_GAMES[i][2].length; j++) if (CAM_GAMES[i][2][j][0] === d) return CAM_GAMES[i][2][j][1];
+    return d || '';
+  }
   window.CMApp = { showQr: showQr, showInstall: showInstall, showQrList: function (list) { showQr(list[0].key, list); }, ROOT: ROOT,
-    climbInfo: climbInfo, fmtM: fmtM, climbHTML: function (m, t, ly) { addClimbCss(); return climbHTML(m, t, ly); } };
+    climbInfo: climbInfo, fmtM: fmtM, CAM_GAMES: CAM_GAMES, gameName: gameName, diffName: diffName, climbHTML: function (m, t, ly) { addClimbCss(); return climbHTML(m, t, ly); } };
 })();
