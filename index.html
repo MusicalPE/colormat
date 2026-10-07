@@ -121,11 +121,10 @@
 <script>
 (function(){
 'use strict';
-const VERSION = 'app v1.3.0';
+const VERSION = 'app v1.3.1';
 const REQUIRED_SHELL = 1;
 const GAME_NAME = { stroop:'색깔 스트룹', basic:'색깔 점프', memory:'기억력 스텝', rhythm:'리듬 스텝', dir:'방향 점프', quiz:'퀴즈 점프', assoc:'연상 점프', twist:'손발 트위스터', freeze:'얼음 스텝', lava:'용암 매트' };
 const DIFFN = (g, d) => (window.CMApp && CMApp.diffName) ? CMApp.diffName(g, d) : d;
-const CAMG = (window.CMApp && CMApp.CAM_GAMES) || [['stroop', '색깔 스트룹', []]];
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = n => Number(n || 0).toLocaleString('ko-KR');
@@ -183,7 +182,7 @@ function climbCard(c){
 const clsKey = s => (s.grade ? s.grade + '학년 ' : '') + (s.cls ? s.cls + '반' : '');
 
 /* ================= 메인 (첫 화면) ================= */
-const STU = { grade: '', cls: '', sid: q.sid || '', game: LS.get('cm_game', 'stroop'), period: LS.get('cm_period', 'month') };
+const STU = { grade: '', cls: '', sid: q.sid || '', period: LS.get('cm_period', 'month') };
 (function(){ const last = LS.get('cm_pick|' + APP.s, null); if (last) { STU.grade = last.grade; STU.cls = last.cls; } })();
 function ymd(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
 function weekStart(todayStr){ const d = new Date(todayStr + 'T00:00:00'); const k = (d.getDay() + 6) % 7; d.setDate(d.getDate() - k); return ymd(d); }   // 월요일
@@ -226,8 +225,7 @@ function renderMain(){
     '<div class="form3"><label>학년<select id="selG">' + grades.map(g => '<option value="' + esc(g) + '"' + (g===STU.grade?' selected':'') + '>' + esc(g ? g + '학년' : '-') + '</option>').join('') + '</select></label>' +
       '<label>반<select id="selC">' + clsList.map(c => '<option value="' + esc(c) + '"' + (c===STU.cls?' selected':'') + '>' + esc(c ? c + '반' : '-') + '</option>').join('') + '</select></label>' +
       '<label>이름<select id="selN"><option value="">이름을 골라요</option>' + names.map(s => '<option value="' + esc(s.id) + '"' + (s.id===STU.sid?' selected':'') + '>' + esc((s.number ? s.number + '. ' : '') + s.name) + '</option>').join('') + '</select></label></div>' +
-    '<div class="row"><label>게임</label><select id="selGame">' + CAMG.map(g => '<option value="' + g[0] + '"' + (g[0]===STU.game?' selected':'') + '>' + esc(g[1]) + '</option>').join('') + '</select></div>' +
-    '<p class="hint" style="margin:-2px 0 6px">난이도·규칙은 다음 화면(판정기)에서 골라요.</p>' +
+    '<p class="hint" style="margin:2px 0 4px">이름을 고르고 시작을 누르면, 다음 화면에서 게임과 난이도를 골라요.</p>' +
     '<button class="btn big" id="goCam" style="margin-top:8px"' + (STU.sid ? '' : ' disabled') + '>📷 카메라 판정으로 시작!</button>' +
     '<p class="hint" style="text-align:center;margin-top:8px">' + (p.approvalOn ? '기록은 선생님이 승인하면 인정되고, 그래프와 하늘까지에 더해져요.' : '기록은 바로 인정돼요.') + ' 게임을 끝까지 하면 완주 기록!</p>') + '</div>';
 
@@ -260,11 +258,10 @@ function renderMain(){
   $('selG').onchange = e => { STU.grade = e.target.value; STU.cls = ''; STU.sid = ''; pick(); renderMain(); };
   $('selC').onchange = e => { STU.cls = e.target.value; STU.sid = ''; pick(); renderMain(); };
   $('selN').onchange = e => { STU.sid = e.target.value; $('goCam').disabled = !STU.sid; };
-  $('selGame').onchange = e => { STU.game = e.target.value; LS.set('cm_game', STU.game); };
   $('periodSeg').querySelectorAll('button').forEach(b => { b.classList.toggle('on', b.dataset.v === STU.period); b.onclick = () => { STU.period = b.dataset.v; LS.set('cm_period', STU.period); renderMain(); }; });
   $('goCam').onclick = () => {
     const me = list.find(s => s.id === STU.sid); if (!me) return;
-    const prm = new URLSearchParams({ s: APP.s, sid: me.id, who: me.name, grade: String(me.grade || ''), game: $('selGame').value, back: selfUrl() + '&sid=' + encodeURIComponent(me.id) });
+    const prm = new URLSearchParams({ s: APP.s, sid: me.id, who: me.name, grade: String(me.grade || ''), back: selfUrl() + '&sid=' + encodeURIComponent(me.id) });
     location.href = 'checker/index.html?' + prm.toString();
   };
 }
