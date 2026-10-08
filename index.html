@@ -153,7 +153,7 @@ function go(page, tab){ APP.page = page; if (tab) APP.tab = tab; history.replace
 function wireInstall(){ const b = $('cmInstallBtn'); if (b) b.onclick = () => CMApp.showInstall(); }
 function showStudentQr(){
   CMApp.showQrList([
-    { key:'stu', label:'🙋 우리 학교 화면', url: selfUrl(), note:'학생 휴대폰·태블릿으로 찍으면 우리 학교 매트 놀이터가 열려요. 이름을 고르고 카메라 판정으로 뛰어요.' },
+    { key:'stu', label:'🙋 우리 학교 화면', url: selfUrl(), note:'학생 휴대폰·태블릿으로 찍으면 우리 학교 색동이 열려요. 이름을 고르고 카메라 판정으로 뛰어요.' },
     { key:'board', label:'🏆 색동 한마당', url: CMApp.ROOT + 'board.html', note:'찍으면 전국 매트 현황판이 열려요.' }
   ]);
 }
