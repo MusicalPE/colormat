@@ -26,6 +26,7 @@
   .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
   .brand{font-weight:800;font-size:1.08em;color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:8px}
   .brand small{font-weight:600;color:var(--muted);font-size:.8em}
+  .sd-tag{font-weight:600;color:#6b7280;font-size:.78em;display:inline-flex;align-items:baseline;gap:5px;margin-left:2px;white-space:nowrap}.sd-tag b{font-family:'Song Myung',serif;font-weight:400;font-size:1.3em;color:#2a2420}
   .logo{display:grid;grid-template-columns:1fr 1fr;gap:2px;width:22px;height:22px}.logo i{border-radius:3px}
   .nav{display:flex;gap:8px;flex-wrap:wrap}
   .pill{display:inline-block;text-decoration:none;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font:inherit;font-weight:700;font-size:.9em;cursor:pointer}
@@ -111,7 +112,7 @@
 <body>
 <div class="container">
   <header class="topbar">
-    <a class="brand" href="#" id="brand"><span id="sdMarkTop" style="line-height:0"></span><span id="brandName">색동</span><small id="brandSchool"></small></a>
+    <a class="brand" href="#" id="brand"><span id="sdMarkTop" style="line-height:0"></span><span id="brandName">색동</span><small class="sd-tag"><b>色童</b>색으로 노는 아이들</small><small id="brandSchool" hidden></small></a>
     <nav class="nav" id="nav"></nav>
   </header>
   <div id="view"><div class="loading">불러오는 중…</div></div>
