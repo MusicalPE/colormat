@@ -179,18 +179,18 @@
   // ---------- 카메라 판정 게임 목록 · 난이도 이름 (판정기·우리 학교·현황판이 함께 씀) ----------
   var E3 = [['easy', '쉬움'], ['normal', '보통'], ['hard', '어려움']];
   var CAM_GAMES = [
-    ['basic', '색깔 점프', [['easy', '천천히'], ['normal', '보통'], ['hard', '빠르게'], ['easy2', '2색 천천히'], ['normal2', '2색 보통'], ['hard2', '2색 빠르게']]],
-    ['stroop', '색깔 스트룹', [['normal', '노말'], ['hard', '하드'], ['expert', '익스퍼트']]],
-    ['memory', '기억력 스텝', E3],
-    ['dir', '방향 점프', E3],
-    ['quiz', '퀴즈 점프', [['add1', '덧셈·뺄셈 쉬움'], ['add2', '덧셈·뺄셈 보통'], ['add3', '덧셈·뺄셈 어려움'], ['times1', '구구단 쉬움'], ['times2', '구구단 보통'], ['times3', '구구단 어려움'],
+    ['basic', '색깔 뛰기', [['easy', '천천히'], ['normal', '보통'], ['hard', '빠르게'], ['easy2', '2색 천천히'], ['normal2', '2색 보통'], ['hard2', '2색 빠르게']]],
+    ['stroop', '헷갈려 뛰기', [['normal', '노말'], ['hard', '하드'], ['expert', '익스퍼트']]],
+    ['memory', '기억 뛰기', E3],
+    ['dir', '방향 뛰기', E3],
+    ['quiz', '정답 뛰기', [['add1', '덧셈·뺄셈 쉬움'], ['add2', '덧셈·뺄셈 보통'], ['add3', '덧셈·뺄셈 어려움'], ['times1', '구구단 쉬움'], ['times2', '구구단 보통'], ['times3', '구구단 어려움'],
       ['muldiv1', '곱셈·나눗셈 쉬움'], ['muldiv2', '곱셈·나눗셈 보통'], ['muldiv3', '곱셈·나눗셈 어려움'], ['pe', '체육 상식']]],
     ['assoc', '연상 점프', E3],
-    ['twist', '손발 트위스터', E3],
-    ['freeze', '얼음 스텝', E3],
-    ['lava', '용암 매트', E3]
+    ['twist', '손발 꼬기', E3],
+    ['freeze', '얼음 꽁꽁', E3],
+    ['lava', '용암 피하기', E3]
   ];
-  var GAME_NAMES = { rhythm: '리듬 스텝' };
+  var GAME_NAMES = { rhythm: '박자 뛰기' };
   CAM_GAMES.forEach(function (g) { GAME_NAMES[g[0]] = g[1]; });
   function gameName(g) { return GAME_NAMES[g] || g || ''; }
   function diffName(g, d) {

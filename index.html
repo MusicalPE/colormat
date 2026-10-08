@@ -125,7 +125,7 @@
 'use strict';
 const VERSION = 'app v1.4.0';
 const REQUIRED_SHELL = 1;
-const GAME_NAME = { stroop:'색깔 스트룹', basic:'색깔 점프', memory:'기억력 스텝', rhythm:'리듬 스텝', dir:'방향 점프', quiz:'퀴즈 점프', assoc:'연상 점프', twist:'손발 트위스터', freeze:'얼음 스텝', lava:'용암 매트' };
+const GAME_NAME = { stroop:'헷갈려 뛰기', basic:'색깔 뛰기', memory:'기억 뛰기', rhythm:'박자 뛰기', dir:'방향 뛰기', quiz:'정답 뛰기', assoc:'연상 점프', twist:'손발 꼬기', freeze:'얼음 꽁꽁', lava:'용암 피하기' };
 const DIFFN = (g, d) => (window.CMApp && CMApp.diffName) ? CMApp.diffName(g, d) : d;
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
