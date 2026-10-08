@@ -145,7 +145,7 @@
 <script>
 (function(){
   const q = {}; new URLSearchParams(location.search).forEach(function(v, k){ q[k] = v; });
-  const GAMES = (window.CMApp && CMApp.CAM_GAMES) || [['stroop','헷갈려 뛰기',[['normal','노말'],['hard','하드'],['expert','익스퍼트']]]];
+  const GAMES = (window.CMApp && CMApp.CAM_GAMES) || [['stroop','함정 뛰기',[['normal','노말'],['hard','하드'],['expert','익스퍼트']]]];
   const diffsOf = function(g){ const x = GAMES.find(function(r){ return r[0] === g; }); return x ? x[2] : []; };
   const fillDiff = function(v){ $('diffSel').innerHTML = '<option value="">모든 난이도</option>' + diffsOf($('gameSel').value).map(function(d){ return '<option value="' + d[0] + '">' + d[1] + '</option>'; }).join(''); $('diffSel').value = diffsOf($('gameSel').value).some(function(d){ return d[0] === v; }) ? v : ''; };
   const TABS = [['correct','정답 착지'],['time','플레이 시간'],['accuracy','정확도']];

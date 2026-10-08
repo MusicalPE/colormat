@@ -866,7 +866,7 @@ function endGame(completed){
     if (target){ try{ target.postMessage({type:'matResult', ...rec}, '*'); $('rSent').textContent='✅ 기록을 프로그램으로 보냈어요'; }catch(e){} } }
   const OLD={normal:'노말',hard:'하드',expert:'익스퍼트'};
   $('history').innerHTML = hist.slice(0,10).map(h=>{ const d=new Date(h.endedAt);
-    return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} · ${esc(h.gameName||'헷갈려 뛰기')} ${esc(h.diffName||OLD[h.difficulty]||h.difficulty)} · 정답 ${h.correct}/${h.attempts} (${h.accuracy}%) · ${h.playSeconds}초${h.completed?' · 🏁':''}`; }).join('<br>') || '아직 없어요';
+    return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} · ${esc(h.gameName||'함정 뛰기')} ${esc(h.diffName||OLD[h.difficulty]||h.difficulty)} · 정답 ${h.correct}/${h.attempts} (${h.accuracy}%) · ${h.playSeconds}초${h.completed?' · 🏁':''}`; }).join('<br>') || '아직 없어요';
   sndOk(); show('result');
   if (LV.on){ $('rSent').textContent='기록은 선생님 화면에서 한꺼번에 저장해요'; const lv=GM.live; GM.live=lv; livePush(true);
     clearTimeout(LV.back); LV.back=setTimeout(()=>{ if (S.screen==='result'){ GM.live=''; liveWait('다음 판에 뛸 사람을 골라요 (같은 사람이면 그대로)'); livePick(); } },7000); }

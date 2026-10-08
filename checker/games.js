@@ -6,7 +6,7 @@ export const TILE = ['빨강','노랑','초록','파랑'];
 export const NAME = ['빨간색','노란색','초록색','파란색'];
 export const TILE_COLOR = ['#F2392F','#FFD21F','#2FC653','#4C88FF'];
 export const INK = ['#F2392F','#E6B800','#2FC653','#4C88FF'];   // 흰 바탕에서 노랑이 잘 보이게
-// 놀이터 v1.9 헷갈려 뛰기과 같은 단계표
+// 놀이터 v1.9 함정 뛰기과 같은 단계표
 export const LEVELS=[{gap:3.0,trick:0},{gap:2.5,trick:0},{gap:2.2,trick:0.3},{gap:1.9,trick:0.45},{gap:1.65,trick:0.6},
   {gap:1.45,trick:0.7},{gap:1.3,trick:0.8},{gap:1.15,trick:0.85},{gap:1.0,trick:0.9},{gap:0.85,trick:0.95}];
 export function seeded(seed){ let a=(seed>>>0)||1; return ()=>{ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
@@ -72,8 +72,8 @@ GDEF.basic = { name:'색깔 뛰기', sub:'화면 색 칸으로 점프',
     } };
   } };
 
-// ----- 헷갈려 뛰기 -----
-GDEF.stroop = { name:'헷갈려 뛰기', sub:'글자 색깔·뜻 보고 밟기',
+// ----- 함정 뛰기 -----
+GDEF.stroop = { name:'함정 뛰기', sub:'글자 색깔·뜻 보고 밟기',
   desc:'10단계 × 30초(5분), 3단계부터 함정. <b>다음 글자가 나오기 전에 정답 칸에 있으면 정답</b>이에요(옮겨 가다 다른 칸을 밟아도 괜찮아요). 하드는 두 발로 두 칸, 익스퍼트는 왼발·오른발 칸이 정해져요.',
   options:[{id:'rule',label:'보고 밟기',choices:[['ink','글자 색깔'],['word','글자 읽기']]},
            {id:'mode',label:'모드',choices:[['1','노말'],['2','하드'],['3','익스퍼트']]},
