@@ -162,7 +162,7 @@ function setNav(){
   if (!APP.s) { $('nav').innerHTML = '<button class="pill" id="cmInstallBtn">📲 바로가기</button>'; wireInstall(); return; }
   const pend = APP.pub && APP.pub.pending ? '<span class="cnt">' + APP.pub.pending + '</span>' : '';
   $('nav').innerHTML = (APP.page === 'main'
-      ? '<a class="pill" href="play/">🎮 놀이터</a>' +
+      ? '<a class="pill" href="play/">🎮 색동 놀이터</a>' +
         '<a class="pill" href="board.html" target="_blank" rel="noopener">🏆 색동 한마당</a>' +
         '<button class="pill" id="qrBtn">📱 접속 QR</button>' +
         '<button class="pill" id="apBtn">기록 승인' + pend + '</button>' +
