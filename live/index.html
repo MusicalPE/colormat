@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>매트 라이브</title>
+<title>색동 라이브</title>
 <link rel="manifest" href="../manifest.webmanifest">
 <meta name="theme-color" content="#1f2937">
 <link rel="icon" type="image/png" href="../icons/icon-192.png">
@@ -160,7 +160,7 @@ h1{font-size:clamp(20px,2.4vw,28px);margin:0;font-weight:900;letter-spacing:-.03
 <div class="wrap">
   <header>
     <div id="sdMark" style="line-height:0"></div>
-    <h1>매트 라이브<span class="ver" id="ver"></span></h1>
+    <h1>색동 라이브<span class="ver" id="ver"></span></h1>
     <span class="demo" id="demoTag" hidden>시험 모드 — 서버를 쓰지 않아요</span>
     <div class="spacer"></div>
     <div class="me" id="me" hidden><span id="meName"></span><button id="btnOut">로그아웃</button></div>
@@ -180,7 +180,7 @@ h1{font-size:clamp(20px,2.4vw,28px);margin:0;font-weight:900;letter-spacing:-.03
   <!-- 2. 준비 -->
   <section class="center" id="vSetup" hidden>
     <div class="card panel">
-      <h2>매트 라이브 준비</h2>
+      <h2>색동 라이브 준비</h2>
       <div id="appBox" hidden>
         <p><b>우리 학교 명단</b> · <span id="appInfo"></span></p>
         <div class="chips" id="clsChips" style="margin-top:8px"></div>
@@ -253,7 +253,7 @@ h1{font-size:clamp(20px,2.4vw,28px);margin:0;font-weight:900;letter-spacing:-.03
 <script src="../cm-app.js"></script>
 <script type="module">
 /* =========================================================================================
-   매트 라이브 — 선생님 TV 화면
+   색동 라이브 — 선생님 TV 화면
    흐름: 로그인 → 반·매트 수·게임 → 방 열기(추측 불가능한 열쇠 + QR) → 매트마다 기기가 들어옴(매트 번호·뛸 사람)
         → 시작: 모든 기기에 "같은 씨앗 + 같은 시작 시각"을 보냄 → TV와 모든 매트가 같은 문제로 동시에 진행
         → 기기는 카메라로 판정해 정답·시도 수만 보냄 → 끝나면 결과를 우리 학교 시트에 저장(승인된 카메라 기록)

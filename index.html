@@ -378,9 +378,9 @@ function loadAdmin(msg){
   return rpc('getAllDataAdmin', [APP.token]).then(d => { APP.data = d; renderAdmin(msg); })
     .catch(e => { if (/권한/.test(e.message)) { APP.token = null; renderLogin('로그인 시간이 지났어요. 다시 들어와 주세요.'); } else $('view').innerHTML = '<div class="msg err">' + esc(e.message) + '</div>'; });
 }
-// 매트 라이브가 결과를 시트에 넣으면 알려 줌 → 전국 현황판에 보내고 화면 새로 고침
+// 색동 라이브가 결과를 시트에 넣으면 알려 줌 → 전국 현황판에 보내고 화면 새로 고침
 window.addEventListener('message', e => { if (e.origin === location.origin && e.data && e.data.type === 'matlive-saved' && APP.token)
-  rpc('getAllDataAdmin', [APP.token]).then(dd => { APP.data = dd; return syncAfter('매트 라이브 기록을 저장했어요'); }).then(m => { if (APP.page === 'admin') renderAdmin(m); reloadPublic && reloadPublic(); }).catch(() => {}); });
+  rpc('getAllDataAdmin', [APP.token]).then(dd => { APP.data = dd; return syncAfter('색동 라이브 기록을 저장했어요'); }).then(m => { if (APP.page === 'admin') renderAdmin(m); reloadPublic && reloadPublic(); }).catch(() => {}); });
 function syncAfter(note){
   return NAT.sync().then(r => r ? note + ' · 전국 현황판에도 반영했어요' : note).catch(e => note + ' · (전국 현황판 보내기 실패: ' + e.message + ')');
 }
@@ -419,7 +419,7 @@ function renderAdmin(msg){
   if (APP.pub) APP.pub.pending = d.records.filter(r => r.status === 'pending').length;
   setNav();
   const pending = d.records.filter(r => r.status === 'pending').sort((a,b) => b.ts - a.ts);
-  const tabs = [['pending','기록 승인', pending.length], ['students','학생 관리'], ['records','기록 관리'], ['live','📺 매트 라이브'], ['settings','설정']];
+  const tabs = [['pending','기록 승인', pending.length], ['students','학생 관리'], ['records','기록 관리'], ['live','📺 색동 라이브'], ['settings','설정']];
   let h = '<div class="hero"><h1>관리자 메뉴</h1><p>' + esc(d.title || '') + ' · 껍데기 판 ' + d.shell + '</p></div>';
   if (d.shell < REQUIRED_SHELL) h += '<div class="msg err">껍데기를 새 판으로 바꿔 주세요.</div>';
   if (APP.isDefaultPw) h += '<div class="msg info">처음 비밀번호(1234)를 쓰고 있어요. 설정 탭에서 바꿔 주세요.</div>';
@@ -466,10 +466,10 @@ function renderAdmin(msg){
       '<div class="card"><h2>껍데기 · 연결</h2><p class="hint">이 기기는 다음부터 <b>musicalpe.github.io/colormat/</b>만 열어도 이 학교로 바로 들어와요. 다른 시트로 바꾸려면 <a href="./?new=1">새로 연결하기</a>.</p><p class="hint">지금 껍데기 판 ' + d.shell + ' · 화면 ' + VERSION + '. 화면은 자동으로 새 판이 되고, 껍데기를 바꿔야 할 때만 여기서 알려 드려요.</p><button class="btn ghost" id="logout">로그아웃</button></div>';
   }
   if (APP.tab === 'live') {
-    h += '<div class="card"><h2>📺 매트 라이브 (여러 매트가 함께 뛰기)</h2>' +
+    h += '<div class="card"><h2>📺 색동 라이브 (여러 매트가 함께 뛰기)</h2>' +
       '<p class="hint">매트마다 휴대폰·태블릿을 한 대씩 세우면, <b>문제는 TV 한 곳에 크게</b> 나오고 모든 매트가 같은 문제로 동시에 뛰어요. 각 기기가 카메라로 판정해 TV 아래에 매트별 정답 수가 실시간으로 떠요.</p>' +
       '<p class="hint">명단은 이 학교 시트에서 가져오고, 판이 끝나면 결과가 <b>승인된 카메라 기록</b>으로 바로 들어가 전국 현황판에도 보내져요. TV 화면은 처음 한 번 구글 계정 로그인이 필요해요.</p>' +
-      '<div class="row"><button class="btn big" id="openLive">📺 매트 라이브 열기</button></div><p class="hint" id="liveMsg"></p></div>';
+      '<div class="row"><button class="btn big" id="openLive">📺 색동 라이브 열기</button></div><p class="hint" id="liveMsg"></p></div>';
   }
   $('view').innerHTML = h;
   if ($('openLive')) $('openLive').onclick = () => { const w = window.open('live/?s=' + encodeURIComponent(APP.s), '_blank'); if (!w) $('liveMsg').textContent = '새 창이 막혔어요. 주소창 오른쪽에서 팝업을 허용해 주세요.'; };
