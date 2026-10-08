@@ -139,55 +139,39 @@
   }
   // 위로 올라가는 그림 + 설명 HTML (높이 m, 제목, 작년 높이)
   // 다 함께 하늘까지: 4색 청사초롱을 든 아이가 이정표 계단을 따라 달까지 걸어 올라감
-  function lanternKid(x, y, k) {   // (x,y) = 발 위치, k = 크기
-    var g = '<g transform="translate(' + x.toFixed(1) + ',' + y.toFixed(1) + ') scale(' + k + ')">';
-    g += '<circle cx="15" cy="-34" r="16" fill="url(#cmcGlow)"/>';
-    // 몸 (흰 테두리 + 먹색)
-    var body = function (c, w) { return '<g stroke="' + c + '" stroke-width="' + w + '" stroke-linecap="round" stroke-linejoin="round" fill="none">' +
-      '<path d="M0 -30 L0 -14"/><path d="M0 -14 L-6 -4 L-8 0 M0 -14 L5 -6 L9 -1"/><path d="M0 -26 L-6 -18 M0 -26 L8 -30 L12 -40"/></g>'; };
-    g += body('#fff', 6.5) + '<circle cx="0" cy="-37" r="5.6" fill="#fff"/>' + body('#1d2b53', 3.6) + '<circle cx="0" cy="-37" r="4.2" fill="#1d2b53"/>';
-    // 청사초롱: 장대 끝에 매단 네 색 초롱
-    g += '<path d="M12 -40 L15 -44" stroke="#5b3a1a" stroke-width="1.6" stroke-linecap="round"/><path d="M15 -44 L15 -41" stroke="#5b3a1a" stroke-width="1"/>' +
-      '<rect x="10.5" y="-41.5" width="9" height="1.8" rx=".6" fill="#7a1f1f"/>' +
-      '<rect x="10" y="-39.8" width="10" height="2.6" fill="#E0352B"/><rect x="10" y="-37.2" width="10" height="2.6" fill="#F2C230"/>' +
-      '<rect x="10" y="-34.6" width="10" height="2.6" fill="#2E9E57"/><rect x="10" y="-32" width="10" height="2.6" fill="#2F5FB3"/>' +
-      '<rect x="10.5" y="-29.4" width="9" height="1.8" rx=".6" fill="#7a1f1f"/><path d="M15 -27.6 L15 -24.5" stroke="#E0352B" stroke-width="1.2"/>';
-    return g + '</g>';
-  }
+  // 계단 그림(2048×512 기준 좌표): 계단 왼쪽 끝 X, 윗면 높이 T, 이정표 그림 자리
+  var SKY = { W: 2048, H: 512, X: [90, 278, 466, 654, 842, 1032, 1218, 1405, 1592, 1782], T: [431, 392, 352, 313, 273, 234, 194, 155, 115],
+    ico: [['tower', 154, 356, 50, 82], ['lotte', 328, 329, 77, 70], ['halla', 522, 300, 74, 60], ['baekdu', 708, 258, 76, 62], ['baekdu', 896, 218, 76, 62],
+      ['plane', 1096, 169, 60, 60], ['space', 1285, 130, 57, 55], ['iss', 1465, 91, 68, 57]], kid: [176, 170] };
   function climbScene(m) {
-    var W = 600, H = 150, n = CLIMB.length - 1, x0 = 26, y0 = 138, x1 = 520, y1 = 34;
-    var c = climbInfo(m), i = Math.max(0, CLIMB.indexOf(c.prev)), f = Math.min(1, (i + Math.max(0, Math.min(1, c.pct))) / n);
-    var sx = (x1 - x0) / n, sy = (y0 - y1) / n, svg = '<svg class="cmc-scene" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMid meet" aria-hidden="true">' +
-      '<defs><radialGradient id="cmcGlow"><stop offset="0" stop-color="#FFE9A0" stop-opacity=".95"/><stop offset=".45" stop-color="#FDBA4D" stop-opacity=".45"/><stop offset="1" stop-color="#FDBA4D" stop-opacity="0"/></radialGradient>' +
-      '<radialGradient id="cmcMoon"><stop offset="0" stop-color="#FFF7D6"/><stop offset=".7" stop-color="#FDE68A"/><stop offset="1" stop-color="#F5C451"/></radialGradient></defs>';
-    [[60, 22], [140, 48], [210, 16], [300, 30], [380, 12], [455, 58], [250, 70], [110, 86]].forEach(function (p) { svg += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="1.4" fill="#fff" opacity=".7"/>'; });
-    svg += '<circle cx="560" cy="30" r="40" fill="url(#cmcGlow)" opacity=".55"/><circle cx="560" cy="30" r="20" fill="url(#cmcMoon)"/>' +
-      '<circle cx="553" cy="25" r="3.5" fill="#E9C45A" opacity=".55"/><circle cx="566" cy="36" r="2.5" fill="#E9C45A" opacity=".5"/>';
-    // 돌계단 (이정표마다 한 칸)
-    for (var k = 0; k < n; k++) {
-      var sxk = x0 + k * sx, syk = y0 - (k + 1) * sy, done = m >= CLIMB[k + 1].m;
-      svg += '<rect x="' + sxk.toFixed(1) + '" y="' + syk.toFixed(1) + '" width="' + (sx + 1).toFixed(1) + '" height="' + (y0 - syk + 10).toFixed(1) + '" fill="' + (done ? '#d9c9a3' : '#8d93a8') + '" opacity="' + (done ? .95 : .45) + '"/>' +
-        '<rect x="' + sxk.toFixed(1) + '" y="' + syk.toFixed(1) + '" width="' + (sx + 1).toFixed(1) + '" height="3" fill="' + (done ? '#f3e7c9' : '#b6bccd') + '" opacity="' + (done ? 1 : .5) + '"/>' + (k === n - 1 ? '' :
-        '<text x="' + (sxk + sx / 2).toFixed(1) + '" y="' + (syk - 6).toFixed(1) + '" text-anchor="middle" font-size="13">' + CLIMB[k + 1].ico + '</text>');
-    }
-    // 아이 위치: 지금 오르는 계단 위
-    var kx = x0 + f * (x1 - x0), ky = y0 - Math.min(n, Math.floor(f * n + 1e-9)) * sy;
-    svg += lanternKid(kx - 6, ky, 1.25);
-    return svg + '</svg>';
+    var n = CLIMB.length - 1, c = climbInfo(m), i = Math.max(0, CLIMB.indexOf(c.prev));
+    var f = Math.min(1, (i + Math.max(0, Math.min(1, c.pct))) / n), done = 0;
+    for (var k = 1; k <= n; k++) if (m >= CLIMB[k].m) done = k;
+    var P = function (v, t) { return (v / t * 100).toFixed(3) + '%'; }, img = ROOT + 'img/sky/';
+    var h = '<div class="cmc-scene" aria-hidden="true"><img class="cmc-l" src="' + img + 'stairs-navy.webp" alt="">';
+    if (done) h += '<img class="cmc-l" src="' + img + 'stairs-gold.webp" alt="" style="clip-path:inset(0 ' + P(SKY.W - (SKY.X[done] - 5), SKY.W) + ' 0 0)">';
+    // 아이: 지금 오르는 계단 위, 계단 안에서는 진행만큼 오른쪽으로
+    var fn = f * n, s = Math.min(n - 1, Math.floor(fn + 1e-9)), fr = Math.min(1, fn - s);
+    var cx = SKY.X[s] + 40 + fr * (SKY.X[s + 1] - SKY.X[s] - 80), kw = SKY.kid[0], kh = SKY.kid[1];
+    SKY.ico.forEach(function (q, k) {
+      if (k !== s) h += '<img class="cmc-i" src="' + img + q[0] + '.webp" alt="" title="' + CLIMB[k + 1].name + '" style="left:' + P(q[1], SKY.W) + ';top:' + P(q[2], SKY.H) + ';width:' + P(q[3], SKY.W) + '">';
+    });
+    h += '<img class="cmc-k" src="' + img + 'kid.webp" alt="" style="left:' + P(cx - kw * 0.42, SKY.W) + ';top:' + P(SKY.T[s] + 3 - kh, SKY.H) + ';width:' + P(kw, SKY.W) + '">';
+    return h + '</div>';
   }
   function climbHTML(m, title, lastYear) {
     var c = climbInfo(m);
     var steps = CLIMB.slice(1).map(function (s) { var on = m >= s.m; return '<span class="cmc-step' + (on ? ' on' : '') + (c.next === s ? ' next' : '') + '" title="' + fmtM(s.m) + '">' + s.ico + '<small>' + s.name + '</small></span>'; }).join('');
     return '<div class="cmc"><div class="cmc-top"><div><div class="cmc-t">' + title + '</div><div class="cmc-h">' + fmtM(m) + '</div>' +
-      '<div class="cmc-s">' + (c.next ? (c.prev.m ? c.prev.name + eul(c.prev.name) + ' 넘었어요! ' : '') + '<b>' + c.next.name + '(' + fmtM(c.next.m) + ')</b>까지 <b>' + fmtM(c.next.m - m) + '</b> 남았어요' : '🌕 청사초롱 들고 달에 도착했어요!') + '</div></div></div>' +
+      '<div class="cmc-s">' + (c.next ? (c.prev.m ? c.prev.name + eul(c.prev.name) + ' 넘었어요! ' : '') + '<b>' + c.next.name + '(' + fmtM(c.next.m) + ')</b>까지 <b>' + fmtM(c.next.m - m) + '</b> 남았어요' : '🌕 청사초롱 들고 달에 도착했어요!') + '</div></div><img class="cmc-b" src="' + ROOT + 'img/sky/kid-badge.webp" alt=""></div>' +
       climbScene(m) +
       '<div class="cmc-steps">' + steps + '</div>' +
       '<div class="cmc-f">4색 청사초롱 들고 다 함께 달까지 · 정답 착지 1번 = 1m 위로 · 3월 1일마다 새로 출발' + (lastYear ? ' · 지난 학년도에는 ' + fmtM(lastYear) + '까지 올라갔어요' : '') + '</div></div>';
   }
-  var climbCss = '.cmc{background:linear-gradient(180deg,#0B1B3F 0%,#1E3A8A 55%,#3B5BA9 100%);color:#fff;border-radius:18px;padding:18px 20px;margin-bottom:16px;box-shadow:0 4px 16px rgba(17,24,39,.08);overflow:hidden}' +
-    '.cmc-top{display:flex;justify-content:space-between;align-items:center;gap:10px}.cmc-t{font-weight:800;opacity:.9}.cmc-h{font-size:2.3em;font-weight:900;line-height:1.15;font-variant-numeric:tabular-nums}' +
+  var climbCss = '.cmc{background:linear-gradient(180deg,#0c163c 0%,#15225a 60%,#1f2f6e 100%);color:#fff;border-radius:18px;padding:18px 20px;margin-bottom:16px;box-shadow:0 4px 16px rgba(17,24,39,.08);overflow:hidden}' +
+    '.cmc-top{display:flex;justify-content:space-between;align-items:center;gap:10px}.cmc-b{width:64px;height:64px;border-radius:50%;flex:none;border:2px solid rgba(253,230,138,.6);box-shadow:0 0 18px rgba(253,186,77,.35);object-fit:cover}@media(max-width:520px){.cmc-b{width:46px;height:46px}}.cmc-t{font-weight:800;opacity:.9}.cmc-h{font-size:2.3em;font-weight:900;line-height:1.15;font-variant-numeric:tabular-nums}' +
     '.cmc-s{opacity:.95;margin-top:2px}.cmc-s b{color:#FDE68A}' +
-    '.cmc-scene{display:block;width:100%;height:auto;max-height:220px;margin:6px 0 2px}' +
+    '.cmc-scene{position:relative;width:100%;aspect-ratio:4/1;margin:10px 0 2px;border-radius:12px;background:#0d1a45}.cmc-scene img{position:absolute;display:block;height:auto;pointer-events:none}.cmc-l{left:0;top:0;width:100%;border-radius:12px}.cmc-k{z-index:2;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}' +
     '.cmc-steps{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.cmc-step{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.12);border-radius:999px;padding:3px 9px;font-size:.95em;opacity:.55}' +
     '.cmc-step small{font-size:.72em;font-weight:700}.cmc-step.on{opacity:1;background:rgba(253,230,138,.25)}.cmc-step.next{opacity:1;outline:2px dashed #FDE68A}' +
     '.cmc-f{font-size:.78em;opacity:.8;margin-top:10px}';
@@ -217,7 +201,7 @@
   // 색동 마크: 매트 2×2 그대로 — 왼위 빨강 '새', 오위 노랑 '도', 왼아래 초록 'ㄱ', 오아래 파랑 'ㅇ' (세로로 읽으면 색 · 동)
   function saekdong(size) {
     var t = [['#E0352B', '새', 0, 0, '#fff'], ['#F2C230', '도', 1, 0, '#3b2a00'], ['#2E9E57', 'ㄱ', 0, 1, '#fff'], ['#2F5FB3', 'ㅇ', 1, 1, '#fff']];
-    return '<svg class="sd-mark" viewBox="0 0 100 100" width="' + (size || 48) + '" height="' + (size || 48) + '" role="img" aria-label="색동"><rect width="100" height="100" rx="14" fill="#2a2420"/>' +
+    return '<svg class="sd-mark" viewBox="0 0 100 100" width="' + (size || 48) + '" height="' + (size || 48) + '" role="img" aria-label="색동"><rect width="100" height="100" rx="14" fill="#0b1a3f"/>' +
       t.map(function (x) { var X = x[2] * 47 + 5, Y = x[3] * 47 + 5; return '<rect x="' + X + '" y="' + Y + '" width="43" height="43" rx="6" fill="' + x[0] + '"/>' +
         '<rect x="' + (X + 3) + '" y="' + (Y + 3) + '" width="37" height="37" rx="4" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.2"/>' +
         '<text x="' + (X + 21.5) + '" y="' + (Y + 22.5) + '" text-anchor="middle" dominant-baseline="central" font-family="\'Song Myung\',serif" font-size="31" fill="' + x[4] + '">' + x[1] + '</text>'; }).join('') + '</svg>';
