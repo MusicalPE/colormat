@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>색동 · 전국 매트 현황판</title>
+<title>색동 한마당 · 전국 매트 현황판</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/song-myung@5/korean-400.css">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#F2392F">
@@ -49,6 +49,8 @@
   .sd-name small { font-family: 'Pretendard', sans-serif; font-size: .34em; font-weight: 700; color: #6b5a48; margin-left: 10px; vertical-align: middle; }
   .sd-slogan { font-family: 'Song Myung', serif; font-size: 1.32em; line-height: 1.3; word-break: keep-all; margin: 0 0 8px !important; opacity: 1 !important; color: #2a2420; }
   .sd-slogan .nw { white-space: nowrap; }
+  .sd-name small { white-space: nowrap; }
+  @media (max-width: 560px) { .sd-name small { display: block; margin: 8px 0 10px; font-size: .32em; } }
   .hero-mid #heroSub { font-size: 1.02em; line-height: 1.7; color: #5a4a3a; opacity: 1; }
   .hero-grid .hero-sels { flex-direction: column; align-items: flex-end; gap: 8px; }
   .hero-grid .hero-sels select { width: 200px; max-width: 100%; border: 1px solid #e3d6bf; }
@@ -107,7 +109,7 @@
       <a class="btn" href="play/">🎮 놀이터</a>
       <a class="btn" href="#" id="cmQrBtn" data-target="board" onclick="return false">📱 QR</a>
       <a class="btn" href="#" id="cmInstallBtn" onclick="return false">📲 바로가기</a>
-      <a class="btn on" href="#">색동 현황판</a>
+      <a class="btn on" href="#">색동 한마당</a>
     </nav>
   </header>
 
@@ -116,8 +118,8 @@
     <div class="hero-grid">
       <div class="hero-logo"><img src="img/saekdong-mark.webp" width="600" height="600" alt="색동"></div>
       <div class="hero-mid">
-        <h1 class="sr-only">색동 · 전국 매트 현황판</h1>
-        <p class="sd-name">색동<small>전국 매트 현황판</small></p>
+        <h1 class="sr-only">색동 한마당 · 전국 매트 현황판</h1>
+        <p class="sd-name">색동 한마당<small>전국 매트 현황판</small></p>
         <p class="sd-slogan"><span class="nw">전국의 색동이 색으로 함께한</span> <span class="nw">놀이가 이곳에 모여요</span></p>
         <p id="heroSub">매달 1일에 새로 시작해요</p>
       </div>

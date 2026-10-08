@@ -9,7 +9,7 @@
   var TARGETS = [
     { key: 'checker', label: '📷 카메라 판정기', url: ROOT + 'checker/index.html', note: '휴대폰·태블릿으로 찍으면 판정기가 열려요. 매트 앞에 세워 두고 쓰세요.' },
     { key: 'play', label: '🎮 놀이터', url: ROOT + 'play/', note: '찍으면 색깔 매트 놀이터(게임 모음)가 열려요.' },
-    { key: 'board', label: '🏆 색동 현황판', url: ROOT + 'board.html', note: '찍으면 전국 매트 현황판이 열려요.' }
+    { key: 'board', label: '🏆 색동 한마당', url: ROOT + 'board.html', note: '찍으면 전국 매트 현황판이 열려요.' }
   ];
 
   // ---------- 앱 설치 ----------
