@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>색동 · 전국 매트 현황판</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/song-myung@5/korean-400.css">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#F2392F">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
@@ -36,6 +37,30 @@
   .hero-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
   .hero select { font: inherit; font-weight: 700; border: 0; border-radius: 999px; padding: 8px 14px; color: var(--ink); background: #fff; }
   .hero-sels { display: flex; gap: 8px; flex-wrap: wrap; }
+  /* 색동: 한지 바탕 + 색동 띠, 점퍼스와 같은 배치 (왼쪽 로고 · 가운데 글 · 오른쪽 고르기 · 아래 구호) */
+  .sd-hero { position: relative; background: #F6EFE0; color: #2a2420; padding: 0; overflow: hidden; }
+  .sd-hero::before { content: ""; position: absolute; inset: 0; opacity: .35; pointer-events: none; background-image: radial-gradient(rgba(120,90,50,.18) 1px, transparent 1.2px), radial-gradient(rgba(120,90,50,.12) 1px, transparent 1.4px); background-size: 7px 7px, 13px 11px; }
+  .sd-band { position: relative; height: 12px; background: repeating-linear-gradient(90deg, #E0352B 0 40px, #F2C230 40px 80px, #2E9E57 80px 120px, #E77FA2 120px 160px, #2F5FB3 160px 200px, #FBF7EE 200px 240px, #7B3F86 240px 280px); }
+  .hero-grid { position: relative; display: grid; grid-template-columns: 31% minmax(0,1fr) auto; align-items: center; gap: 18px; padding: 20px 24px 18px; }
+  .hero-logo { background: #fff; border-radius: var(--r-md); padding: 6px 10px; box-shadow: 0 4px 14px rgba(60,40,20,.12); grid-row: 1 / span 2; }
+  .hero-logo img { display: block; width: 100%; height: auto; }
+  .hero-mid { text-align: center; }
+  .sd-slogan { font-family: 'Song Myung', serif; font-size: 2.1em; line-height: 1.2; margin: 0 0 8px !important; opacity: 1 !important; color: #2a2420; }
+  .hero-mid #heroSub { font-size: 1.02em; line-height: 1.7; color: #5a4a3a; opacity: 1; }
+  .hero-grid .hero-sels { flex-direction: column; align-items: flex-end; gap: 8px; }
+  .hero-grid .hero-sels select { width: 200px; max-width: 100%; border: 1px solid #e3d6bf; }
+  .hero-slogan { grid-column: 2 / -1; margin: 2px 0 0 !important; padding-top: 12px; border-top: 1px solid rgba(90,70,50,.25); text-align: center; font-size: .98em; font-weight: 700; color: #5a4a3a; opacity: 1 !important; white-space: nowrap; }
+  .hero-slogan b { font-family: 'Song Myung', serif; font-weight: 400; font-size: 1.25em; color: #2a2420; margin-right: 2px; }
+  .hero-slogan span { opacity: .6; margin: 0 .9em; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  @media (max-width: 720px) {
+    .hero-grid { grid-template-columns: 1fr; gap: 12px; }
+    .hero-logo { grid-row: auto; max-width: 280px; margin: 0 auto; }
+    .hero-grid .hero-sels { flex-direction: row; justify-content: center; flex-wrap: wrap; }
+    .hero-grid .hero-sels select { width: auto; }
+    .hero-slogan { grid-column: auto; white-space: normal; font-size: .9em; }
+    .hero-slogan span { margin: 0 .4em; }
+  }
   .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
   .kpi { background: var(--surface); border-radius: var(--r-md); padding: 12px 14px; box-shadow: var(--shadow); }
   .kpi span { color: var(--muted); font-size: 0.82em; font-weight: 700; }
@@ -73,22 +98,24 @@
 <body>
 <div class="container">
   <header class="topbar">
-    <a class="brand" href="./"><span class="logo"><i style="background:var(--red)"></i><i style="background:var(--yellow)"></i><i style="background:var(--green)"></i><i style="background:var(--blue)"></i></span>색깔 매트 놀이터</a>
+    <a class="brand" href="" title="새로 불러오기"><span id="sdMarkTop" style="line-height:0"></span>색동</a>
     <nav class="nav">
       <a class="btn" href="./">🏫 우리 학교</a>
       <a class="btn" href="play/">🎮 놀이터</a>
       <a class="btn" href="#" id="cmQrBtn" data-target="board" onclick="return false">📱 QR</a>
       <a class="btn" href="#" id="cmInstallBtn" onclick="return false">📲 바로가기</a>
-      <a class="btn on" href="#">전국 현황판</a>
+      <a class="btn on" href="#">색동 현황판</a>
     </nav>
   </header>
 
-  <div class="hero">
-    <div class="hero-row">
-      <div>
-        <h1><span id="sdMark" style="display:inline-block;vertical-align:-10px;margin-right:8px"></span>색동 <span style="font-size:.62em;font-weight:700;opacity:.92">· 전국 매트 현황판</span></h1>
-        <p class="kick" style="margin:0 0 4px;font-weight:800;font-size:1.15em">색으로 노는 아이들 <span style="font-weight:600;font-size:.72em;opacity:.85">· 色童 色同 色動</span></p>
-        <p id="heroSub">카메라가 판정하고 선생님이 확인한 기록만 모여요 · 매달 1일에 새로 시작</p>
+  <div class="hero sd-hero">
+    <div class="sd-band"></div>
+    <div class="hero-grid">
+      <div class="hero-logo"><img src="img/saekdong-logo.webp" width="1054" height="799" alt="색동 · 색으로 노는 아이들 · 전국 매트 현황판"></div>
+      <div class="hero-mid">
+        <h1 class="sr-only">색동 · 전국 매트 현황판</h1>
+        <p class="sd-slogan">색으로 노는 아이들</p>
+        <p id="heroSub">카메라가 판정하고 선생님이 확인한 기록만 모여요<br>매달 1일에 새로 시작해요</p>
       </div>
       <div class="hero-sels">
         <select id="gameSel" aria-label="게임 고르기"></select>
@@ -96,7 +123,10 @@
         <select id="bandSel" aria-label="학년군 고르기"><option value="">전체 학년</option><option value="1-2">1~2학년</option><option value="3-4">3~4학년</option><option value="5-6">5~6학년</option></select>
         <select id="monthSel" aria-label="달 고르기"></select>
       </div>
+      <p class="hero-slogan"><b>色童</b> 색으로 노는 아이들<span>·</span><b>色同</b> 색으로 함께<span>·</span><b>色動</b> 색으로 움직여요</p>
     </div>
+    <div class="sd-band"></div>
+  </div>
   </div>
 
   <div id="body"><div class="loading">현황판을 불러오는 중…</div></div>
@@ -118,7 +148,7 @@
   const monthLabel = function(m){ return m ? Number(m.slice(0, 4)) + '년 ' + Number(m.slice(5, 7)) + '월' : ''; };
   const rankHTML = function(r){ return '<span class="rank' + (r <= 3 ? ' r' + r : '') + '">' + r + '</span>'; };
 
-  if (window.CMApp && CMApp.saekdong) $('sdMark').innerHTML = CMApp.saekdong(46);
+  if (window.CMApp && CMApp.saekdong) $('sdMarkTop').innerHTML = CMApp.saekdong(26);
   let collector = '', data = null, tab = TABS.some(function(t){ return t[0] === q.tab; }) ? q.tab : 'correct';
   $('gameSel').innerHTML = GAMES.map(function(g){ return '<option value="' + g[0] + '">' + g[1] + '</option>'; }).join('');
   $('gameSel').value = GAMES.some(function(g){ return g[0] === q.game; }) ? q.game : 'stroop';
