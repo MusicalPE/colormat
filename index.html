@@ -123,7 +123,7 @@
 <script>
 (function(){
 'use strict';
-const VERSION = 'app v1.4.0';
+const VERSION = 'app v1.5.0';
 const REQUIRED_SHELL = 1;
 const GAME_NAME = { stroop:'함정 뛰기', basic:'색깔 뛰기', memory:'기억 뛰기', rhythm:'박자 뛰기', dir:'방향 뛰기', quiz:'정답 뛰기', assoc:'그림 뛰기', twist:'손발 꼬기', freeze:'얼음 꽁꽁', lava:'용암 피하기' };
 const DIFFN = (g, d) => (window.CMApp && CMApp.diffName) ? CMApp.diffName(g, d) : d;
@@ -174,7 +174,7 @@ function setNav(){
   if ($('mainBtn')) $('mainBtn').onclick = () => { reloadPublic().then(() => go('main')); };
   wireInstall();
 }
-function reloadPublic(){ return rpc('getPublic').then(p => { APP.pub = p; LS.set('cm_pub|' + APP.s, p); if (p.title) $('brandSchool').textContent = p.title; }).catch(() => {}); }
+function reloadPublic(){ return rpc('getPublic').then(p => { APP.pub = p; LS.set('cm_pub|' + APP.s, p); $('brandSchool').textContent = p.title || ''; }).catch(() => {}); }
 
 function climbCard(c){
   if (!c || !window.CMApp || !CMApp.climbHTML) return '';
@@ -205,7 +205,7 @@ function renderMain(){
   const days = p.days || [];
   const yearM = (p.climb && p.climb.years && p.climb.years[p.climb.year]) || 0;
   const monRuns = days.filter(d => d[1].slice(0,7) === mon).reduce((a, d) => a + d[5], 0);
-  let h = '<div class="hero"><h1>' + esc(p.title || '색동') + '</h1><p class="clock" id="clock"></p>' +
+  let h = '<div class="hero"><h1>' + esc(p.title || '우리 학교 색동') + '</h1><p class="clock" id="clock"></p>' +
     '<div class="leads">' + lead('오늘의 매트왕', L.today, v => num(v) + '번 정답') + lead('이번 주 매트왕', L.week, v => num(v) + '번 정답', 'l2') +
       lead('이번 달 정확도왕', L.acc, v => (Math.round(v * 10) / 10) + '%', 'l3') + '</div></div>';
   h += climbCard(p.climb);
@@ -290,7 +290,7 @@ function renderSetup(){
     '</div>' +
     (last ? '<div class="card"><h2>지난번에 쓰던 학교 시트</h2><p class="hint" style="word-break:break-all">' + esc(last) + '</p><a class="btn" href="?' + (idOf(last) ? 'id=' + idOf(last) : 's=' + encodeURIComponent(last)) + '">이어서 열기 →</a></div>' : '') +
     '<div class="card" id="install"><h2>🏫 우리 학교 기록 처음 설치하기 (5분)</h2><ol class="steps">' +
-      '<li><b>새 구글 스프레드시트</b>를 만들고 이름을 정해요 (예: 우리 반 매트 기록).</li>' +
+      '<li><b>새 구글 스프레드시트</b>를 만들고 이름을 정해요 (예: 햇살초 색동 기록). 화면에 보일 이름은 나중에 관리자 메뉴 → 설정에서 따로 정해요.</li>' +
       '<li>메뉴 <b>확장 프로그램 → Apps Script</b>를 열어요.</li>' +
       '<li>원래 있던 내용을 지우고 <b>껍데기 코드</b>를 붙여넣고 저장해요. <button class="btn ghost" id="copyShell" style="padding:6px 12px;margin-left:6px">📋 껍데기 코드 복사</button></li>' +
       '<li><b>배포 → 새 배포 → 웹 앱</b>: 다음 사용자로 실행 = <b>나</b>, 액세스 권한 = <b>모든 사용자</b> → 배포 (권한 허용).</li>' +
@@ -420,7 +420,7 @@ function renderAdmin(msg){
   setNav();
   const pending = d.records.filter(r => r.status === 'pending').sort((a,b) => b.ts - a.ts);
   const tabs = [['pending','기록 승인', pending.length], ['students','학생 관리'], ['records','기록 관리'], ['live','📺 색동 라이브'], ['settings','설정']];
-  let h = '<div class="hero"><h1>관리자 메뉴</h1><p>' + esc(d.title || '') + ' · 껍데기 판 ' + d.shell + '</p></div>';
+  let h = '<div class="hero"><h1>관리자 메뉴</h1><p>' + esc(d.title || '화면 이름 없음') + ' · 껍데기 판 ' + d.shell + '</p></div>';
   if (d.shell < REQUIRED_SHELL) h += '<div class="msg err">껍데기를 새 판으로 바꿔 주세요.</div>';
   if (APP.isDefaultPw) h += '<div class="msg info">처음 비밀번호(1234)를 쓰고 있어요. 설정 탭에서 바꿔 주세요.</div>';
   if (msg) h += '<div class="msg ok">' + esc(msg) + '</div>';
@@ -451,6 +451,10 @@ function renderAdmin(msg){
       recTable(shown) + '</div>';
   } else {
     const last = LS.get('cm_nat_last|' + APP.s, 0);
+    const ttl = (d.extra && d.extra.title) || '';
+    h += '<div class="card"><h2>🏫 화면 이름</h2><p class="hint">우리 학교 화면 맨 위와 큰 제목에 보일 이름이에요. 비워 두면 "우리 학교 색동"으로 보여요.</p>' +
+      '<div class="row"><input type="text" id="appTitle" maxlength="30" value="' + esc(ttl) + '" placeholder="예: 햇살초 색동" style="flex:1;min-width:200px"><button class="btn" id="appTitleSave">저장</button></div>' +
+      (d.shell < 2 ? '<div class="msg err" style="margin-top:8px">지금 껍데기(' + d.shell + '판)에서는 이 이름이 이 기기에만 보이고, 학생 화면에는 시트 파일 이름(' + esc(d.title || '') + ')이 보여요. 학생 화면에도 보이게 하려면 껍데기를 2판으로 바꿔 주세요: 아래 <b>껍데기 · 연결</b>의 코드를 Apps Script 에 붙여넣고 저장 → 배포 관리 → 수정 → 새 버전.</div>' : '') + '</div>';
     h += '<div class="card"><h2>🏆 전국 현황판 참여</h2>' +
       '<p class="hint">켜면 <b>승인한 카메라 판정 기록</b>을 전국 현황판으로 보내요. 보내는 것: 가린 이름(김*늘)·학년·게임·난이도·정답/시도·플레이 시간·완주. <b>반·번호·실명은 보내지 않아요.</b></p>' +
       (!d.approvalOn ? '<div class="msg err">전국 현황판은 승인 절차가 켜져 있어야 참여할 수 있어요.</div>' : '') +
@@ -527,6 +531,8 @@ function renderAdmin(msg){
       if (!on && NAT.cfg().on && !confirm('승인 절차를 끄면 전국 현황판 참여도 꺼져요. 끌까요?')) { e.target.checked = true; return; }
       act(rpc('setAppSettings', [APP.token, { approvalOn: on }]).then(() => (!on && NAT.cfg().on) ? natPatch({ on:false }) : null), on ? '승인 절차를 켰어요' : '승인 절차를 껐어요');
     };
+    $('appTitleSave').onclick = () => { const t = $('appTitle').value.trim().slice(0, 30);
+      act(rpc('setExtraSettings', [APP.token, { title: t || null }]).then(r => { if (APP.pub) { APP.pub.title = (APP.pub.shell >= 2 || !APP.pub.shell) ? t : APP.pub.title; } if (APP.data) APP.data.extra = Object.assign({}, APP.data.extra, { title: t }); $('brandSchool').textContent = t; return r; }), t ? '화면 이름을 "' + t + '"(으)로 바꿨어요' : '화면 이름을 비웠어요'); };
     $('stuQr').onclick = showStudentQr;
     $('copyUrl').onclick = function(){ navigator.clipboard.writeText(selfUrl()).then(() => this.textContent = '복사했어요 ✓'); };
     $('pwf').onsubmit = e => { e.preventDefault(); const a = $('np1').value, b = $('np2').value; if (a !== b) return alert('두 번 넣은 비밀번호가 달라요.'); rpc('changeAdminPassword', [APP.token, a]).then(r => { if (!r.ok) return alert(r.message); APP.isDefaultPw = false; renderAdmin('비밀번호를 바꿨어요'); }).catch(e => alert(e.message)); };
@@ -554,7 +560,7 @@ else {
   setNav();
   // 빠르게: 이 기기에 저장해 둔 지난 내용을 먼저 보여 주고, 학교 시트 응답이 오면 새 내용으로 바꿈
   const CK = 'cm_pub|' + APP.s, cached = LS.get(CK, null);
-  const usePub = p => { APP.pub = p; if (p.title) { $('brandSchool').textContent = p.title; document.title = p.title + ' — 색동'; }
+  const usePub = p => { APP.pub = p; $('brandSchool').textContent = p.title || ''; document.title = p.title ? p.title + ' — 색동' : '색동';
     if (!p.days) { p.days = []; p.today = []; p.now = new Date().toISOString().slice(0,10); } };
   let shownCached = false;
   if (cached && cached.students) { usePub(cached); shownCached = true; render(); showRefreshing(true); }

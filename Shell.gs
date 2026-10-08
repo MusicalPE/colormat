@@ -10,7 +10,7 @@
  * 처음 관리자 비밀번호: 1234 (관리자 메뉴에서 바꾸세요)
  *************************************************************/
 
-const SHELL_VERSION = 1;
+const SHELL_VERSION = 2;   // 2판: 화면 이름(관리자 메뉴 → 설정)을 학생 화면에도 보여 줌
 const APP_URL = 'https://musicalpe.github.io/colormat/';
 
 const SHEET_STUDENTS = 'Students';
@@ -106,7 +106,7 @@ function getPublic() {
   }
   list.sort(function (a, b) { return a.order - b.order; });
   const act = activity_();
-  return { shell: SHELL_VERSION, title: getSS_().getName(), approvalOn: approvalOn_(), students: list, climb: act.climb,
+  return { shell: SHELL_VERSION, title: clean_(getExtraSettings().title, 30), sheetName: getSS_().getName(), approvalOn: approvalOn_(), students: list, climb: act.climb,
     days: act.days, today: act.today, pending: act.pending, now: today_() };
 }
 // 다 함께 하늘까지: 승인된 카메라 판정 정답 착지 1번 = 1m. 학년도(3월 1일 시작)별 합
