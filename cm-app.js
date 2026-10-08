@@ -216,10 +216,11 @@
   }
   // 색동 마크: 매트 2×2 그대로 — 왼위 빨강 '새', 오위 노랑 '도', 왼아래 초록 'ㄱ', 오아래 파랑 'ㅇ' (세로로 읽으면 색 · 동)
   function saekdong(size) {
-    var t = [['#F2392F', '새', 0, 0, '#fff'], ['#FFD21F', '도', 1, 0, '#3b2a00'], ['#2FC653', 'ㄱ', 0, 1, '#fff'], ['#4C88FF', 'ㅇ', 1, 1, '#fff']];
-    return '<svg class="sd-mark" viewBox="0 0 100 100" width="' + (size || 48) + '" height="' + (size || 48) + '" role="img" aria-label="색동">' +
-      t.map(function (x) { return '<rect x="' + (x[2] * 51 + 1) + '" y="' + (x[3] * 51 + 1) + '" width="47" height="47" rx="9" fill="' + x[0] + '"/>' +
-        '<text x="' + (x[2] * 51 + 24.5) + '" y="' + (x[3] * 51 + 25) + '" text-anchor="middle" dominant-baseline="central" font-family="Pretendard,\'Apple SD Gothic Neo\',\'Malgun Gothic\',sans-serif" font-weight="900" font-size="30" fill="' + x[4] + '">' + x[1] + '</text>'; }).join('') + '</svg>';
+    var t = [['#E0352B', '새', 0, 0, '#fff'], ['#F2C230', '도', 1, 0, '#3b2a00'], ['#2E9E57', 'ㄱ', 0, 1, '#fff'], ['#2F5FB3', 'ㅇ', 1, 1, '#fff']];
+    return '<svg class="sd-mark" viewBox="0 0 100 100" width="' + (size || 48) + '" height="' + (size || 48) + '" role="img" aria-label="색동"><rect width="100" height="100" rx="14" fill="#2a2420"/>' +
+      t.map(function (x) { var X = x[2] * 47 + 5, Y = x[3] * 47 + 5; return '<rect x="' + X + '" y="' + Y + '" width="43" height="43" rx="6" fill="' + x[0] + '"/>' +
+        '<rect x="' + (X + 3) + '" y="' + (Y + 3) + '" width="37" height="37" rx="4" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.2"/>' +
+        '<text x="' + (X + 21.5) + '" y="' + (Y + 22.5) + '" text-anchor="middle" dominant-baseline="central" font-family="\'Song Myung\',serif" font-size="31" fill="' + x[4] + '">' + x[1] + '</text>'; }).join('') + '</svg>';
   }
   window.CMApp = { showQr: showQr, showInstall: showInstall, showQrList: function (list) { showQr(list[0].key, list); }, ROOT: ROOT,
     climbInfo: climbInfo, fmtM: fmtM, CAM_GAMES: CAM_GAMES, saekdong: saekdong, gameName: gameName, diffName: diffName, climbHTML: function (m, t, ly) { addClimbCss(); return climbHTML(m, t, ly); } };
