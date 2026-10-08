@@ -102,18 +102,18 @@
   }
   .sd-tag{font-weight:600;color:#6b7280;font-size:.78em;display:inline-flex;align-items:baseline;gap:5px;margin-left:2px;white-space:nowrap}.sd-tag b{font-family:'Song Myung',serif;font-weight:400;font-size:1.3em;color:#2a2420}
   .sdi::before{content:'';display:inline-block;width:12px;height:12px;margin-right:6px;vertical-align:-1px;border-radius:3px;border:1.5px solid #0b1a3f;background:linear-gradient(#E0352B,#E0352B) 0 0/50% 50% no-repeat,linear-gradient(#F2C230,#F2C230) 100% 0/50% 50% no-repeat,linear-gradient(#2E9E57,#2E9E57) 0 100%/50% 50% no-repeat,linear-gradient(#2F5FB3,#2F5FB3) 100% 100%/50% 50% no-repeat}
+  .brand .pg{font-size:22px;font-weight:800;letter-spacing:-.03em;color:#1f2937}
 </style>
 </head>
 <body>
 <div class="container">
   <header class="topbar">
-    <a class="brand" href="" title="새로 불러오기"><span id="sdMarkTop" style="line-height:0"></span>색동<small class="sd-tag"><b>色童</b>색으로 노는 아이들</small></a>
+    <a class="brand" href="" title="새로 불러오기"><span id="sdMarkTop" style="line-height:0"></span><span class="pg">한마당</span><small class="sd-tag"><b>色童</b>색으로 노는 아이들</small></a>
     <nav class="nav">
       <a class="btn sdi" href="./">우리 학교</a>
       <a class="btn sdi" href="play/">놀이터</a>
       <a class="btn" href="#" id="cmQrBtn" data-target="board" onclick="return false">QR</a>
       <a class="btn" href="#" id="cmInstallBtn" onclick="return false">바로가기</a>
-      <a class="btn sdi on" href="#">한마당</a>
     </nav>
   </header>
 
@@ -157,7 +157,7 @@
   const monthLabel = function(m){ return m ? Number(m.slice(0, 4)) + '년 ' + Number(m.slice(5, 7)) + '월' : ''; };
   const rankHTML = function(r){ return '<span class="rank' + (r <= 3 ? ' r' + r : '') + '">' + r + '</span>'; };
 
-  if (window.CMApp && CMApp.saekdong) $('sdMarkTop').innerHTML = CMApp.saekdong(26);
+  if (window.CMApp && CMApp.saekdong) $('sdMarkTop').innerHTML = CMApp.saekdong(30);
   let collector = '', data = null, tab = TABS.some(function(t){ return t[0] === q.tab; }) ? q.tab : 'correct';
   $('gameSel').innerHTML = GAMES.map(function(g){ return '<option value="' + g[0] + '">' + g[1] + '</option>'; }).join('');
   $('gameSel').value = GAMES.some(function(g){ return g[0] === q.game; }) ? q.game : 'stroop';
