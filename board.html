@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>전국 매트 현황판</title>
+<title>색동 · 전국 매트 현황판</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#F2392F">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
@@ -86,7 +86,8 @@
   <div class="hero">
     <div class="hero-row">
       <div>
-        <h1>전국 매트 현황판</h1>
+        <h1><span id="sdMark" style="display:inline-block;vertical-align:-10px;margin-right:8px"></span>색동 <span style="font-size:.62em;font-weight:700;opacity:.92">· 전국 매트 현황판</span></h1>
+        <p class="kick" style="margin:0 0 4px;font-weight:800;font-size:1.15em">색으로 노는 아이들 <span style="font-weight:600;font-size:.72em;opacity:.85">· 色童 色同 色動</span></p>
         <p id="heroSub">카메라가 판정하고 선생님이 확인한 기록만 모여요 · 매달 1일에 새로 시작</p>
       </div>
       <div class="hero-sels">
@@ -117,6 +118,7 @@
   const monthLabel = function(m){ return m ? Number(m.slice(0, 4)) + '년 ' + Number(m.slice(5, 7)) + '월' : ''; };
   const rankHTML = function(r){ return '<span class="rank' + (r <= 3 ? ' r' + r : '') + '">' + r + '</span>'; };
 
+  if (window.CMApp && CMApp.saekdong) $('sdMark').innerHTML = CMApp.saekdong(46);
   let collector = '', data = null, tab = TABS.some(function(t){ return t[0] === q.tab; }) ? q.tab : 'correct';
   $('gameSel').innerHTML = GAMES.map(function(g){ return '<option value="' + g[0] + '">' + g[1] + '</option>'; }).join('');
   $('gameSel').value = GAMES.some(function(g){ return g[0] === q.game; }) ? q.game : 'stroop';

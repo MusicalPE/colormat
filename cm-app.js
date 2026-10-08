@@ -9,7 +9,7 @@
   var TARGETS = [
     { key: 'checker', label: '📷 카메라 판정기', url: ROOT + 'checker/index.html', note: '휴대폰·태블릿으로 찍으면 판정기가 열려요. 매트 앞에 세워 두고 쓰세요.' },
     { key: 'play', label: '🎮 놀이터', url: ROOT + 'play/', note: '찍으면 색깔 매트 놀이터(게임 모음)가 열려요.' },
-    { key: 'board', label: '🏆 전국 현황판', url: ROOT + 'board.html', note: '찍으면 전국 매트 현황판이 열려요.' }
+    { key: 'board', label: '🏆 색동 현황판', url: ROOT + 'board.html', note: '찍으면 전국 매트 현황판이 열려요.' }
   ];
 
   // ---------- 앱 설치 ----------
@@ -179,6 +179,13 @@
       for (var j = 0; j < CAM_GAMES[i][2].length; j++) if (CAM_GAMES[i][2][j][0] === d) return CAM_GAMES[i][2][j][1];
     return d || '';
   }
+  // 색동 마크: 매트 2×2 그대로 — 왼위 빨강 '새', 오위 노랑 '도', 왼아래 초록 'ㄱ', 오아래 파랑 'ㅇ' (세로로 읽으면 색 · 동)
+  function saekdong(size) {
+    var t = [['#F2392F', '새', 0, 0, '#fff'], ['#FFD21F', '도', 1, 0, '#3b2a00'], ['#2FC653', 'ㄱ', 0, 1, '#fff'], ['#4C88FF', 'ㅇ', 1, 1, '#fff']];
+    return '<svg class="sd-mark" viewBox="0 0 100 100" width="' + (size || 48) + '" height="' + (size || 48) + '" role="img" aria-label="색동">' +
+      t.map(function (x) { return '<rect x="' + (x[2] * 51 + 1) + '" y="' + (x[3] * 51 + 1) + '" width="47" height="47" rx="9" fill="' + x[0] + '"/>' +
+        '<text x="' + (x[2] * 51 + 24.5) + '" y="' + (x[3] * 51 + 25) + '" text-anchor="middle" dominant-baseline="central" font-family="Pretendard,\'Apple SD Gothic Neo\',\'Malgun Gothic\',sans-serif" font-weight="900" font-size="30" fill="' + x[4] + '">' + x[1] + '</text>'; }).join('') + '</svg>';
+  }
   window.CMApp = { showQr: showQr, showInstall: showInstall, showQrList: function (list) { showQr(list[0].key, list); }, ROOT: ROOT,
-    climbInfo: climbInfo, fmtM: fmtM, CAM_GAMES: CAM_GAMES, gameName: gameName, diffName: diffName, climbHTML: function (m, t, ly) { addClimbCss(); return climbHTML(m, t, ly); } };
+    climbInfo: climbInfo, fmtM: fmtM, CAM_GAMES: CAM_GAMES, saekdong: saekdong, gameName: gameName, diffName: diffName, climbHTML: function (m, t, ly) { addClimbCss(); return climbHTML(m, t, ly); } };
 })();

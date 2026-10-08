@@ -121,7 +121,7 @@
 <script>
 (function(){
 'use strict';
-const VERSION = 'app v1.3.1';
+const VERSION = 'app v1.4.0';
 const REQUIRED_SHELL = 1;
 const GAME_NAME = { stroop:'색깔 스트룹', basic:'색깔 점프', memory:'기억력 스텝', rhythm:'리듬 스텝', dir:'방향 점프', quiz:'퀴즈 점프', assoc:'연상 점프', twist:'손발 트위스터', freeze:'얼음 스텝', lava:'용암 매트' };
 const DIFFN = (g, d) => (window.CMApp && CMApp.diffName) ? CMApp.diffName(g, d) : d;
@@ -152,7 +152,7 @@ function wireInstall(){ const b = $('cmInstallBtn'); if (b) b.onclick = () => CM
 function showStudentQr(){
   CMApp.showQrList([
     { key:'stu', label:'🙋 우리 학교 화면', url: selfUrl(), note:'학생 휴대폰·태블릿으로 찍으면 우리 학교 매트 놀이터가 열려요. 이름을 고르고 카메라 판정으로 뛰어요.' },
-    { key:'board', label:'🏆 전국 현황판', url: CMApp.ROOT + 'board.html', note:'찍으면 전국 매트 현황판이 열려요.' }
+    { key:'board', label:'🏆 색동 현황판', url: CMApp.ROOT + 'board.html', note:'찍으면 전국 매트 현황판이 열려요.' }
   ]);
 }
 function setNav(){
@@ -160,7 +160,7 @@ function setNav(){
   const pend = APP.pub && APP.pub.pending ? '<span class="cnt">' + APP.pub.pending + '</span>' : '';
   $('nav').innerHTML = (APP.page === 'main'
       ? '<a class="pill" href="play/">🎮 놀이터</a>' +
-        '<a class="pill" href="board.html" target="_blank" rel="noopener">🏆 전국 현황판</a>' +
+        '<a class="pill" href="board.html" target="_blank" rel="noopener">🏆 색동 현황판</a>' +
         '<button class="pill" id="qrBtn">📱 접속 QR</button>' +
         '<button class="pill" id="apBtn">기록 승인' + pend + '</button>' +
         '<button class="pill" id="adBtn">관리자 메뉴</button>'
@@ -284,7 +284,7 @@ function renderSetup(){
     '<div class="doors">' +
       '<a class="door" href="play/"><span class="door-ico">🎮</span><b>놀이터 바로 가기</b><span>설치 없이 바로! 프로젝터·TV로 띄워 반 전체가 함께 뛰는 게임 모음</span></a>' +
       '<a class="door" href="#install" id="toInstall"><span class="door-ico">🏫</span><b>우리 학교 기록 시작하기</b><span>구글 시트 하나로 학생 기록·승인·하늘까지, 카메라 판정 기록은 전국 현황판에</span></a>' +
-      '<a class="door" href="board.html" target="_blank" rel="noopener"><span class="door-ico">🏆</span><b>전국 현황판</b><span>여러 학교가 함께 모은 매트 기록과 "다 함께 하늘까지"</span></a>' +
+      '<a class="door" href="board.html" target="_blank" rel="noopener"><span class="door-ico">🏆</span><b>색동 · 전국 현황판</b><span>여러 학교가 함께 모은 매트 기록과 "다 함께 하늘까지"</span></a>' +
     '</div>' +
     (last ? '<div class="card"><h2>지난번에 쓰던 학교 시트</h2><p class="hint" style="word-break:break-all">' + esc(last) + '</p><a class="btn" href="?' + (idOf(last) ? 'id=' + idOf(last) : 's=' + encodeURIComponent(last)) + '">이어서 열기 →</a></div>' : '') +
     '<div class="card" id="install"><h2>🏫 우리 학교 기록 처음 설치하기 (5분)</h2><ol class="steps">' +
@@ -376,6 +376,9 @@ function loadAdmin(msg){
   return rpc('getAllDataAdmin', [APP.token]).then(d => { APP.data = d; renderAdmin(msg); })
     .catch(e => { if (/권한/.test(e.message)) { APP.token = null; renderLogin('로그인 시간이 지났어요. 다시 들어와 주세요.'); } else $('view').innerHTML = '<div class="msg err">' + esc(e.message) + '</div>'; });
 }
+// 매트 라이브가 결과를 시트에 넣으면 알려 줌 → 전국 현황판에 보내고 화면 새로 고침
+window.addEventListener('message', e => { if (e.origin === location.origin && e.data && e.data.type === 'matlive-saved' && APP.token)
+  rpc('getAllDataAdmin', [APP.token]).then(dd => { APP.data = dd; return syncAfter('매트 라이브 기록을 저장했어요'); }).then(m => { if (APP.page === 'admin') renderAdmin(m); reloadPublic && reloadPublic(); }).catch(() => {}); });
 function syncAfter(note){
   return NAT.sync().then(r => r ? note + ' · 전국 현황판에도 반영했어요' : note).catch(e => note + ' · (전국 현황판 보내기 실패: ' + e.message + ')');
 }
@@ -414,7 +417,7 @@ function renderAdmin(msg){
   if (APP.pub) APP.pub.pending = d.records.filter(r => r.status === 'pending').length;
   setNav();
   const pending = d.records.filter(r => r.status === 'pending').sort((a,b) => b.ts - a.ts);
-  const tabs = [['pending','기록 승인', pending.length], ['students','학생 관리'], ['records','기록 관리'], ['settings','설정']];
+  const tabs = [['pending','기록 승인', pending.length], ['students','학생 관리'], ['records','기록 관리'], ['live','📺 매트 라이브'], ['settings','설정']];
   let h = '<div class="hero"><h1>관리자 메뉴</h1><p>' + esc(d.title || '') + ' · 껍데기 판 ' + d.shell + '</p></div>';
   if (d.shell < REQUIRED_SHELL) h += '<div class="msg err">껍데기를 새 판으로 바꿔 주세요.</div>';
   if (APP.isDefaultPw) h += '<div class="msg info">처음 비밀번호(1234)를 쓰고 있어요. 설정 탭에서 바꿔 주세요.</div>';
@@ -460,7 +463,14 @@ function renderAdmin(msg){
       '<div class="card"><h2>관리자 비밀번호</h2><form class="row" id="pwf"><input type="password" id="np1" placeholder="새 비밀번호 (4자 이상)"><input type="password" id="np2" placeholder="한 번 더"><button class="btn ghost">바꾸기</button></form></div>' +
       '<div class="card"><h2>껍데기 · 연결</h2><p class="hint">이 기기는 다음부터 <b>musicalpe.github.io/colormat/</b>만 열어도 이 학교로 바로 들어와요. 다른 시트로 바꾸려면 <a href="./?new=1">새로 연결하기</a>.</p><p class="hint">지금 껍데기 판 ' + d.shell + ' · 화면 ' + VERSION + '. 화면은 자동으로 새 판이 되고, 껍데기를 바꿔야 할 때만 여기서 알려 드려요.</p><button class="btn ghost" id="logout">로그아웃</button></div>';
   }
+  if (APP.tab === 'live') {
+    h += '<div class="card"><h2>📺 매트 라이브 (여러 매트가 함께 뛰기)</h2>' +
+      '<p class="hint">매트마다 휴대폰·태블릿을 한 대씩 세우면, <b>문제는 TV 한 곳에 크게</b> 나오고 모든 매트가 같은 문제로 동시에 뛰어요. 각 기기가 카메라로 판정해 TV 아래에 매트별 정답 수가 실시간으로 떠요.</p>' +
+      '<p class="hint">명단은 이 학교 시트에서 가져오고, 판이 끝나면 결과가 <b>승인된 카메라 기록</b>으로 바로 들어가 전국 현황판에도 보내져요. TV 화면은 처음 한 번 구글 계정 로그인이 필요해요.</p>' +
+      '<div class="row"><button class="btn big" id="openLive">📺 매트 라이브 열기</button></div><p class="hint" id="liveMsg"></p></div>';
+  }
   $('view').innerHTML = h;
+  if ($('openLive')) $('openLive').onclick = () => { const w = window.open('live/?s=' + encodeURIComponent(APP.s), '_blank'); if (!w) $('liveMsg').textContent = '새 창이 막혔어요. 주소창 오른쪽에서 팝업을 허용해 주세요.'; };
   $('view').querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { APP.tab = b.dataset.tab; history.replaceState(null, '', selfUrl(APP.tab === 'pending' ? 'approval' : 'admin')); renderAdmin(); });
   wirePickAll();
   const act = (p, note) => { $('view').querySelectorAll('button').forEach(b => b.disabled = true); return p.then(() => rpc('getAllDataAdmin', [APP.token])).then(dd => { APP.data = dd; return syncAfter(note); }).then(m => renderAdmin(m)).catch(e => { alert(e.message); loadAdmin(); }); };
