@@ -423,7 +423,7 @@ function renderAdmin(msg){
   setNav();
   const pending = d.records.filter(r => r.status === 'pending').sort((a,b) => b.ts - a.ts);
   const tabs = [['pending','기록 승인', pending.length], ['students','학생 관리'], ['records','기록 관리'], ['live','📺 색동 라이브'], ['settings','설정']];
-  let h = '<div class="hero"><h1>관리자 메뉴</h1><p>' + esc(d.title || '화면 이름 없음') + ' · 껍데기 판 ' + d.shell + '</p></div>';
+  let h = '<div class="hero"><h1>관리자 메뉴</h1>' + (d.title ? '<p>' + esc(d.title) + '</p>' : '') + '</div>';
   if (d.shell < REQUIRED_SHELL) h += '<div class="msg err">껍데기를 새 판으로 바꿔 주세요.</div>';
   if (APP.isDefaultPw) h += '<div class="msg info">처음 비밀번호(1234)를 쓰고 있어요. 설정 탭에서 바꿔 주세요.</div>';
   if (msg) h += '<div class="msg ok">' + esc(msg) + '</div>';
