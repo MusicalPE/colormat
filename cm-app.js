@@ -111,7 +111,7 @@
     ];
     var body = (location.protocol === 'file:' ? '<p class="cmq-note">파일로 열린 상태라 바로가기를 만들 수 없어요. <b>' + HOME + '</b> 주소로 열어 주세요.</p>' : '') +
       '<ul class="cmq-steps">' + steps.map(function (s) { return '<li class="' + (s.on ? 'me' : '') + '">' + s.t + '</li>'; }).join('') + '</ul>' +
-      '<p class="cmq-note">바탕화면·홈 화면의 <b>매트 놀이터</b> 아이콘을 누르면 주소 없이 바로 열려요. 길게 누르면 판정기·현황판으로 바로 갈 수도 있어요(안드로이드).</p>' +
+      '<p class="cmq-note">바탕화면·홈 화면의 <b>색동</b> 아이콘을 누르면 주소 없이 바로 열려요. 길게 누르면 판정기·현황판으로 바로 갈 수도 있어요(안드로이드).</p>' +
       '<div class="cmq-act"><button data-cm="close" class="main">알겠어요</button></div>';
     open('바로가기 아이콘 만들기', '바탕화면·홈 화면에 앱처럼 놓고 써요', body);
   }

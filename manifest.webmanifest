@@ -1,13 +1,13 @@
 {
   "id": "/colormat/",
-  "name": "색깔 매트 놀이터",
-  "short_name": "매트 놀이터",
+  "name": "색동",
+  "short_name": "색동",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#F3F5F8",
-  "theme_color": "#F2392F",
+  "theme_color": "#0b1a3f",
   "lang": "ko",
   "description": "4색 매트 체육 게임 모음 · 카메라 판정기 · 전국 현황판",
   "icons": [
@@ -18,6 +18,6 @@
   "shortcuts": [
     { "name": "놀이터", "url": "play/", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
     { "name": "카메라 판정기", "url": "checker/index.html", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "전국 현황판", "url": "board.html", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+    { "name": "색동 한마당", "url": "board.html", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
   ]
 }

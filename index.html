@@ -3,12 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>색깔 매트 놀이터</title>
+<title>색동</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/song-myung@5/korean-400.css">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#F2392F">
+<meta name="theme-color" content="#0b1a3f">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<meta name="apple-mobile-web-app-title" content="매트 놀이터">
+<meta name="apple-mobile-web-app-title" content="색동">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
   :root {
@@ -29,8 +30,8 @@
   .nav{display:flex;gap:8px;flex-wrap:wrap}
   .pill{display:inline-block;text-decoration:none;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font:inherit;font-weight:700;font-size:.9em;cursor:pointer}
   .pill:hover,.pill.on{border-color:var(--coral);color:var(--coral-dark);background:var(--coral-tint)}
-  .hero{background:linear-gradient(135deg,#F2392F 0%,#FF8A3D 45%,#2FC653 120%);color:#fff;border-radius:var(--r-lg);padding:20px 22px;box-shadow:var(--shadow);margin-bottom:16px}
-  .hero h1{margin:0 0 4px;font-size:1.45em}.hero p{margin:0;opacity:.94}
+  .hero{background:linear-gradient(160deg,#0c163c 0%,#15225a 60%,#22357a 100%);color:#fff;border-radius:var(--r-lg);padding:30px 22px 20px;position:relative;overflow:hidden;box-shadow:var(--shadow);margin-bottom:16px}
+  .hero::before{content:'';position:absolute;left:0;right:0;top:0;height:9px;background:repeating-linear-gradient(90deg,#E0352B 0 40px,#F2C230 40px 80px,#2E9E57 80px 120px,#E77FA2 120px 160px,#2F5FB3 160px 200px,#FBF7EE 200px 240px,#7B3F86 240px 280px)}.hero h1{margin:0 0 4px;font-size:1.7em;font-family:'Song Myung','Pretendard',serif;font-weight:400;letter-spacing:.01em}.brand .sdm{width:28px;height:28px;border-radius:7px;display:block}.hero p{margin:0;opacity:.94}
   .card{background:var(--surface);border-radius:var(--r-lg);padding:18px 20px;box-shadow:var(--shadow);margin-bottom:16px}
   .card h2{margin:0 0 6px;font-size:1.15em}
   .hint{color:var(--muted);font-size:.88em;margin:4px 0 10px}
@@ -110,7 +111,7 @@
 <body>
 <div class="container">
   <header class="topbar">
-    <a class="brand" href="#" id="brand"><span class="logo"><i style="background:var(--red)"></i><i style="background:var(--yellow)"></i><i style="background:var(--green)"></i><i style="background:var(--blue)"></i></span><span id="brandName">색깔 매트 놀이터</span></a>
+    <a class="brand" href="#" id="brand"><span id="sdMarkTop" style="line-height:0"></span><span id="brandName">색동</span><small id="brandSchool"></small></a>
     <nav class="nav" id="nav"></nav>
   </header>
   <div id="view"><div class="loading">불러오는 중…</div></div>
@@ -118,6 +119,7 @@
 </div>
 
 <script src="cm-app.js"></script>
+<script>if (window.CMApp && CMApp.saekdong) document.getElementById('sdMarkTop').innerHTML = CMApp.saekdong(26);</script>
 <script>
 (function(){
 'use strict';
@@ -172,7 +174,7 @@ function setNav(){
   if ($('mainBtn')) $('mainBtn').onclick = () => { reloadPublic().then(() => go('main')); };
   wireInstall();
 }
-function reloadPublic(){ return rpc('getPublic').then(p => { APP.pub = p; LS.set('cm_pub|' + APP.s, p); if (p.title) $('brandName').textContent = p.title; }).catch(() => {}); }
+function reloadPublic(){ return rpc('getPublic').then(p => { APP.pub = p; LS.set('cm_pub|' + APP.s, p); if (p.title) $('brandSchool').textContent = p.title; }).catch(() => {}); }
 
 function climbCard(c){
   if (!c || !window.CMApp || !CMApp.climbHTML) return '';
@@ -203,7 +205,7 @@ function renderMain(){
   const days = p.days || [];
   const yearM = (p.climb && p.climb.years && p.climb.years[p.climb.year]) || 0;
   const monRuns = days.filter(d => d[1].slice(0,7) === mon).reduce((a, d) => a + d[5], 0);
-  let h = '<div class="hero"><h1>' + esc(p.title || '색깔 매트 놀이터') + '</h1><p class="clock" id="clock"></p>' +
+  let h = '<div class="hero"><h1>' + esc(p.title || '색동') + '</h1><p class="clock" id="clock"></p>' +
     '<div class="leads">' + lead('오늘의 매트왕', L.today, v => num(v) + '번 정답') + lead('이번 주 매트왕', L.week, v => num(v) + '번 정답', 'l2') +
       lead('이번 달 정확도왕', L.acc, v => (Math.round(v * 10) / 10) + '%', 'l3') + '</div></div>';
   h += climbCard(p.climb);
@@ -280,7 +282,7 @@ function tickClock(){
 function renderSetup(){
   const last = LS.get('cm_last_shell', '');
   $('view').innerHTML =
-    '<div class="hero"><h1>색깔 매트 놀이터</h1><p>바닥에 4색 매트를 깔고 화면을 보며 뛰는 체육 놀이 · 카메라 판정 · 우리 학교 기록 · 전국 현황판</p></div>' +
+    '<div class="hero"><h1>색동 <small style="font-size:.55em;opacity:.85">색으로 노는 아이들</small></h1><p>바닥에 4색 매트를 깔고 화면을 보며 뛰는 체육 놀이 · 카메라 판정 · 우리 학교 기록 · 전국 현황판</p></div>' +
     '<div class="doors">' +
       '<a class="door" href="play/"><span class="door-ico">🎮</span><b>놀이터 바로 가기</b><span>설치 없이 바로! 프로젝터·TV로 띄워 반 전체가 함께 뛰는 게임 모음</span></a>' +
       '<a class="door" href="#install" id="toInstall"><span class="door-ico">🏫</span><b>우리 학교 기록 시작하기</b><span>구글 시트 하나로 학생 기록·승인·하늘까지, 카메라 판정 기록은 전국 현황판에</span></a>' +
@@ -552,7 +554,7 @@ else {
   setNav();
   // 빠르게: 이 기기에 저장해 둔 지난 내용을 먼저 보여 주고, 학교 시트 응답이 오면 새 내용으로 바꿈
   const CK = 'cm_pub|' + APP.s, cached = LS.get(CK, null);
-  const usePub = p => { APP.pub = p; if (p.title) { $('brandName').textContent = p.title; document.title = p.title + ' — 매트 놀이터'; }
+  const usePub = p => { APP.pub = p; if (p.title) { $('brandSchool').textContent = p.title; document.title = p.title + ' — 색동'; }
     if (!p.days) { p.days = []; p.today = []; p.now = new Date().toISOString().slice(0,10); } };
   let shownCached = false;
   if (cached && cached.students) { usePub(cached); shownCached = true; render(); showRefreshing(true); }
