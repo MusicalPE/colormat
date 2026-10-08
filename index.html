@@ -107,6 +107,7 @@
   .door:hover{border-color:var(--coral)}.door-ico{font-size:2em}.door b{font-size:1.1em}.door span{color:var(--muted);font-size:.88em}
   @media (max-width:640px){.doors{grid-template-columns:1fr}}
   .refreshing{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:.82em;font-weight:700;padding:7px 14px;border-radius:999px;opacity:.85;z-index:50}
+  .sdi::before{content:'';display:inline-block;width:12px;height:12px;margin-right:6px;vertical-align:-1px;border-radius:3px;border:1.5px solid #0b1a3f;background:linear-gradient(#E0352B,#E0352B) 0 0/50% 50% no-repeat,linear-gradient(#F2C230,#F2C230) 100% 0/50% 50% no-repeat,linear-gradient(#2E9E57,#2E9E57) 0 100%/50% 50% no-repeat,linear-gradient(#2F5FB3,#2F5FB3) 100% 100%/50% 50% no-repeat}
 </style>
 </head>
 <body>
@@ -159,16 +160,16 @@ function showStudentQr(){
   ]);
 }
 function setNav(){
-  if (!APP.s) { $('nav').innerHTML = '<button class="pill" id="cmInstallBtn">📲 바로가기</button>'; wireInstall(); return; }
+  if (!APP.s) { $('nav').innerHTML = '<button class="pill" id="cmInstallBtn">바로가기</button>'; wireInstall(); return; }
   const pend = APP.pub && APP.pub.pending ? '<span class="cnt">' + APP.pub.pending + '</span>' : '';
   $('nav').innerHTML = (APP.page === 'main'
-      ? '<a class="pill" href="play/">🎮 색동 놀이터</a>' +
-        '<a class="pill" href="board.html" target="_blank" rel="noopener">🏆 색동 한마당</a>' +
-        '<button class="pill" id="qrBtn">📱 접속 QR</button>' +
+      ? '<a class="pill sdi" href="play/">놀이터</a>' +
+        '<a class="pill sdi" href="board.html" target="_blank" rel="noopener">한마당</a>' +
+        '<button class="pill" id="qrBtn">접속 QR</button>' +
         '<button class="pill" id="apBtn">기록 승인' + pend + '</button>' +
         '<button class="pill" id="adBtn">관리자 메뉴</button>'
-      : '<button class="pill" id="mainBtn">← 메인으로</button><button class="pill" id="qrBtn">📱 접속 QR</button>') +
-    '<button class="pill" id="cmInstallBtn">📲 바로가기</button>';
+      : '<button class="pill" id="mainBtn">← 메인으로</button><button class="pill" id="qrBtn">접속 QR</button>') +
+    '<button class="pill" id="cmInstallBtn">바로가기</button>';
   if ($('qrBtn')) $('qrBtn').onclick = showStudentQr;
   if ($('apBtn')) $('apBtn').onclick = () => go('admin', 'pending');
   if ($('adBtn')) $('adBtn').onclick = () => go('admin', 'students');
