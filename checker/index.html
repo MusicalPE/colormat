@@ -168,7 +168,7 @@ body.wide .wrap{max-width:1180px}
   <!-- 시작 -->
   <section id="home">
     <div id="liveCard" class="card hidden" style="background:#EEF5FF">
-      <h2>📺 색동 라이브</h2>
+      <h2>📺 색동 한판</h2>
       <p class="lvconn" id="lvConn">선생님 화면에 연결하는 중…</p>
       <p class="muted" id="lvGame"></p>
       <div id="lvMatBox" class="hidden"><p class="muted" style="margin:10px 0 6px"><b>이 기기를 세운 매트 번호</b>를 눌러요</p><div class="lvmats" id="lvMats"></div></div>
@@ -889,7 +889,7 @@ function saveToSchool(rec){
 $('retrySave').onclick = () => { if (lastRec) saveToSchool(lastRec); };
 for (const id of ['home1','home2']) $(id).onclick = () => { GM.running=false; show('home'); };
 
-// ---------- 색동 라이브 (선생님 TV 화면과 연결: 주소에 ?room=방열쇠) ----------
+// ---------- 색동 한판 (선생님 TV 화면과 연결: 주소에 ?room=방열쇠) ----------
 // 이 기기 = 매트 하나. 선생님이 시작하면 모든 매트가 같은 문제(같은 씨앗·같은 시작 시각)로 동시에 뛰고,
 // 정답·시도 수만 선생님 화면에 보냄 (이름·영상은 보내지 않음. 이름은 선생님 화면이 학교 명단에서 붙임)
 // 자리: matrooms/{방열쇠}/devs/{기기번호}
