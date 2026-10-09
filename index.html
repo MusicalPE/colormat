@@ -393,7 +393,7 @@ function loadAdmin(msg){
   return rpc('getAllDataAdmin', [APP.token]).then(d => { APP.data = d; renderAdmin(msg); })
     .catch(e => { if (/권한/.test(e.message)) { APP.token = null; renderLogin('로그인 시간이 지났어요. 다시 들어와 주세요.'); } else $('view').innerHTML = '<div class="msg err">' + esc(e.message) + '</div>'; });
 }
-// 색동 한판가 결과를 시트에 넣으면 알려 줌 → 전국 현황판에 보내고 화면 새로 고침
+// 색동 한판이 결과를 시트에 넣으면 알려 줌 → 전국 현황판에 보내고 화면 새로 고침
 window.addEventListener('message', e => { if (e.origin === location.origin && e.data && e.data.type === 'matlive-saved' && APP.token)
   rpc('getAllDataAdmin', [APP.token]).then(dd => { APP.data = dd; return syncAfter('색동 한판 기록을 저장했어요'); }).then(m => { if (APP.page === 'admin') renderAdmin(m); reloadPublic && reloadPublic(); }).catch(() => {}); });
 function syncAfter(note){
