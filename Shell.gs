@@ -10,7 +10,7 @@
  * 처음 관리자 비밀번호: 1234 (관리자 메뉴에서 바꾸세요)
  *************************************************************/
 
-const SHELL_VERSION = 2;   // 2판: 화면 이름(관리자 메뉴 → 설정)을 학생 화면에도 보여 줌
+const SHELL_VERSION = 3;   // 2판: 화면 이름(관리자 메뉴 → 설정)을 학생 화면에도 보여 줌  3판: 학교 공개 번호(natPid)를 학생 화면에도 (비밀 키는 안 나감)
 const APP_URL = 'https://musicalpe.github.io/colormat/';
 
 const SHEET_STUDENTS = 'Students';
@@ -106,8 +106,9 @@ function getPublic() {
   }
   list.sort(function (a, b) { return a.order - b.order; });
   const act = activity_();
-  return { shell: SHELL_VERSION, title: clean_(getExtraSettings().title, 30), sheetName: getSS_().getName(), approvalOn: approvalOn_(), students: list, climb: act.climb,
-    days: act.days, today: act.today, pending: act.pending, now: today_() };
+  const ex = getExtraSettings();
+  return { shell: SHELL_VERSION, title: clean_(ex.title, 30), sheetName: getSS_().getName(), approvalOn: approvalOn_(), students: list, climb: act.climb,
+    days: act.days, today: act.today, pending: act.pending, now: today_(), natPid: natPid_(ex) };
 }
 // 다 함께 하늘까지: 승인된 카메라 판정 정답 착지 1번 = 1m. 학년도(3월 1일 시작)별 합
 function schoolYear_(d) { const y = Number(String(d).slice(0, 4)), m = Number(String(d).slice(5, 7)); return String(m >= 3 ? y : y - 1); }
@@ -267,6 +268,13 @@ function setAppSettings(token, obj) {
 }
 // 화면이 새 설정을 두더라도 껍데기를 바꾸지 않도록 마련한 자유 저장칸 (JSON). 전국 참여 설정(nat, 학교 키 포함)도 여기
 // → 학교 키가 새지 않게 관리자만 읽음 (getAllDataAdmin 의 extra)
+// 학교 공개 번호: 전국 현황판(색동 한마당)이 '우리 학교'를 알아보는 번호. 수집기와 같은 계산(SHA-256('jr-school|' + 키) 앞 10자리)
+// 비밀 키(nat.key)는 절대 내보내지 않고 이 번호만. 전국 참여를 켜고 키가 있을 때만
+function natPid_(ex) {
+  const n = ex && ex.nat;
+  if (!n || !n.on || !n.key) return '';
+  return hashPw_('jr-school|' + n.key).slice(0, 10);
+}
 function getExtraSettings() {
   try { return JSON.parse(props_().getProperty('EXTRA_SETTINGS') || '{}'); } catch (e) { return {}; }
 }

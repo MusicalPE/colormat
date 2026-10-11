@@ -158,7 +158,7 @@
 <script>
 (function(){
 'use strict';
-const VERSION = 'app v1.6.2';
+const VERSION = 'app v1.6.3';
 const REQUIRED_SHELL = 1;
 const GAME_NAME = { stroop:'함정 뛰기', basic:'색깔 뛰기', memory:'기억 뛰기', rhythm:'박자 뛰기', dir:'방향 뛰기', quiz:'정답 뛰기', assoc:'그림 뛰기', twist:'손발 꼬기', freeze:'얼음 꽁꽁', lava:'용암 피하기' };
 const DIFFN = (g, d) => (window.CMApp && CMApp.diffName) ? CMApp.diffName(g, d) : d;
@@ -218,8 +218,8 @@ function climbCard(c){
 }
 const clsKey = s => (s.grade ? s.grade + '학년 ' : '') + (s.cls ? s.cls + '반' : '');
 
-// 한마당으로 갈 때 우리 학교 공개 ID 를 붙여요 (한마당에서 '우리 학교' 줄·'우리 학교만' 버튼). 관리자 메뉴에 한 번 들어간 기기에서만 알아요
-function boardHref(){ let me = ''; try { me = localStorage.getItem('cm_me') || ''; } catch (e) {} return 'board.html' + (/^[0-9a-f]{10}$/.test(me) ? '?me=' + me : ''); }
+// 한마당으로 갈 때 우리 학교 공개 번호를 붙여요 (한마당에서 '우리 학교' 줄·'우리 학교만' 버튼). 관리자 메뉴에 들어간 기기는 기억해 둔 번호, 아니면 껍데기 3판이 주는 번호
+function boardHref(){ let me = ''; try { me = localStorage.getItem('cm_me') || ''; } catch (e) {} if (!me && APP.pub && APP.pub.natPid) me = String(APP.pub.natPid); return 'board.html' + (/^[0-9a-f]{10}$/.test(me) ? '?me=' + me : ''); }
 /* ================= 메인 (첫 화면) ================= */
 const STU = { grade: '', cls: '', sid: q.sid || '', period: LS.get('cm_period', 'month') };
 (function(){ const last = LS.get('cm_pick|' + APP.s, null); if (last) { STU.grade = last.grade; STU.cls = last.cls; } })();
@@ -502,7 +502,7 @@ function renderAdmin(msg){
       '<label class="switch"><input type="checkbox" id="natShow" ' + (nat.showName ? 'checked' : '') + '> 현황판에 학교 이름 보이기 <span class="hint" style="margin:0">(끄면 "익명 학교"로 보여요)</span></label>' +
       '<div class="row" style="margin-top:10px">' + (nat.on ? '<button class="btn" id="natSave">저장하고 지금 보내기</button><button class="btn ghost" id="natOff">참여 끄기</button>' + (NAT.moved() ? '<button class="btn ghost" id="natNew">참여 번호 새로 만들기</button>' : '') : '<button class="btn" id="natOn" ' + (d.approvalOn ? '' : 'disabled') + '>참여하기</button>') +
       '<a class="btn ghost" href="' + boardHref() + '" target="_blank" rel="noopener">현황판 보기</a></div>' +
-      (nat.on ? '<p class="hint">참여 중' + (last ? ' · 마지막으로 보낸 때 ' + new Date(last).toLocaleString('ko-KR') : '') + ' · 기록을 승인하면 자동으로 보내요.</p>' : '') + '</div>' +
+      (nat.on ? '<p class="hint">참여 중' + (last ? ' · 마지막으로 보낸 때 ' + new Date(last).toLocaleString('ko-KR') : '') + ' · 기록을 승인하면 자동으로 보내요.</p>' : '') + (nat.on && d.shell < 3 ? '<p class="hint">껍데기를 3판으로 바꾸면 학생 기기에서 한마당으로 가도 우리 학교 줄과 "우리 학교만" 버튼이 보여요. (지금은 이 기기에서만)</p>' : '') + '</div>' +
       '<div class="card"><h2>승인 절차</h2><label class="switch"><input type="checkbox" id="apOn" ' + (d.approvalOn ? 'checked' : '') + '> 학생 기록은 선생님이 승인해야 인정돼요</label><p class="hint">끄면 카메라 판정 기록은 바로 인정되지만, 전국 현황판에는 참여할 수 없어요.</p></div>' +
       '<div class="card"><h2>학생 접속</h2><p class="hint">학생 휴대폰·태블릿으로 QR을 찍으면 우리 학교 메인 화면이 열려요. 한 번 들어온 기기는 다음부터 자동으로 이 학교로 들어와요.</p><div class="row"><button class="btn" id="stuQr">📱 학생 접속 QR</button><button class="btn ghost" id="copyUrl">주소 복사</button></div></div>' +
       '<div class="card"><h2>관리자 비밀번호</h2><form class="row" id="pwf"><input type="password" id="np1" placeholder="새 비밀번호 (4자 이상)"><input type="password" id="np2" placeholder="한 번 더"><button class="btn ghost">바꾸기</button></form></div>' +
