@@ -103,6 +103,35 @@
   .sd-tag{font-weight:600;color:#6b7280;font-size:.78em;display:inline-flex;align-items:baseline;gap:5px;margin-left:2px;white-space:nowrap}.sd-tag b{font-family:'Song Myung',serif;font-weight:400;font-size:1.3em;color:#2a2420}
   .sdi::before{content:'';display:inline-block;width:12px;height:12px;margin-right:6px;vertical-align:-1px;border-radius:3px;border:1.5px solid #0b1a3f;background:linear-gradient(#E0352B,#E0352B) 0 0/50% 50% no-repeat,linear-gradient(#F2C230,#F2C230) 100% 0/50% 50% no-repeat,linear-gradient(#2E9E57,#2E9E57) 0 100%/50% 50% no-repeat,linear-gradient(#2F5FB3,#2F5FB3) 100% 100%/50% 50% no-repeat}
   .brand .pg{font-size:22px;font-weight:800;letter-spacing:-.03em;color:#1f2937}
+  /* 넓은 화면(PC·노트북·가로 태블릿): 두 칸 — 왼쪽 로고·하늘까지·숫자, 오른쪽 순위들 */
+  .fold-row { display: none; text-align: center; }
+  .more-btn { display: inline-flex; align-items: center; gap: 4px; margin-top: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--coral-dark); border-radius: 999px; padding: 7px 14px; font: inherit; font-weight: 700; font-size: .88em; cursor: pointer; }
+  .more-btn:hover { border-color: var(--coral); background: var(--coral-tint); }
+  @media (min-width: 1000px) {
+    .container { max-width: 1560px; }
+    .bw { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); grid-template-rows: auto 1fr; column-gap: 18px; align-items: start; }
+    .bw > .hero { grid-column: 1; grid-row: 1; }
+    .bw > #body { display: contents; }
+    .bw-l { grid-column: 1; grid-row: 2; position: sticky; top: 16px; }
+    .bw-r { grid-column: 2; grid-row: 1 / span 2; }
+    .bw-r .card.fold:not(.open) tr.x { display: none; }
+    .bw-r .fold-row { display: block; }
+    .bw > #body > .loading, .bw > #body > .err { grid-column: 1 / -1; }
+    .bw .hero-grid { grid-template-columns: 24% minmax(0,1fr); row-gap: 10px; padding: 16px 22px 14px; }
+    .bw .hero-grid .hero-logo { grid-row: 1 / span 3; }
+    .bw .hero-grid .hero-sels { grid-column: 2; justify-content: center; flex-direction: row; flex-wrap: wrap; gap: 8px; }
+    .bw .hero-grid .hero-sels select { width: auto; }
+    .bw .hero-slogan { grid-column: 2; font-size: .9em; padding-top: 10px; }
+    .bw .hero-slogan span { margin: 0 .45em; }
+    .bw .sd-name { font-size: 2.2em; }
+    .bw .hero-mid #heroSub { line-height: 1.5; }
+    .bw .sd-slogan { font-size: 1.18em; }
+  }
+  @media (min-width: 1000px) and (max-width: 1279px) {
+    .bw .hero-slogan { white-space: normal; line-height: 1.6; }
+    .bw .hero-slogan > span { display: none; }
+    .bw .hero-slogan .nw { margin: 0 .5em; }
+  }
 </style>
 </head>
 <body>
@@ -117,6 +146,7 @@
     </nav>
   </header>
 
+  <div class="bw">
   <div class="hero sd-hero">
     <div class="sd-band"></div>
     <div class="hero-grid">
@@ -139,6 +169,7 @@
   </div>
 
   <div id="body"><div class="loading">현황판을 불러오는 중…</div></div>
+  </div>
   <p class="foot">카메라가 판정하고 선생님이 확인한 기록만 모여요 · 학생 이름은 가려서 보여 줍니다 (예: 김*늘) · 학교 이름은 학교가 공개를 켠 경우에만 보여요<br>Made by <b>음악적체육인</b></p>
 </div>
 
@@ -191,6 +222,9 @@
     });
   }
 
+  // 넓은 화면에서는 순위를 5등까지만 보이고 더보기로 펼쳐요 (좁은 화면은 그대로 전부)
+  const FOLD = 5, folds = { stu: false, sch: false };
+  const foldBtn = function(k, len){ return len > FOLD ? '<div class="fold-row"><button type="button" class="more-btn fold-btn" data-fold="' + k + '">' + (folds[k] ? '접기 ▴' : (FOLD + 1) + '~' + len + '등 더보기 ▾') + '</button></div>' : ''; };
   function render(){
     const d = data;
     // 달 고르기: 기록이 있는 달 + 이번 달
@@ -204,7 +238,7 @@
     const gameName = ($('gameSel').selectedOptions[0] || {}).textContent || '';
     const filt = [gameName, d.diff ? CMApp.diffName($('gameSel').value, d.diff) : '', d.band ? d.band.replace('-', '~') + '학년' : ''].filter(Boolean).join(' · ');
     const s = d.summary || {};
-    let h = '';
+    let h = '<div class="bw-l">';
     if (d.climb && window.CMApp && CMApp.climbHTML) {
       const y = d.climb.year, ys = d.climb.years || {};
       h += CMApp.climbHTML(Number(ys[y]) || 0, '🚀 다 함께 하늘까지 · ' + y + '학년도 전국', Number(ys[String(Number(y) - 1)]) || 0);
@@ -213,14 +247,14 @@
       '<div class="kpi"><span>참여 학교</span><b class="mono">' + num(s.schools) + '</b></div>' +
       '<div class="kpi"><span>참여 학생</span><b class="mono">' + num(s.students) + '</b></div>' +
       '<div class="kpi"><span>누적 정답 착지</span><b class="mono">' + num(s.correct) + '</b></div>' +
-      '<div class="kpi"><span>누적 플레이 시간</span><b class="mono">' + dur(s.sec) + '</b></div></div>';
+      '<div class="kpi"><span>누적 플레이 시간</span><b class="mono">' + dur(s.sec) + '</b></div></div>' + '</div><div class="bw-r">';
 
     if (!s.students) {
-      h += '<div class="card"><div class="empty">' + esc(monthLabel(d.month)) + ' ' + esc(filt) + ' 기록이 아직 없어요.<br>카메라 판정으로 뛰고 선생님이 확인하면 여기에 올라와요!</div></div>';
+      h += '<div class="card"><div class="empty">' + esc(monthLabel(d.month)) + ' ' + esc(filt) + ' 기록이 아직 없어요.<br>카메라 판정으로 뛰고 선생님이 확인하면 여기에 올라와요!</div></div></div>';
       $('body').innerHTML = h; return;
     }
 
-    h += '<div class="card"><div class="card-head"><div><h2>학생 순위</h2><span class="hint">' + esc(monthLabel(d.month)) + ' · ' + esc(filt) + '</span></div>' +
+    h += '<div class="card fold' + (folds.stu ? ' open' : '') + '"><div class="card-head"><div><h2>학생 순위</h2><span class="hint">' + esc(monthLabel(d.month)) + ' · ' + esc(filt) + '</span></div>' +
       '<div class="seg" id="tabSeg">' + TABS.map(function(t){ return '<button data-t="' + t[0] + '" class="' + (t[0] === tab ? 'on' : '') + '">' + t[1] + '</button>'; }).join('') + '</div></div>';
     if (tab === 'accuracy') h += '<p class="hint">5분 한 판을 끝까지 완주한 판만 정확도에 들어가요.</p>';
     const list = d[tab] || [];
@@ -228,23 +262,24 @@
     else {
       const valHead = tab === 'correct' ? '정답 착지' : tab === 'time' ? '플레이 시간' : '정확도';
       h += '<div class="table-wrap"><table><thead><tr><th>순위</th><th>이름</th><th class="hide-sm">학년</th><th>학교</th><th class="num">' + valHead + '</th></tr></thead><tbody>' +
-        list.map(function(x){
+        list.map(function(x, i){
           const v = tab === 'correct' ? num(x.correct) + '<span class="sub">/ ' + num(x.attempts) + '번</span>'
             : tab === 'time' ? dur(x.sec)
             : x.acc + '%<span class="sub">완주 ' + num(x.runs) + '판</span>';
-          return '<tr><td>' + rankHTML(x.rank) + '</td><td><b>' + esc(x.n) + '</b></td><td class="hide-sm">' + esc(x.g) + '학년</td><td class="' + (/^익명 학교/.test(x.school) ? 'anon' : '') + '">' + esc(x.school) + '</td><td class="num mono">' + v + '</td></tr>';
-        }).join('') + '</tbody></table></div>';
+          return '<tr' + (i >= FOLD ? ' class="x"' : '') + '><td>' + rankHTML(x.rank) + '</td><td><b>' + esc(x.n) + '</b></td><td class="hide-sm">' + esc(x.g) + '학년</td><td class="' + (/^익명 학교/.test(x.school) ? 'anon' : '') + '">' + esc(x.school) + '</td><td class="num mono">' + v + '</td></tr>';
+        }).join('') + '</tbody></table></div>' + foldBtn('stu', list.length);
     }
     h += '</div>';
 
     const sc = d.schools || [];
-    h += '<div class="card"><div class="card-head"><div><h2>학교 순위</h2><span class="hint">학생들이 모은 정답 착지 합</span></div></div>' +
+    h += '<div class="card fold' + (folds.sch ? ' open' : '') + '"><div class="card-head"><div><h2>학교 순위</h2><span class="hint">학생들이 모은 정답 착지 합</span></div></div>' +
       '<div class="table-wrap"><table><thead><tr><th>순위</th><th>학교</th><th class="num hide-sm">참여 학생</th><th class="num hide-sm">플레이 시간</th><th class="num">정답 착지</th></tr></thead><tbody>' +
-      sc.map(function(x){
-        return '<tr><td>' + rankHTML(x.rank) + '</td><td class="' + (x.named ? '' : 'anon') + '"><b>' + esc(x.label) + '</b></td><td class="num hide-sm mono">' + num(x.participants) + '명</td><td class="num hide-sm mono">' + dur(x.sec) + '</td><td class="num mono"><b>' + num(x.correct) + '</b></td></tr>';
-      }).join('') + '</tbody></table></div></div>';
+      sc.map(function(x, i){
+        return '<tr' + (i >= FOLD ? ' class="x"' : '') + '><td>' + rankHTML(x.rank) + '</td><td class="' + (x.named ? '' : 'anon') + '"><b>' + esc(x.label) + '</b></td><td class="num hide-sm mono">' + num(x.participants) + '명</td><td class="num hide-sm mono">' + dur(x.sec) + '</td><td class="num mono"><b>' + num(x.correct) + '</b></td></tr>';
+      }).join('') + '</tbody></table></div>' + foldBtn('sch', sc.length) + '</div></div>';
 
     $('body').innerHTML = h;
+    $('body').querySelectorAll('.fold-btn').forEach(function(b){ b.onclick = function(){ folds[b.dataset.fold] = !folds[b.dataset.fold]; render(); }; });
     const seg = $('tabSeg');
     if (seg) seg.querySelectorAll('button').forEach(function(b){ b.onclick = function(){ tab = b.dataset.t; syncUrl(); render(); }; });
   }
