@@ -125,6 +125,11 @@
   .modal-tabs .pop-search { width: 100%; box-sizing: border-box; font: inherit; font-size: 16px; border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; }
   .modal-tabs .pop-search:focus { outline: none; border-color: var(--coral); }
   .pop-pages { display: flex; gap: 6px; flex-wrap: wrap; width: 100%; }
+  .pop-pages:empty { display: none; }
+  .modal-tabs .pop-search { flex: 1 1 200px; width: auto; }
+  .modal-tabs .pop-mine.on::before { content: '✓ '; }
+  .rank.wide { width: auto; min-width: 28px; padding: 0 8px; border-radius: 999px; }
+  .pop-note { margin: 8px 0 0; }
   .pop-empty { text-align: center; color: var(--ink-2); padding: 24px 0 8px; }
   .modal-body { overflow: auto; padding: 8px 18px 18px; }
   .more-btn { display: inline-flex; align-items: center; gap: 4px; margin-top: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--coral-dark); border-radius: 999px; padding: 7px 14px; font: inherit; font-weight: 700; font-size: .88em; cursor: pointer; }
@@ -247,16 +252,18 @@
   //  학교 순위: 5등까지 먼저, 더보기로 10등까지 · 우리 학교는 순위 밖이어도 그 아래 늘 한 줄
   //  학교 줄을 누르면 학교 안 5등까지 + 학교 안 전체 순위 팝업
   //  학생 순위: 10등까지, 나머지는 팝업(10명씩 쪽 나누기, 50등까지) + 이름 찾기
-  let me = q.me || '';
-  try { if (!me) me = localStorage.getItem('cm_me') || ''; } catch (e) {}
+  const me = q.me || '';   // 우리 학교 프로그램에서 넘어왔을 때만 (?me=학교 공개 ID)
   let openPid = '';
   const FOLD = 5, SCH_MAX = 10, SHOW_STU = 10, PER = 10, folds = { sch: false };
   const valHead = function(t){ return t === 'correct' ? '정답 착지' : t === 'time' ? '플레이 시간' : '정확도'; };
   const valCell = function(x, t){ return t === 'correct' ? num(x.correct) + '<span class="sub">/ ' + num(x.attempts) + '번</span>' : t === 'time' ? dur(x.sec) : x.acc + '%<span class="sub">완주 ' + num(x.runs) + '판</span>'; };
   const stuHead = function(t){ return '<tr><th>순위</th><th>이름</th><th class="hide-sm">학년</th><th>학교</th><th class="num">' + valHead(t) + '</th></tr>'; };
-  const stuRow = function(t){ return function(x){ return '<tr' + (me && x.pid === me ? ' class="me"' : '') + '><td>' + rankHTML(x.rank) + '</td><td><b>' + esc(x.n) + '</b></td><td class="hide-sm">' + esc(x.g) + '학년</td><td class="' + (/^익명 학교/.test(x.school) ? 'anon' : '') + '">' + esc(x.school) + '</td><td class="num mono">' + valCell(x, t) + '</td></tr>'; }; };
-  const IN_HEAD = '<tr><th>학교 안 순위</th><th>이름</th><th class="num">정답 착지</th><th class="num">플레이 시간</th></tr>';
-  const inRow = function(x){ return '<tr><td>' + rankHTML(x.rank) + '</td><td><b>' + esc(x.n) + '</b>' + (x.g ? '<span class="sub">' + esc(x.g) + '학년</span>' : '') + '</td><td class="num mono">' + num(x.correct) + '<span class="sub">/ ' + num(x.attempts) + '번</span></td><td class="num mono">' + dur(x.sec) + '</td></tr>'; };
+  const stuRow = function(t){ return function(x){ return '<tr' + (me && x.pid === me ? ' class="me"' : '') + '><td>' + rankCell(x.rank) + '</td><td><b>' + esc(x.n) + '</b></td><td class="hide-sm">' + esc(x.g) + '학년</td><td class="' + (/^익명 학교/.test(x.school) ? 'anon' : '') + '">' + esc(x.school) + '</td><td class="num mono">' + valCell(x, t) + '</td></tr>'; }; };
+  const IN_HEAD = '<tr><th>학교 안 순위</th><th>이름</th><th class="num">정답 착지</th><th class="num">전국</th><th class="num hide-sm">플레이 시간</th></tr>';
+  // 학교 안 순위는 정답 착지 순이라 전국 칸도 정답 착지 전국 등수(nrC). 예전 수집기면 –
+  const inRow = function(x){ return '<tr><td>' + rankHTML(x.rank) + '</td><td><b>' + esc(x.n) + '</b>' + (x.g ? '<span class="sub">' + esc(x.g) + '학년</span>' : '') + '</td><td class="num mono">' + num(x.correct) + '<span class="sub">/ ' + num(x.attempts) + '번</span></td><td class="num mono">' + (x.nrC ? num(x.nrC) + '등' : '–') + '</td><td class="num mono hide-sm">' + dur(x.sec) + '</td></tr>'; };
+  // 등수 동그라미: 세 자리 넘으면(전국 1,030등 등) 옆으로 늘어나게
+  const rankCell = function(r){ return r > 99 ? '<span class="rank wide">' + num(r) + '</span>' : rankHTML(r); };
   const table = function(head, rows, row, cls){ return '<table' + (cls ? ' class="' + cls + '"' : '') + '><thead>' + head + '</thead><tbody>' + rows.map(row).join('') + '</tbody></table>'; };
 
   // 팝업
@@ -283,24 +290,51 @@
     const nameOk = function(nm){ const c = Array.from(String(nm)); return qc.length <= c.length && qc.every(function(ch, i){ return c[i] === '*' || c[i] === ch; }); };
     return function(x){ return nameOk(x.n) || String(x.n).indexOf(s) >= 0 || (s.length > 1 && String(x.school || '').replace(/\s+/g, '').indexOf(s) >= 0); };
   }
+  let popDraw = null;   // 열려 있는 팝업 다시 그리기 (우리 학교 자료가 늦게 오면)
   function rankPopup(o){
-    const rows = o.rows, pages = Math.ceil(rows.length / PER);
-    let page = 0;
-    const tabs = pages > 1 ? rows.filter(function(x, i){ return i % PER === 0; }).map(function(x, p){
-      return '<button type="button" data-pg="' + p + '">' + (p * PER + 1) + '~' + Math.min(rows.length, (p + 1) * PER) + '등</button>';
-    }).join('') : '';
-    const bg = openModal(o.title, o.sub, '<div class="pop-list"></div>', '<input type="search" class="pop-search" placeholder="' + (o.school ? '이름 찾기 (예: 김하늘)' : '이름이나 학교 찾기 (예: 김하늘)') + '" aria-label="찾기">' + (tabs ? '<div class="pop-pages">' + tabs + '</div>' : ''));
-    const list = bg.querySelector('.pop-list'), inp = bg.querySelector('.pop-search'), pg = bg.querySelector('.pop-pages');
+    const bg = openModal(o.title, o.sub, '<div class="pop-list"></div>', '<input type="search" class="pop-search" placeholder="' + (o.school ? '이름 찾기 (예: 김하늘)' : '이름이나 학교 찾기 (예: 김하늘)') + '" aria-label="찾기">' + (o.mine ? '<button type="button" class="pop-mine">우리 학교만</button>' : '') + '<div class="pop-pages"></div>');
+    const list = bg.querySelector('.pop-list'), inp = bg.querySelector('.pop-search'), pg = bg.querySelector('.pop-pages'), mineBtn = bg.querySelector('.pop-mine');
+    let mineOnly = false, page = 0;
     const draw = function(){
+      if (!document.body.contains(bg)) { popDraw = null; return; }
       const m = matcher(inp.value);
+      let base = o.rows, note = '';
+      if (mineOnly) {
+        const mr = o.mine();   // 우리 학교 학생 전부 + 전국 등수 (수집기 12판), 예전 수집기면 받아 온 50등 안에서만
+        if (!mr) { pg.innerHTML = ''; list.innerHTML = '<p class="pop-empty">우리 학교 순위를 불러오는 중이에요…</p>'; return; }
+        base = mr.rows; note = mr.note || '';
+      }
+      const pages = Math.ceil(base.length / PER);
+      if (page >= pages) page = 0;
       let show;
-      if (m) { show = rows.filter(m); if (pg) pg.style.display = 'none'; }
-      else { show = rows.slice(page * PER, (page + 1) * PER); if (pg) { pg.style.display = ''; Array.prototype.forEach.call(pg.children, function(b){ b.classList.toggle('on', Number(b.dataset.pg) === page); }); } }
-      list.innerHTML = show.length ? table(o.head, show, o.row) : '<p class="pop-empty">찾는 이름이 ' + (o.school ? '이 학교 순위에' : rows.length + '등 안에') + ' 없어요.<br><span class="hint">이름은 가운데를 가려서 보여 줘요 (김하늘 → 김*늘)</span></p>';
+      if (m) { show = base.filter(m); pg.innerHTML = ''; }
+      else {
+        show = base.slice(page * PER, (page + 1) * PER);
+        pg.innerHTML = pages > 1 ? Array.from({ length: pages }, function(_, p){
+          const a = base[p * PER], b = base[Math.min(base.length, (p + 1) * PER) - 1];
+          const lab = (p * PER + 1) + '~' + Math.min(base.length, (p + 1) * PER) + (mineOnly ? '번째' : '등');
+          return '<button type="button" data-pg="' + p + '"' + (p === page ? ' class="on"' : '') + ' title="' + (a && b ? num(a.rank) + '~' + num(b.rank) + '등' : '') + '">' + lab + '</button>';
+        }).join('') : '';
+      }
+      list.innerHTML = (note ? '<p class="hint pop-note">' + note + '</p>' : '') + (show.length ? table(o.head, show, o.row) : '<p class="pop-empty">' + (mineOnly && !m ? '이 순위에 든 우리 학교 학생이 아직 없어요.' : '찾는 이름이 ' + (o.school ? '이 학교 순위에' : (mineOnly ? '우리 학교에' : o.rows.length + '등 안에')) + ' 없어요.') + '<br><span class="hint">이름은 가운데를 가려서 보여 줘요 (김하늘 → 김*늘)</span></p>');
     };
     inp.addEventListener('input', draw);
-    if (pg) pg.addEventListener('click', function(e){ const b = e.target.closest('[data-pg]'); if (b) { page = Number(b.dataset.pg); draw(); } });
+    if (mineBtn) mineBtn.addEventListener('click', function(){ mineOnly = !mineOnly; page = 0; mineBtn.classList.toggle('on', mineOnly); draw(); });
+    pg.addEventListener('click', function(e){ const b = e.target.closest('[data-pg]'); if (b) { page = Number(b.dataset.pg); draw(); } });
+    popDraw = draw;
+    if (o.mine) o.mine();   // 우리 학교 자료를 미리 받아 둬요
     draw();
+  }
+  // '우리 학교만': 수집기 12판이면 우리 학교 학생 전부를 그 순위의 전국 등수(nrC·nrT·nrA)와 함께, 아니면 받아 온 50등 안에서만
+  const NR = { correct: ['nrC', 'correctTotal'], time: ['nrT', 'timeTotal'], accuracy: ['nrA', 'accTotal'] };
+  function mineRows(t, nat){
+    const d = schoolData(me);
+    if (!d) return null;
+    const st = d.students || [], k = NR[t][0];
+    if (d.old || d.err || !st.length || st[0][k] == null) return { rows: nat.filter(function(x){ return x.pid === me; }), note: '전국 ' + nat.length + '등 안에 든 우리 학교 학생이에요' };
+    const base = { school: (d.school && d.school.label) || '', pid: me };
+    return { rows: st.filter(function(x){ return x[k] > 0; }).map(function(x){ return Object.assign({}, x, base, { rank: x[k] }); }).sort(function(a, b){ return a.rank - b.rank; }),
+      note: '우리 학교 학생의 전국 등수예요 (전국 ' + num(d[NR[t][1]]) + '명 중)' };
   }
 
   // 학교 하나의 자료 (그 학교 줄 + 학교 안 학생 전체) — 새 수집기(11판)에서만
@@ -317,7 +351,7 @@
       .then(function(r){ return r.json(); })
       .then(function(j){ if (!j.ok) throw new Error(j.error || ''); scd[k] = j.result; })
       .catch(function(){ scd[k] = { err: true, students: [] }; })
-      .then(function(){ if (data && filterKey() === fk) render(); });
+      .then(function(){ if (data && filterKey() === fk) { render(); if (popDraw) popDraw(); } });
     return null;
   }
   function schoolDetail(sc){
@@ -405,7 +439,7 @@
       rankPopup({ title: esc(sc.label || '') + ' · 학교 안 순위', sub: esc(monthLabel(d.month)) + ' · ' + esc(filt) + ' · ' + rows.length + '명', rows: rows, head: IN_HEAD, row: inRow, school: true });
     }; });
     if ($('stuMore')) $('stuMore').onclick = function(){
-      rankPopup({ title: '학생 순위 · ' + valHead(tab) + ' · ' + list.length + '등까지', sub: esc(monthLabel(d.month)) + ' · ' + esc(filt), rows: list, head: stuHead(tab), row: stuRow(tab) });
+      rankPopup({ title: '학생 순위 · ' + valHead(tab) + ' · ' + list.length + '등까지', sub: esc(monthLabel(d.month)) + ' · ' + esc(filt), rows: list, head: stuHead(tab), row: stuRow(tab), mine: me ? function(){ return mineRows(tab, list); } : null });
     };
   }
 
