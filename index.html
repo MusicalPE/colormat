@@ -158,7 +158,7 @@
 <script>
 (function(){
 'use strict';
-const VERSION = 'app v1.6.0';
+const VERSION = 'app v1.6.1';
 const REQUIRED_SHELL = 1;
 const GAME_NAME = { stroop:'함정 뛰기', basic:'색깔 뛰기', memory:'기억 뛰기', rhythm:'박자 뛰기', dir:'방향 뛰기', quiz:'정답 뛰기', assoc:'그림 뛰기', twist:'손발 꼬기', freeze:'얼음 꽁꽁', lava:'용암 피하기' };
 const DIFFN = (g, d) => (window.CMApp && CMApp.diffName) ? CMApp.diffName(g, d) : d;
@@ -356,6 +356,8 @@ const NAT = {
   mask(n){ const c = Array.from(String(n||'').trim()); if (c.length<=1) return c.join(''); if (c.length===2) return c[0]+'*'; return c[0]+'*'.repeat(c.length-2)+c[c.length-1]; },
   newKey(){ try { if (crypto.randomUUID) return crypto.randomUUID(); } catch (e) {} return Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => (b<16?'0':'')+b.toString(16)).join(''); },
   deployId(u){ const m = String(u).match(/\/s\/([A-Za-z0-9_-]{20,})\//); return m ? m[1] : String(u); },
+  // 한마당에서 '우리 학교'를 알아보게: 이 기기에 학교 공개 ID 를 기억 (학교 키에서 만든 것, 키 자체는 안 남김)
+  rememberMe(){ const c = this.cfg(); if (!c.on || !c.key || this.moved()) return; this.sha('jr-school|' + c.key).then(h => { try { localStorage.setItem('cm_me', h.slice(0, 10)); } catch (e) {} }).catch(() => {}); },
   moved(){ const c = this.cfg(); return !!(c.on && c.shell && c.shell !== this.deployId(APP.s)); },
   post(fn, payload){
     return fetch(this.collector, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args:[payload] }), redirect:'follow' })
@@ -410,7 +412,7 @@ function renderLogin(err){
 }
 function loadAdmin(msg){
   if (!APP.token) return renderLogin();
-  return rpc('getAllDataAdmin', [APP.token]).then(d => { APP.data = d; renderAdmin(msg); })
+  return rpc('getAllDataAdmin', [APP.token]).then(d => { APP.data = d; NAT.rememberMe(); renderAdmin(msg); })
     .catch(e => { if (/권한/.test(e.message)) { APP.token = null; renderLogin('로그인 시간이 지났어요. 다시 들어와 주세요.'); } else $('view').innerHTML = '<div class="msg err">' + esc(e.message) + '</div>'; });
 }
 // 색동 한판이 결과를 시트에 넣으면 알려 줌 → 전국 현황판에 보내고 화면 새로 고침

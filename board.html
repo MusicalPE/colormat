@@ -104,7 +104,29 @@
   .sdi::before{content:'';display:inline-block;width:12px;height:12px;margin-right:6px;vertical-align:-1px;border-radius:3px;border:1.5px solid #0b1a3f;background:linear-gradient(#E0352B,#E0352B) 0 0/50% 50% no-repeat,linear-gradient(#F2C230,#F2C230) 100% 0/50% 50% no-repeat,linear-gradient(#2E9E57,#2E9E57) 0 100%/50% 50% no-repeat,linear-gradient(#2F5FB3,#2F5FB3) 100% 100%/50% 50% no-repeat}
   .brand .pg{font-size:22px;font-weight:800;letter-spacing:-.03em;color:#1f2937}
   /* 넓은 화면(PC·노트북·가로 태블릿): 두 칸 — 왼쪽 로고·하늘까지·숫자, 오른쪽 순위들 */
-  .fold-row { display: none; text-align: center; }
+  .fold-row, .more-row { text-align: center; }
+  tr.gap td { text-align: center; color: var(--muted); padding: 0 !important; line-height: 1.2; letter-spacing: .2em; border-bottom: 0 !important; }
+  tr.school.click { cursor: pointer; }
+  tr.school.click:hover td { background: #FAFAFB; }
+  tr.me td { background: var(--coral-tint) !important; }
+  tr.detail td { background: #FAFAFB; padding: 4px 8px 14px; }
+  table.mini th, table.mini td { padding: 6px 8px; font-size: .88em; }
+  .tag-me { display: inline-block; background: var(--coral); color: #fff; font-size: 0.72em; font-weight: 800; padding: 1px 7px; border-radius: 999px; margin-left: 6px; vertical-align: middle; }
+  @media (max-width: 640px) { .tag-me { display: block; width: fit-content; margin: 2px 0 0; } }
+  .modal-bg { position: fixed; inset: 0; background: rgba(17,24,39,.45); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 60; }
+  .modal { background: var(--surface); border-radius: var(--r-lg); width: 100%; max-width: 680px; max-height: 88vh; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,.25); }
+  .modal-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 16px 18px 12px; border-bottom: 1px solid var(--line); }
+  .modal-head h3 { margin: 0; font-size: 1.1em; }
+  .modal-head .hint { display: block; font-weight: 500; margin: 2px 0 0; }
+  .modal-x { border: 0; background: var(--line-2); border-radius: 999px; width: 34px; height: 34px; font-size: 18px; line-height: 1; cursor: pointer; flex: none; }
+  .modal-tabs { display: flex; gap: 6px; padding: 10px 18px 0; flex-wrap: wrap; }
+  .modal-tabs button { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 12px; font: inherit; font-weight: 700; font-size: .86em; cursor: pointer; color: var(--ink-2); }
+  .modal-tabs button.on { background: var(--coral); border-color: var(--coral); color: #fff; }
+  .modal-tabs .pop-search { width: 100%; box-sizing: border-box; font: inherit; font-size: 16px; border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; }
+  .modal-tabs .pop-search:focus { outline: none; border-color: var(--coral); }
+  .pop-pages { display: flex; gap: 6px; flex-wrap: wrap; width: 100%; }
+  .pop-empty { text-align: center; color: var(--ink-2); padding: 24px 0 8px; }
+  .modal-body { overflow: auto; padding: 8px 18px 18px; }
   .more-btn { display: inline-flex; align-items: center; gap: 4px; margin-top: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--coral-dark); border-radius: 999px; padding: 7px 14px; font: inherit; font-weight: 700; font-size: .88em; cursor: pointer; }
   .more-btn:hover { border-color: var(--coral); background: var(--coral-tint); }
   @media (min-width: 1000px) {
@@ -114,8 +136,6 @@
     .bw > #body { display: contents; }
     .bw-l { grid-column: 1; grid-row: 2; position: sticky; top: 16px; }
     .bw-r { grid-column: 2; grid-row: 1 / span 2; }
-    .bw-r .card.fold:not(.open) tr.x { display: none; }
-    .bw-r .fold-row { display: block; }
     .bw > #body > .loading, .bw > #body > .err { grid-column: 1 / -1; }
     .bw .hero-grid { grid-template-columns: 24% minmax(0,1fr); row-gap: 10px; padding: 16px 22px 14px; }
     .bw .hero-grid .hero-logo { grid-row: 1 / span 3; }
@@ -199,6 +219,7 @@
   function syncUrl(){
     const p = new URLSearchParams();
     if (q.c) p.set('c', q.c);
+    if (q.me) p.set('me', q.me);
     p.set('game', $('gameSel').value);
     if ($('diffSel').value) p.set('diff', $('diffSel').value);
     if ($('bandSel').value) p.set('band', $('bandSel').value);
@@ -222,9 +243,92 @@
     });
   }
 
-  // 넓은 화면에서는 순위를 5등까지만 보이고 더보기로 펼쳐요 (좁은 화면은 그대로 전부)
-  const FOLD = 5, folds = { stu: false, sch: false };
-  const foldBtn = function(k, len){ return len > FOLD ? '<div class="fold-row"><button type="button" class="more-btn fold-btn" data-fold="' + k + '">' + (folds[k] ? '접기 ▴' : (FOLD + 1) + '~' + len + '등 더보기 ▾') + '</button></div>' : ''; };
+  // 순위 보여 주기 (점퍼스 Jump Earth! 와 같은 방식)
+  //  학교 순위: 5등까지 먼저, 더보기로 10등까지 · 우리 학교는 순위 밖이어도 그 아래 늘 한 줄
+  //  학교 줄을 누르면 학교 안 5등까지 + 학교 안 전체 순위 팝업
+  //  학생 순위: 10등까지, 나머지는 팝업(10명씩 쪽 나누기, 50등까지) + 이름 찾기
+  let me = q.me || '';
+  try { if (!me) me = localStorage.getItem('cm_me') || ''; } catch (e) {}
+  let openPid = '';
+  const FOLD = 5, SCH_MAX = 10, SHOW_STU = 10, PER = 10, folds = { sch: false };
+  const valHead = function(t){ return t === 'correct' ? '정답 착지' : t === 'time' ? '플레이 시간' : '정확도'; };
+  const valCell = function(x, t){ return t === 'correct' ? num(x.correct) + '<span class="sub">/ ' + num(x.attempts) + '번</span>' : t === 'time' ? dur(x.sec) : x.acc + '%<span class="sub">완주 ' + num(x.runs) + '판</span>'; };
+  const stuHead = function(t){ return '<tr><th>순위</th><th>이름</th><th class="hide-sm">학년</th><th>학교</th><th class="num">' + valHead(t) + '</th></tr>'; };
+  const stuRow = function(t){ return function(x){ return '<tr' + (me && x.pid === me ? ' class="me"' : '') + '><td>' + rankHTML(x.rank) + '</td><td><b>' + esc(x.n) + '</b></td><td class="hide-sm">' + esc(x.g) + '학년</td><td class="' + (/^익명 학교/.test(x.school) ? 'anon' : '') + '">' + esc(x.school) + '</td><td class="num mono">' + valCell(x, t) + '</td></tr>'; }; };
+  const IN_HEAD = '<tr><th>학교 안 순위</th><th>이름</th><th class="num">정답 착지</th><th class="num">플레이 시간</th></tr>';
+  const inRow = function(x){ return '<tr><td>' + rankHTML(x.rank) + '</td><td><b>' + esc(x.n) + '</b>' + (x.g ? '<span class="sub">' + esc(x.g) + '학년</span>' : '') + '</td><td class="num mono">' + num(x.correct) + '<span class="sub">/ ' + num(x.attempts) + '번</span></td><td class="num mono">' + dur(x.sec) + '</td></tr>'; };
+  const table = function(head, rows, row, cls){ return '<table' + (cls ? ' class="' + cls + '"' : '') + '><thead>' + head + '</thead><tbody>' + rows.map(row).join('') + '</tbody></table>'; };
+
+  // 팝업
+  function openModal(title, sub, bodyHtml, tabs){
+    closeModal();
+    const bg = document.createElement('div'); bg.className = 'modal-bg'; bg.id = 'rankModal';
+    bg.innerHTML = '<div class="modal" role="dialog" aria-modal="true"><div class="modal-head"><h3>' + title + (sub ? '<span class="hint">' + sub + '</span>' : '') + '</h3><button type="button" class="modal-x" aria-label="닫기">×</button></div>' +
+      (tabs ? '<div class="modal-tabs">' + tabs + '</div>' : '') + '<div class="modal-body">' + bodyHtml + '</div></div>';
+    bg.addEventListener('click', function(e){ if (e.target === bg || e.target.closest('.modal-x')) closeModal(); });
+    document.addEventListener('keydown', escClose);
+    document.body.appendChild(bg); document.body.style.overflow = 'hidden';
+    return bg;
+  }
+  function escClose(e){ if (e.key === 'Escape') closeModal(); }
+  function closeModal(){ const m = $('rankModal'); if (m) m.remove(); document.body.style.overflow = ''; document.removeEventListener('keydown', escClose); }
+
+  // 이름 찾기: 이름은 가운데가 * 로 가려져 있어서, 찾는 이름도 똑같이 가려서 맞춰 봐요 (김하늘 → 김*늘)
+  const maskName = function(t){ const c = Array.from(t); if (c.length <= 1) return t; if (c.length === 2) return c[0] + '*'; return c[0] + new Array(c.length - 1).join('*') + c[c.length - 1]; };
+  function matcher(qv){
+    const s = String(qv || '').replace(/\s+/g, '');
+    if (!s) return null;
+    if (s.indexOf('*') >= 0) { const re = new RegExp('^' + s.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.') + '$'); const t = s.replace(/\*/g, ''); return function(x){ return re.test(x.n) || (t.length > 1 && String(x.school || '').indexOf(t) >= 0); }; }
+    const ms = maskName(s);
+    return function(x){ return x.n === ms || String(x.n).indexOf(s) >= 0 || (s.length > 1 && String(x.school || '').replace(/\s+/g, '').indexOf(s) >= 0); };
+  }
+  function rankPopup(o){
+    const rows = o.rows, pages = Math.ceil(rows.length / PER);
+    let page = 0;
+    const tabs = pages > 1 ? rows.filter(function(x, i){ return i % PER === 0; }).map(function(x, p){
+      return '<button type="button" data-pg="' + p + '">' + (p * PER + 1) + '~' + Math.min(rows.length, (p + 1) * PER) + '등</button>';
+    }).join('') : '';
+    const bg = openModal(o.title, o.sub, '<div class="pop-list"></div>', '<input type="search" class="pop-search" placeholder="' + (o.school ? '이름 찾기 (예: 김하늘)' : '이름이나 학교 찾기 (예: 김하늘)') + '" aria-label="찾기">' + (tabs ? '<div class="pop-pages">' + tabs + '</div>' : ''));
+    const list = bg.querySelector('.pop-list'), inp = bg.querySelector('.pop-search'), pg = bg.querySelector('.pop-pages');
+    const draw = function(){
+      const m = matcher(inp.value);
+      let show;
+      if (m) { show = rows.filter(m); if (pg) pg.style.display = 'none'; }
+      else { show = rows.slice(page * PER, (page + 1) * PER); if (pg) { pg.style.display = ''; Array.prototype.forEach.call(pg.children, function(b){ b.classList.toggle('on', Number(b.dataset.pg) === page); }); } }
+      list.innerHTML = show.length ? table(o.head, show, o.row) : '<p class="pop-empty">찾는 이름이 ' + (o.school ? '이 학교 순위에' : rows.length + '등 안에') + ' 없어요.<br><span class="hint">이름은 가운데를 가려서 보여 줘요 (김하늘 → 김*늘)</span></p>';
+    };
+    inp.addEventListener('input', draw);
+    if (pg) pg.addEventListener('click', function(e){ const b = e.target.closest('[data-pg]'); if (b) { page = Number(b.dataset.pg); draw(); } });
+    draw();
+  }
+
+  // 학교 하나의 자료 (그 학교 줄 + 학교 안 학생 전체) — 새 수집기(11판)에서만
+  const scd = {};
+  const filterKey = function(){ return [data.month, data.game, data.diff || '', data.band || ''].join('|'); };
+  function schoolData(pid){
+    if (!data.v) return { school: null, students: [], old: true };
+    const k = pid + '|' + filterKey(), hit = scd[k];
+    if (hit) return hit.loading ? null : hit;
+    scd[k] = { loading: true };
+    const fk = filterKey();
+    fetch(collector + '?api=matSchool&pid=' + encodeURIComponent(pid) + '&month=' + encodeURIComponent(data.month) + '&game=' + encodeURIComponent(data.game) +
+      '&diff=' + encodeURIComponent(data.diff || '') + '&band=' + encodeURIComponent(data.band || ''), { cache: 'no-store' })
+      .then(function(r){ return r.json(); })
+      .then(function(j){ if (!j.ok) throw new Error(j.error || ''); scd[k] = j.result; })
+      .catch(function(){ scd[k] = { err: true, students: [] }; })
+      .then(function(){ if (data && filterKey() === fk) render(); });
+    return null;
+  }
+  function schoolDetail(sc){
+    const d = schoolData(sc.pid);
+    if (!d) return '<p class="hint" style="margin:6px 0;">학교 안 순위를 불러오는 중…</p>';
+    if (d.err) return '<p class="hint" style="margin:6px 0;">학교 안 순위를 불러오지 못했어요. 잠시 뒤 다시 눌러 보세요.</p>';
+    const st = d.students || [];
+    if (!st.length) return '<p class="hint">학생 기록이 없어요.</p>';
+    return table(IN_HEAD, st.slice(0, FOLD), inRow, 'mini') +
+      '<div class="more-row"><button type="button" class="more-btn" data-insch="' + esc(sc.pid) + '">학교 안 전체 순위 보기 · ' + st.length + '명 →</button></div>';
+  }
+
   function render(){
     const d = data;
     // 달 고르기: 기록이 있는 달 + 이번 달
@@ -254,37 +358,57 @@
       $('body').innerHTML = h; return;
     }
 
-    const sc = d.schools || [];
-    h += '<div class="card fold' + (folds.sch ? ' open' : '') + '"><div class="card-head"><div><h2>학교 순위</h2><span class="hint">학생들이 모은 정답 착지 합</span></div></div>' +
+    // 학교 순위
+    const top = (d.schools || []).slice(0, SCH_MAX);
+    const shown = top.slice(0, folds.sch ? SCH_MAX : FOLD);
+    let mine = null;
+    if (me && d.v && !shown.some(function(x){ return x.pid === me; })) {
+      mine = top.filter(function(x){ return x.pid === me; })[0] || null;
+      if (!mine) { const sd = schoolData(me); mine = sd && sd.school; }
+    }
+    const canOpen = !!d.v;
+    const schRow = function(x, tail){
+      const isMe = me && x.pid === me;
+      let r = '<tr class="school' + (canOpen ? ' click' : '') + (isMe ? ' me' : '') + (tail ? ' tail' : '') + '"' + (canOpen ? ' data-pid="' + esc(x.pid) + '"' : '') + '><td>' + rankHTML(x.rank) + '</td><td class="' + (x.named ? '' : 'anon') + '"><b>' + esc(x.label) + '</b>' + (isMe ? '<span class="tag-me">우리 학교</span>' : '') + '</td><td class="num hide-sm mono">' + num(x.participants) + '명</td><td class="num hide-sm mono">' + dur(x.sec) + '</td><td class="num mono"><b>' + num(x.correct) + '</b></td></tr>';
+      if (canOpen && openPid === x.pid) r += '<tr class="detail"><td colspan="5">' + schoolDetail(x) + '</td></tr>';
+      return r;
+    };
+    const nSchools = d.schoolsTotal || s.schools || top.length;
+    h += '<div class="card"><div class="card-head"><div><h2>학교 순위</h2><span class="hint">학생들이 모은 정답 착지 합' + (canOpen ? ' · 학교 줄을 누르면 그 학교 안 학생 순위가 보여요' : '') + '</span></div></div>' +
       '<div class="table-wrap"><table><thead><tr><th>순위</th><th>학교</th><th class="num hide-sm">참여 학생</th><th class="num hide-sm">플레이 시간</th><th class="num">정답 착지</th></tr></thead><tbody>' +
-      sc.map(function(x, i){
-        return '<tr' + (i >= FOLD ? ' class="x"' : '') + '><td>' + rankHTML(x.rank) + '</td><td class="' + (x.named ? '' : 'anon') + '"><b>' + esc(x.label) + '</b></td><td class="num hide-sm mono">' + num(x.participants) + '명</td><td class="num hide-sm mono">' + dur(x.sec) + '</td><td class="num mono"><b>' + num(x.correct) + '</b></td></tr>';
-      }).join('') + '</tbody></table></div>' + foldBtn('sch', sc.length) + '</div>';
+      shown.map(function(x){ return schRow(x); }).join('') + (mine ? '<tr class="gap"><td colspan="5">⋯</td></tr>' + schRow(mine, true) : '') + '</tbody></table></div>';
+    if (top.length > FOLD) h += '<div class="fold-row"><button type="button" class="more-btn" data-fold="sch">' + (folds.sch ? '접기 ▴' : (FOLD + 1) + '~' + top.length + '등 더보기 ▾') + '</button></div>';
+    h += '<p class="hint" style="margin:10px 0 0;">참여 ' + num(nSchools) + '개 학교 중 ' + SCH_MAX + '등까지 보여요' + (me && d.v ? ' (우리 학교는 늘 보여요)' : '') + '.</p></div>';
 
-    h += '<div class="card fold' + (folds.stu ? ' open' : '') + '"><div class="card-head"><div><h2>학생 순위</h2><span class="hint">' + esc(monthLabel(d.month)) + ' · ' + esc(filt) + '</span></div>' +
+    // 학생 순위: 10등까지, 나머지는 팝업
+    h += '<div class="card"><div class="card-head"><div><h2>학생 순위</h2><span class="hint">' + esc(monthLabel(d.month)) + ' · ' + esc(filt) + '</span></div>' +
       '<div class="seg" id="tabSeg">' + TABS.map(function(t){ return '<button data-t="' + t[0] + '" class="' + (t[0] === tab ? 'on' : '') + '">' + t[1] + '</button>'; }).join('') + '</div></div>';
     if (tab === 'accuracy') h += '<p class="hint">5분 한 판을 끝까지 완주한 판만 정확도에 들어가요.</p>';
     const list = d[tab] || [];
     if (!list.length) h += '<div class="empty">' + (tab === 'accuracy' ? '아직 완주한 기록이 없어요. 끝까지 뛰어서 첫 주인공이 되어 보세요!' : '아직 기록이 없어요.') + '</div>';
     else {
-      const valHead = tab === 'correct' ? '정답 착지' : tab === 'time' ? '플레이 시간' : '정확도';
-      h += '<div class="table-wrap"><table><thead><tr><th>순위</th><th>이름</th><th class="hide-sm">학년</th><th>학교</th><th class="num">' + valHead + '</th></tr></thead><tbody>' +
-        list.map(function(x, i){
-          const v = tab === 'correct' ? num(x.correct) + '<span class="sub">/ ' + num(x.attempts) + '번</span>'
-            : tab === 'time' ? dur(x.sec)
-            : x.acc + '%<span class="sub">완주 ' + num(x.runs) + '판</span>';
-          return '<tr' + (i >= FOLD ? ' class="x"' : '') + '><td>' + rankHTML(x.rank) + '</td><td><b>' + esc(x.n) + '</b></td><td class="hide-sm">' + esc(x.g) + '학년</td><td class="' + (/^익명 학교/.test(x.school) ? 'anon' : '') + '">' + esc(x.school) + '</td><td class="num mono">' + v + '</td></tr>';
-        }).join('') + '</tbody></table></div>' + foldBtn('stu', list.length);
+      h += '<div class="table-wrap">' + table(stuHead(tab), list.slice(0, SHOW_STU), stuRow(tab)) + '</div>';
+      h += '<div class="more-row"><button type="button" class="more-btn" id="stuMore">' + (list.length > SHOW_STU ? '전국 ' + list.length + '등까지 보기 · 이름 찾기 →' : '이름 찾기 →') + '</button></div>';
     }
     h += '</div></div>';
 
     $('body').innerHTML = h;
-    $('body').querySelectorAll('.fold-btn').forEach(function(b){ b.onclick = function(){ folds[b.dataset.fold] = !folds[b.dataset.fold]; render(); }; });
     const seg = $('tabSeg');
     if (seg) seg.querySelectorAll('button').forEach(function(b){ b.onclick = function(){ tab = b.dataset.t; syncUrl(); render(); }; });
+    $('body').querySelectorAll('[data-fold]').forEach(function(b){ b.onclick = function(){ folds[b.dataset.fold] = !folds[b.dataset.fold]; render(); }; });
+    $('body').querySelectorAll('tr.school.click').forEach(function(tr){ tr.onclick = function(){ openPid = openPid === tr.dataset.pid ? '' : tr.dataset.pid; render(); }; });
+    $('body').querySelectorAll('[data-insch]').forEach(function(b){ b.onclick = function(e){
+      e.stopPropagation();
+      const sd = schoolData(b.dataset.insch); if (!sd) return;
+      const sc = sd.school || {}, rows = sd.students || [];
+      rankPopup({ title: esc(sc.label || '') + ' · 학교 안 순위', sub: esc(monthLabel(d.month)) + ' · ' + esc(filt) + ' · ' + rows.length + '명', rows: rows, head: IN_HEAD, row: inRow, school: true });
+    }; });
+    if ($('stuMore')) $('stuMore').onclick = function(){
+      rankPopup({ title: '학생 순위 · ' + valHead(tab) + ' · ' + list.length + '등까지', sub: esc(monthLabel(d.month)) + ' · ' + esc(filt), rows: list, head: stuHead(tab), row: stuRow(tab) });
+    };
   }
 
-  $('gameSel').onchange = function(){ fillDiff(''); load(); };
+  $('gameSel').onchange = function(){ fillDiff(''); openPid = ''; load(); };
   ['diffSel', 'bandSel'].forEach(function(id){ $(id).onchange = load; });
   $('monthSel').onchange = function(){ month = $('monthSel').value; load(); };
 
