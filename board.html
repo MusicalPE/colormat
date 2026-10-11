@@ -274,13 +274,14 @@
   function closeModal(){ const m = $('rankModal'); if (m) m.remove(); document.body.style.overflow = ''; document.removeEventListener('keydown', escClose); }
 
   // 이름 찾기: 이름은 가운데가 * 로 가려져 있어서, 찾는 이름도 똑같이 가려서 맞춰 봐요 (김하늘 → 김*늘)
-  const maskName = function(t){ const c = Array.from(t); if (c.length <= 1) return t; if (c.length === 2) return c[0] + '*'; return c[0] + new Array(c.length - 1).join('*') + c[c.length - 1]; };
   function matcher(qv){
     const s = String(qv || '').replace(/\s+/g, '');
     if (!s) return null;
     if (s.indexOf('*') >= 0) { const re = new RegExp('^' + s.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.') + '$'); const t = s.replace(/\*/g, ''); return function(x){ return re.test(x.n) || (t.length > 1 && String(x.school || '').indexOf(t) >= 0); }; }
-    const ms = maskName(s);
-    return function(x){ return x.n === ms || String(x.n).indexOf(s) >= 0 || (s.length > 1 && String(x.school || '').replace(/\s+/g, '').indexOf(s) >= 0); };
+    // 앞에서부터 한 글자씩: 가려진 * 자리는 어떤 글자든 맞는 걸로 (강 → 강민 → 강민호 모두 '강*호'를 찾아요)
+    const qc = Array.from(s);
+    const nameOk = function(nm){ const c = Array.from(String(nm)); return qc.length <= c.length && qc.every(function(ch, i){ return c[i] === '*' || c[i] === ch; }); };
+    return function(x){ return nameOk(x.n) || String(x.n).indexOf(s) >= 0 || (s.length > 1 && String(x.school || '').replace(/\s+/g, '').indexOf(s) >= 0); };
   }
   function rankPopup(o){
     const rows = o.rows, pages = Math.ceil(rows.length / PER);
