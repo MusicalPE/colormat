@@ -154,7 +154,7 @@ h1{font-size:clamp(20px,2.4vw,28px);margin:0;font-weight:900;letter-spacing:-.03
 .qrText h3{margin:0;font-size:clamp(26px,3.6vw,42px);letter-spacing:-.03em}
 .qrText p{margin:0;font-size:18px;line-height:1.7;color:var(--ink2)}
 .qrText code{font-size:12px;color:var(--sub);word-break:break-all;background:var(--soft);border-radius:10px;padding:8px}
-.qjN{font-size:clamp(24px,3vw,34px);font-weight:900}.qjN b{color:var(--coral)}
+.qjN{font-size:clamp(20px,2.4vw,30px);font-weight:900;word-break:keep-all}.qjN b{color:var(--coral)}
 .box{background:var(--card);border-radius:26px;padding:26px;width:min(820px,100%);max-height:92vh;display:flex;flex-direction:column;gap:12px}
 .box h3{margin:0;font-size:28px;letter-spacing:-.03em}
 .res{overflow:auto;border:1px solid var(--line);border-radius:14px}
@@ -651,7 +651,7 @@ $('btnFindAll').onclick=e=>findDev(0,e.target);
 
 /* ---------- QR ---------- */
 function showQr(){
-  $('qrHow').innerHTML='매트 앞 휴대폰·태블릿 <b>카메라</b>로 QR을 찍고<br>→ <b>매트 번호</b>를 누르고<br>→ <b>카메라 켜고 준비하기</b><br>→ '+(S.rot?'<b>지금 차례</b> 친구가 저절로 떠요.':'뛸 사람 번호를 눌러요.');
+  $('qrHow').innerHTML='매트 앞 휴대폰·태블릿 <b>카메라</b>로 QR을 찍고<br>→ 이 기기를 세운 <b>매트 번호</b>를 누르고 <span style="color:var(--sub)">(기기마다 처음 한 번)</span><br>→ <b>카메라 켜고 준비하기</b><br>→ '+(S.rot?'<b>지금 차례</b> 친구가 저절로 떠요.':'뛸 친구가 <b>내 번호</b>를 눌러요.');
   const url=deviceUrl(); $('qrUrl').textContent=url; $('qrTitle').textContent=`매트 앞 기기 ${S.mats}대가 들어와요`;
   const box=$('qrImg'); box.innerHTML='';
   if(window.QRCode) new QRCode(box,{text:url,width:512,height:512,correctLevel:QRCode.CorrectLevel.M}); else box.textContent='QR을 만들지 못했어요 — 아래 주소를 쓰세요';
