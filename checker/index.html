@@ -142,6 +142,9 @@ body.wide .wrap{max-width:1180px}
 .pics{display:flex;gap:6vw;justify-content:center}.pic{text-align:center}.pic .e{font-size:min(26vw,140px);line-height:1.05}.pic .n{font-size:20px;font-weight:800}.pic .n small{color:var(--bad);font-size:14px;margin-left:4px}
 .arrowbox{position:relative;display:flex;flex-direction:column;align-items:center}.arrowbox svg{width:min(38vw,190px);height:auto}
 .arrowbox .trick,.arrowbox .stay{font-size:30px;font-weight:900;color:var(--bad)}
+.lvfind{position:fixed;inset:0;z-index:80;background:#1f2937;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;animation:lvf .5s ease-in-out infinite alternate}
+.lvfind b{font-size:min(30vw,220px);line-height:1;color:#FFD21F;font-weight:900}.lvfind span{font-size:clamp(20px,4vw,34px);font-weight:800}
+@keyframes lvf{from{background:#1f2937}to{background:#c2410c}}
 .lvconn{font-weight:700;margin:2px 0 6px}.lvconn.bad{color:var(--bad)}.lvconn.ok{color:var(--ok)}
 .lvmats{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:8px}
 .lvmats button{font:inherit;font-size:22px;font-weight:900;min-height:58px;border-radius:12px;border:1px solid var(--line);background:#fff;cursor:pointer}
@@ -257,7 +260,7 @@ body.wide .wrap{max-width:1180px}
 
   <!-- 칸 확인 -->
   <section id="check" class="hidden">
-    <div class="lvbar hidden" id="lvBar"><div><b id="lvMatNo"></b> · 뛸 사람 <b id="lvWho">아직 안 골랐어요</b> <button class="iconbtn" id="lvPickBtn">바꾸기</button></div><div class="lvst" id="lvState">선생님이 시작하면 같이 시작해요</div></div>
+    <div class="lvbar hidden" id="lvBar"><div><b id="lvMatNo"></b> · <span id="lvWhoL">뛸 사람</span> <b id="lvWho">아직 안 골랐어요</b> <button class="iconbtn" id="lvPickBtn">바꾸기</button></div><div class="lvst" id="lvState">선생님이 시작하면 같이 시작해요</div></div>
     <div class="card">
       <div class="hud"><span>착지 <b id="chkCount">0</b>번</span><span id="chkLast"></span></div>
       <div class="split"><div><div class="mat" id="chkMat"><div class="tile t0">빨강</div><div class="tile t1">노랑</div><div class="tile t2">초록</div><div class="tile t3">파랑</div><canvas id="chkCanvas"></canvas></div></div><div class="selfslot" id="cSelfSlot"></div></div>
@@ -311,7 +314,7 @@ body.wide .wrap{max-width:1180px}
 
 <script type="module">
 import { TILE, NAME, TILE_COLOR, INK, LEVELS, esc, fmt, pop, hintMat, hintShow, makeGames, GAME_ORDER as GORDER, seeded } from './games.js';
-const VERSION = 'v0.7.0';
+const VERSION = 'v0.7.1';
 // 칸 번호: 0 왼위 빨강, 1 오위 노랑, 2 왼아래 초록, 3 오아래 파랑
 const TILE_CENTER = [{x:.25,y:.25},{x:.75,y:.25},{x:.25,y:.75},{x:.75,y:.75}];
 const params = new URLSearchParams(location.search);
@@ -869,7 +872,7 @@ function endGame(completed){
     return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} · ${esc(h.gameName||'함정 뛰기')} ${esc(h.diffName||OLD[h.difficulty]||h.difficulty)} · 정답 ${h.correct}/${h.attempts} (${h.accuracy}%) · ${h.playSeconds}초${h.completed?' · 🏁':''}`; }).join('<br>') || '아직 없어요';
   sndOk(); show('result');
   if (LV.on){ $('rSent').textContent='기록은 선생님 화면에서 한꺼번에 저장해요'; const lv=GM.live; GM.live=lv; livePush(true);
-    clearTimeout(LV.back); LV.back=setTimeout(()=>{ if (S.screen==='result'){ GM.live=''; liveWait('다음 판에 뛸 사람을 골라요 (같은 사람이면 그대로)'); livePick(); } },7000); }
+    clearTimeout(LV.back); LV.back=setTimeout(()=>{ if (S.screen==='result'){ GM.live=''; if (LV.sl) liveWait(); else { liveWait('다음 판에 뛸 사람을 골라요 (같은 사람이면 그대로)'); livePick(); } } },7000); }
 }
 $('againBtn').onclick = () => startGame();
 // 시험용(?test=1): 카메라 없이 게임을 돌려 보는 손잡이
@@ -897,7 +900,7 @@ const FB_CONFIG={ apiKey:'AIzaSyDimPwJ974Pmn9wcgwFZFWUBQPaOra5chQ', authDomain:'
   databaseURL:'https://jumpropelive-default-rtdb.asia-southeast1.firebasedatabase.app', projectId:'jumpropelive',
   storageBucket:'jumpropelive.firebasestorage.app', messagingSenderId:'727527484238', appId:'1:727527484238:web:aaed6e0585ee7db7228c1f' };
 const FB_SDK='https://www.gstatic.com/firebasejs/10.14.1';
-const LV = { on:false, room:'', dev:'', T:null, meta:null, ctl:null, mat:0, me:null, sent:null, last:0, timer:0, cd:0, run:'', conn:false, back:0 };
+const LV = { on:false, room:'', dev:'', T:null, meta:null, ctl:null, mat:0, me:null, sent:null, last:0, timer:0, cd:0, run:'', conn:false, back:0, sl:null, fdSeen:'' };
 { const r=params.get('room')||''; if (/^[A-Za-z0-9_-]{20,64}$/.test(r)){ LV.on=true; LV.room=r; } }
 const LV_DEMO = params.get('demo')==='1';
 async function liveFirebase(room, dev){
@@ -968,10 +971,11 @@ function livePush(force){
   try{ localStorage.setItem('ml_'+LV.room+(params.get('slot')||''), JSON.stringify({dev:LV.dev, mat:LV.mat, me:LV.me, at:Date.now()})); }catch(e){}
   LV.T.send(out).catch(()=>{ LV.sent=null; });
 }
-function liveWho(){ const m=LV.me; return m ? (LV.meta&&LV.meta.groups.length>1 ? `${m.g}-${m.c} ` : '')+`${m.n}번` : '아직 안 골랐어요'; }
+function liveWho(){ const m=LV.me; if (LV.sl) return m ? `${m.g}학년 ${m.c}반 ${m.n}번` : '없어요 (쉬는 매트)'; return m ? (LV.meta&&LV.meta.groups.length>1 ? `${m.g}-${m.c} ` : '')+`${m.n}번` : '아직 안 골랐어요'; }
 function liveBar(state){
   $('lvBar').classList.toggle('hidden', !LV.on);
   $('lvMatNo').textContent=`매트 ${LV.mat}번`; $('lvWho').textContent=liveWho();
+  $('lvWhoL').textContent=LV.sl?'지금 차례':'뛸 사람'; $('lvPickBtn').classList.toggle('hidden', !!LV.sl);
   if (state) $('lvState').textContent=state;
 }
 function liveMats(){
@@ -1014,13 +1018,14 @@ async function livePick(grp){
 function liveWait(msg){ // 선생님 신호를 기다리는 화면 = 칸 확인 연습 화면 (몸풀기)
   if (!S.H){ return; }
   chkCount=0; $('chkCount').textContent='0'; $('chkLast').textContent=''; show('check');
-  liveBar(msg || (LV.me ? '선생님이 시작하면 같이 시작해요 — 매트에서 몸을 풀어요' : '먼저 이번에 뛸 사람을 골라요'));
-  if (!LV.me) livePick();
+  liveBar(msg || (LV.sl ? (LV.me ? '내 차례예요! 선생님이 시작하면 같이 시작해요' : '이번 조에서는 쉬는 매트예요 — 다음 조를 기다려요') : LV.me ? '선생님이 시작하면 같이 시작해요 — 매트에서 몸을 풀어요' : '먼저 이번에 뛸 사람을 골라요'));
+  if (!LV.me && !LV.sl) livePick();
   livePush(true);
 }
 function liveStart(c){
   const meta=LV.meta, id=meta&&meta.game; if (!id || !GDEF[id]) return;
   if (LV.T.now()-c.at > 3000){ liveBar('이번 판은 이미 시작했어요 — 다음 판을 기다려요'); return; }
+  if (LV.sl && !LV.me){ liveBar('이번 조에서는 쉬는 매트예요 — 다음 조를 기다려요'); return; }
   $('lvPick')&&$('lvPick').classList.add('hidden'); clearTimeout(LV.back);
   S.mode=id; const def=GDEF[id], o=Object.assign({}, optsFor(id), meta.opts);
   Object.assign(GM,{ def, o, inst:null, running:false, correct:0, attempts:0, cur:null, level:1, T:0, vt:0, seed:(+c.seed)>>>0, live:String(c.id) });
@@ -1037,8 +1042,33 @@ function liveStart(c){
   },100);
   livePush(true);
 }
+// 차례 돌리기: 선생님 신호의 sl = "매트=학년-반-번호,…" → 이 매트의 지금 차례 친구 (없으면 이번 조는 쉬는 매트)
+function liveSlot(c){
+  const raw=c&&typeof c.sl==='string'?c.sl:'';
+  if (!raw){ if (LV.sl){ LV.sl=null; liveBar(); } return; }
+  const map={}; raw.split(',').forEach(x=>{ const r=/^(\d{1,2})=(\d{1,2})-(\d{1,2})-(\d{1,2})$/.exec(x); if (r) map[+r[1]]={g:+r[2],c:+r[3],n:+r[4]}; });
+  LV.sl=map;
+  const nx=map[LV.mat]||null, cur=LV.me, same=nx&&cur&&nx.g===cur.g&&nx.c===cur.c&&nx.n===cur.n;
+  if (same || (!nx && !cur)) { liveBar(); return; }
+  LV.me=nx; $('lvPick')&&$('lvPick').classList.add('hidden');
+  if (!GM.running){ GM.live=''; clearTimeout(LV.back); if (S.screen==='result' || S.screen==='check') liveWait(); else liveBar(); }
+  else liveBar();
+  livePush(true);
+  if (nx && navigator.vibrate) try{ navigator.vibrate(200); }catch(e){}
+}
+// 기기 찾기: fd = "매트:시각" (0 = 모든 매트) → 4초 동안 매트 번호를 크게 + 소리·진동
+function liveFind(c){
+  const raw=c&&typeof c.fd==='string'?c.fd:''; if (!raw || raw===LV.fdSeen) return;
+  LV.fdSeen=raw; const [m,at]=raw.split(':').map(Number);
+  if (!LV.mat || (m && m!==LV.mat) || Math.abs(LV.T.now()-at)>15000) return;
+  let el=$('lvFind'); if (!el){ el=document.createElement('div'); el.id='lvFind'; el.className='lvfind'; document.body.appendChild(el); }
+  el.innerHTML=`<span>여기예요!</span><b>${LV.mat}</b><span>매트 ${LV.mat}번${LV.me?' · '+esc(liveWho()):''}</span>`; el.classList.remove('hidden');
+  try{ navigator.vibrate&&navigator.vibrate([300,150,300,150,300]); }catch(e){}
+  [0,500,1000,1500].forEach(t=>setTimeout(()=>beep(1175,180),t));
+  clearTimeout(LV.fdT); LV.fdT=setTimeout(()=>el.classList.add('hidden'),4000);
+}
 function liveControl(c){
-  LV.ctl=c;
+  LV.ctl=c; if (c){ liveSlot(c); liveFind(c); }
   if (!c){ if (GM.running && GM.live) endGame(false); liveConn('선생님이 방을 닫았어요','bad'); return; }
   if (c.ph==='go' && c.id && String(c.id)!==LV.run){ LV.run=String(c.id); if (S.H) liveStart(c); else liveBar('카메라를 켜고 매트를 찾으면 다음 판부터 함께해요'); }
   else if (c.ph==='end' && GM.live && String(c.id)===GM.live){ clearInterval(LV.cd); LV.cd=0; if (GM.running) endGame(false); else liveWait(); }
