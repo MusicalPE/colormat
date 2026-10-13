@@ -72,6 +72,13 @@
   .kpi { background: var(--surface); border-radius: var(--r-md); padding: 12px 14px; box-shadow: var(--shadow); }
   .kpi span { color: var(--muted); font-size: 0.82em; font-weight: 700; }
   .kpi b { display: block; font-size: 1.45em; }
+  /* 숫자 카드는 하늘까지와 같은 남색, 순위 카드에는 위쪽에 색동 띠 (우리 학교 화면과 같은 느낌) */
+  .kpi { position: relative; overflow: hidden; padding-left: 18px; background: linear-gradient(160deg, #0f1a45 0%, #1a2a66 100%); color: #fff; box-shadow: 0 2px 10px rgba(12,22,60,.18); }
+  .kpi::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; }
+  .kpi:nth-child(1)::before { background: #E0352B; } .kpi:nth-child(2)::before { background: #F2C230; } .kpi:nth-child(3)::before { background: #2E9E57; } .kpi:nth-child(4)::before { background: #2F5FB3; }
+  .kpi span { color: rgba(255,255,255,.72); } .kpi b { color: #fff; }
+  .bw-r .card { position: relative; overflow: hidden; padding-top: 24px; }
+  .bw-r .card::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: repeating-linear-gradient(90deg, #E0352B 0 40px, #F2C230 40px 80px, #2E9E57 80px 120px, #E77FA2 120px 160px, #2F5FB3 160px 200px, #FBF7EE 200px 240px, #7B3F86 240px 280px); }
   .card { background: var(--surface); border-radius: var(--r-lg); padding: 18px 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
   .card h2 { margin: 0 0 4px; font-size: 1.15em; }
   .card-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
@@ -378,15 +385,16 @@
     const filt = [gameName, d.diff ? CMApp.diffName($('gameSel').value, d.diff) : '', d.band ? d.band.replace('-', '~') + '학년' : ''].filter(Boolean).join(' · ');
     const s = d.summary || {};
     let h = '<div class="bw-l">';
-    if (d.climb && window.CMApp && CMApp.climbHTML) {
-      const y = d.climb.year, ys = d.climb.years || {};
-      h += CMApp.climbHTML(Number(ys[y]) || 0, '🚀 다 함께 하늘까지 · ' + y + '학년도 전국', Number(ys[String(Number(y) - 1)]) || 0);
-    }
     h += '<div class="kpis">' +
       '<div class="kpi"><span>참여 학교</span><b class="mono">' + num(s.schools) + '</b></div>' +
       '<div class="kpi"><span>참여 학생</span><b class="mono">' + num(s.students) + '</b></div>' +
       '<div class="kpi"><span>누적 정답 착지</span><b class="mono">' + num(s.correct) + '</b></div>' +
-      '<div class="kpi"><span>누적 플레이 시간</span><b class="mono">' + dur(s.sec) + '</b></div></div>' + '</div><div class="bw-r">';
+      '<div class="kpi"><span>누적 플레이 시간</span><b class="mono">' + dur(s.sec) + '</b></div></div>';
+    if (d.climb && window.CMApp && CMApp.climbHTML) {
+      const y = d.climb.year, ys = d.climb.years || {};
+      h += CMApp.climbHTML(Number(ys[y]) || 0, '🚀 다 함께 하늘까지 · ' + y + '학년도 전국', Number(ys[String(Number(y) - 1)]) || 0);
+    }
+    h += '</div><div class="bw-r">';
 
     if (!s.students) {
       h += '<div class="card"><div class="empty">' + esc(monthLabel(d.month)) + ' ' + esc(filt) + ' 기록이 아직 없어요.<br>카메라 판정으로 뛰고 선생님이 확인하면 여기에 올라와요!</div></div></div>';
