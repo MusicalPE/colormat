@@ -63,6 +63,12 @@
           "dur": {
             ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 3600"
           },
+          "who": {
+            ".validate": "newData.isString() && newData.val().length <= 16"
+          },
+          "sl": {
+            ".validate": "newData.isString() && newData.val().length <= 200"
+          },
           "$other": {
             ".validate": false
           }
@@ -155,6 +161,12 @@
           },
           "seed": {
             ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 4294967295"
+          },
+          "sl": {
+            ".validate": "newData.isString() && newData.val().length <= 400"
+          },
+          "fd": {
+            ".validate": "newData.isString() && newData.val().length <= 32"
           },
           "$other": {
             ".validate": false
