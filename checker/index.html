@@ -314,7 +314,7 @@ body.wide .wrap{max-width:1180px}
 
 <script type="module">
 import { TILE, NAME, TILE_COLOR, INK, LEVELS, esc, fmt, pop, hintMat, hintShow, makeGames, GAME_ORDER as GORDER, seeded } from './games.js';
-const VERSION = 'v0.7.1';
+const VERSION = 'v0.7.2';
 // 칸 번호: 0 왼위 빨강, 1 오위 노랑, 2 왼아래 초록, 3 오아래 파랑
 const TILE_CENTER = [{x:.25,y:.25},{x:.75,y:.25},{x:.25,y:.75},{x:.75,y:.75}];
 const params = new URLSearchParams(location.search);
@@ -932,7 +932,7 @@ async function liveFirebase(room, dev){
     onMeta:cb=>{ cbs.meta=cb; watch(`matrooms/${room}/meta`,cb); },
     onControl:cb=>{ cbs.ctl=cb; watch(`matrooms/${room}/control`,cb); },
     onConnected:cb=>{ cbs.conn=cb; cb(conn,ever); },
-    taken:async()=>{ try{ return Object.values((await D.get(D.ref(db,`matrooms/${room}/devs`))).val()||{}).filter(d=>d.st!=='off'); }catch(e){ return []; } },
+    taken:async()=>{ try{ return Object.entries((await D.get(D.ref(db,`matrooms/${room}/devs`))).val()||{}).map(([id,d])=>Object.assign({id},d)).filter(d=>d.st!=='off'); }catch(e){ return []; } },
   };
 }
 // 시험용(?demo=1): 같은 브라우저의 다른 탭(선생님 화면 시험 모드)과 BroadcastChannel 로 주고받음
@@ -941,7 +941,7 @@ function liveDemo(room, dev){
   bc.onmessage=e=>{ const m=e.data||{}; if (m.type==='meta') cbs.meta&&cbs.meta(m.v); if (m.type==='control') cbs.ctl&&cbs.ctl(m.v); if (m.type==='devs') devs=m.v||{}; };
   setTimeout(()=>bc.postMessage({type:'hello',dev}),50);
   return { now:()=>Date.now(), send:async data=>bc.postMessage({type:'dev',dev,data:Object.assign({},data,{t:Date.now()})}),
-    onMeta:cb=>{ cbs.meta=cb; }, onControl:cb=>{ cbs.ctl=cb; }, onConnected:cb=>cb(true,true), taken:async()=>Object.values(devs).filter(d=>d.st!=='off') };
+    onMeta:cb=>{ cbs.meta=cb; }, onControl:cb=>{ cbs.ctl=cb; }, onConnected:cb=>cb(true,true), taken:async()=>Object.entries(devs).map(([id,d])=>Object.assign({id},d)).filter(d=>d.st!=='off') };
 }
 function liveMetaParse(m){
   if (!m || !m.game) return null;
@@ -971,26 +971,34 @@ function livePush(force){
   try{ localStorage.setItem('ml_'+LV.room+(params.get('slot')||''), JSON.stringify({dev:LV.dev, mat:LV.mat, me:LV.me, at:Date.now()})); }catch(e){}
   LV.T.send(out).catch(()=>{ LV.sent=null; });
 }
-function liveWho(){ const m=LV.me; if (LV.sl) return m ? `${m.g}학년 ${m.c}반 ${m.n}번` : '없어요 (쉬는 매트)'; return m ? (LV.meta&&LV.meta.groups.length>1 ? `${m.g}-${m.c} ` : '')+`${m.n}번` : '아직 안 골랐어요'; }
+function liveWho(){ const m=LV.me; if (LV.sl) return m ? `${m.g}학년 ${m.c}반 ${m.n}번` : '없어요 (쉬는 기기)'; return m ? (LV.meta&&LV.meta.groups.length>1 ? `${m.g}-${m.c} ` : '')+`${m.n}번` : '아직 안 골랐어요'; }
 function liveBar(state){
   $('lvBar').classList.toggle('hidden', !LV.on);
-  $('lvMatNo').textContent=`매트 ${LV.mat}번`; $('lvWho').textContent=liveWho();
+  $('lvMatNo').textContent=`기기 ${LV.mat}번`; $('lvWho').textContent=liveWho();
   $('lvWhoL').textContent=LV.sl?'지금 차례':'뛸 사람'; $('lvPickBtn').classList.toggle('hidden', !!LV.sl);
   if (state) $('lvState').textContent=state;
 }
-function liveMats(){
-  const box=$('lvMats'), n=LV.meta?LV.meta.mats:0; $('lvMatBox').classList.toggle('hidden', !n);
-  LV.T.taken().then(list=>{
-    const taken=new Set(list.filter(d=>d.m&&d.m!==LV.mat).map(d=>d.m));
-    box.innerHTML=''; for (let i=1;i<=n;i++){ const b=document.createElement('button'); b.textContent=i;
-      b.className=(i===LV.mat?'on':'')+(taken.has(i)?' taken':''); b.title=taken.has(i)?'이미 다른 기기가 이 매트로 들어와 있어요':'';
-      b.onclick=()=>{ if (taken.has(i) && !confirm(i+'번 매트에는 이미 다른 기기가 있어요. 그래도 이 기기를 '+i+'번으로 할까요?')) return;
-        LV.mat=i; liveMats(); livePush(true); liveHome(); };
-      box.appendChild(b); } });
+// 기기 번호: 매트에는 번호를 붙일 방법이 없어서, 들어온 차례대로 빈 번호를 저절로 줌 (방마다 새로)
+// 두 기기가 동시에 같은 번호를 잡으면 기기 이름이 큰 쪽이 다음 빈 번호로 옮김
+async function liveMats(){
+  const n=LV.meta?LV.meta.mats:0; if (!n || LV.matBusy) return;
+  LV.matBusy=true;
+  try{
+    for (let tries=0; tries<6; tries++){
+      const list=(await LV.T.taken()).filter(d=>d.id!==LV.dev);
+      const clash=LV.mat && list.some(d=>d.m===LV.mat && d.id<LV.dev);
+      if (LV.mat && LV.mat<=n && !clash) break;
+      const used=new Set(list.map(d=>d.m)); let k=0; for (let i=1;i<=n;i++) if (!used.has(i)){ k=i; break; }
+      if (!k){ LV.mat=0; liveHome('기기 자리가 다 찼어요 — 선생님께 매트 수를 늘려 달라고 해요'); return; }
+      LV.mat=k; livePush(true); liveHome();
+      await new Promise(r=>setTimeout(r,700+Math.random()*600));
+    }
+  } finally { LV.matBusy=false; }
+  liveHome(); liveBar();
 }
-function liveHome(){
-  $('lvMatPicked').innerHTML = LV.mat ? `이 기기는 <b>매트 ${LV.mat}번</b>이에요. 아래 <b>카메라 켜고 준비하기</b>를 눌러요.` : '';
-  $('startBtn').disabled = !LV.mat; $('startBtn').textContent = LV.mat ? '카메라 켜고 준비하기' : '먼저 매트 번호를 골라요';
+function liveHome(msg){
+  $('lvMatPicked').innerHTML = msg ? `<b style="color:var(--bad)">${msg}</b>` : LV.mat ? `이 기기는 <b>기기 ${LV.mat}번</b>이에요 (저절로 정해져요). 아래 <b>카메라 켜고 준비하기</b>를 누르고, 뛸 친구가 <b>내 번호</b>를 눌러요.` : '기기 번호를 받는 중…';
+  $('startBtn').disabled = !LV.mat; $('startBtn').textContent = LV.mat ? '카메라 켜고 준비하기' : '기기 번호를 받는 중…';
 }
 async function livePick(grp){
   const meta=LV.meta; if (!meta || GM.running) return;
@@ -1000,11 +1008,11 @@ async function livePick(grp){
   if (!grp && gs.length===1) grp=gs[0];
   const close=document.createElement('button'); close.className='btn ghost'; close.textContent='닫기'; close.onclick=()=>box.classList.add('hidden');
   if (!grp){
-    $('pkT').textContent='이번에 뛸 사람 — 반을 눌러요'; $('pkN').textContent=`매트 ${LV.mat}번`; $('pkG').innerHTML='';
+    $('pkT').textContent='내 반을 눌러요'; $('pkN').textContent=`기기 ${LV.mat}번`; $('pkG').innerHTML='';
     gs.forEach(x=>{ const b=document.createElement('button'); b.className='wide'; b.textContent=`${x.g}학년 ${x.c}반`; b.onclick=()=>livePick(x); $('pkG').appendChild(b); });
     $('pkB').appendChild(close); box.classList.remove('hidden'); return;
   }
-  $('pkT').textContent=`이번에 뛸 사람 — ${grp.g}학년 ${grp.c}반 내 번호`; $('pkN').textContent=`매트 ${LV.mat}번 · 흐린 번호는 지금 다른 매트에 있어요`;
+  $('pkT').textContent=`내 번호를 눌러요 — ${grp.g}학년 ${grp.c}반`; $('pkN').textContent=`기기 ${LV.mat}번 · 흐린 번호는 지금 다른 기기에 있어요`;
   const taken=new Set((await LV.T.taken()).filter(d=>d.g===grp.g&&d.c===grp.c&&d.m!==LV.mat).map(d=>d.n));
   $('pkG').innerHTML='';
   for (let n=1;n<=grp.max;n++){ const b=document.createElement('button'); b.textContent=n; if (taken.has(n)) b.className='taken';
@@ -1018,14 +1026,14 @@ async function livePick(grp){
 function liveWait(msg){ // 선생님 신호를 기다리는 화면 = 칸 확인 연습 화면 (몸풀기)
   if (!S.H){ return; }
   chkCount=0; $('chkCount').textContent='0'; $('chkLast').textContent=''; show('check');
-  liveBar(msg || (LV.sl ? (LV.me ? '내 차례예요! 선생님이 시작하면 같이 시작해요' : '이번 조에서는 쉬는 매트예요 — 다음 조를 기다려요') : LV.me ? '선생님이 시작하면 같이 시작해요 — 매트에서 몸을 풀어요' : '먼저 이번에 뛸 사람을 골라요'));
+  liveBar(msg || (LV.sl ? (LV.me ? '내 차례예요! 선생님이 시작하면 같이 시작해요' : '이번 조에서는 쉬는 기기예요 — 다음 조를 기다려요') : LV.me ? '선생님이 시작하면 같이 시작해요 — 매트에서 몸을 풀어요' : '먼저 이번에 뛸 사람을 골라요'));
   if (!LV.me && !LV.sl) livePick();
   livePush(true);
 }
 function liveStart(c){
   const meta=LV.meta, id=meta&&meta.game; if (!id || !GDEF[id]) return;
   if (LV.T.now()-c.at > 3000){ liveBar('이번 판은 이미 시작했어요 — 다음 판을 기다려요'); return; }
-  if (LV.sl && !LV.me){ liveBar('이번 조에서는 쉬는 매트예요 — 다음 조를 기다려요'); return; }
+  if (LV.sl && !LV.me){ liveBar('이번 조에서는 쉬는 기기예요 — 다음 조를 기다려요'); return; }
   $('lvPick')&&$('lvPick').classList.add('hidden'); clearTimeout(LV.back);
   S.mode=id; const def=GDEF[id], o=Object.assign({}, optsFor(id), meta.opts);
   Object.assign(GM,{ def, o, inst:null, running:false, correct:0, attempts:0, cur:null, level:1, T:0, vt:0, seed:(+c.seed)>>>0, live:String(c.id) });
@@ -1062,7 +1070,7 @@ function liveFind(c){
   LV.fdSeen=raw; const [m,at]=raw.split(':').map(Number);
   if (!LV.mat || (m && m!==LV.mat) || Math.abs(LV.T.now()-at)>15000) return;
   let el=$('lvFind'); if (!el){ el=document.createElement('div'); el.id='lvFind'; el.className='lvfind'; document.body.appendChild(el); }
-  el.innerHTML=`<span>여기예요!</span><b>${LV.mat}</b><span>매트 ${LV.mat}번${LV.me?' · '+esc(liveWho()):''}</span>`; el.classList.remove('hidden');
+  el.innerHTML=`<span>여기예요!</span><b>${LV.mat}</b><span>기기 ${LV.mat}번${LV.me?' · '+esc(liveWho()):''}</span>`; el.classList.remove('hidden');
   try{ navigator.vibrate&&navigator.vibrate([300,150,300,150,300]); }catch(e){}
   [0,500,1000,1500].forEach(t=>setTimeout(()=>beep(1175,180),t));
   clearTimeout(LV.fdT); LV.fdT=setTimeout(()=>el.classList.add('hidden'),4000);

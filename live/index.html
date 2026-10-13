@@ -252,7 +252,7 @@ h1{font-size:clamp(20px,2.4vw,28px);margin:0;font-weight:900;letter-spacing:-.03
       <span class="clock" id="clock"></span>
       <button class="primary" id="btnGo" style="min-width:110px;font-size:18px">시작</button>
       <button class="dark" id="btnEnd" disabled>끝</button>
-      <button id="btnNext" hidden title="다음 조 친구들이 매트로">다음 조 ▶</button>
+      <button id="btnNext" hidden title="다음 조 친구들 차례로">다음 조 ▶</button>
       <button id="btnRot" title="매트보다 친구가 많을 때 조를 나눠 차례로">차례</button>
       <button id="btnGame">게임 바꾸기</button>
       <button id="btnResult" disabled>결과</button>
@@ -283,7 +283,7 @@ h1{font-size:clamp(20px,2.4vw,28px);margin:0;font-weight:900;letter-spacing:-.03
   <h3 id="resTitle">결과</h3>
   <div class="climb" id="resClimb"></div>
   <p class="small" id="resNote" style="margin:0"></p>
-  <div class="res"><table><thead><tr><th>순위</th><th>매트</th><th>이름</th><th>정답</th><th>시도</th><th>정확도</th></tr></thead><tbody id="resBody"></tbody></table></div>
+  <div class="res"><table><thead><tr><th>순위</th><th>기기</th><th>이름</th><th>정답</th><th>시도</th><th>정확도</th></tr></thead><tbody id="resBody"></tbody></table></div>
   <div class="row" id="resSaveRow" hidden><b id="resSave"></b><input type="password" id="resPw" placeholder="관리자 비밀번호" hidden><button id="btnResSave" hidden>저장</button></div>
   <div class="row"><button class="primary" id="btnResCopy">결과 복사</button><button id="btnResNext" hidden>다음 조로 ▶</button><button id="btnResClose">닫기</button><span class="small" id="resMsg"></span></div>
 </div></div>
@@ -295,9 +295,9 @@ h1{font-size:clamp(20px,2.4vw,28px);margin:0;font-weight:900;letter-spacing:-.03
 
 <div class="ov" id="devModal" hidden><div class="box">
   <h3>매트 기기</h3>
-  <p class="small" style="margin:0">찾기를 누르면 그 기기 화면에 매트 번호가 4초 동안 크게 뜨고 소리·진동이 나요.</p>
+  <p class="small" style="margin:0">찾기를 누르면 그 기기 화면에 기기 번호가 4초 동안 크게 뜨고 소리·진동이 나요.</p>
   <div class="warnbox" id="devWarn" hidden></div>
-  <div class="res"><table class="devTbl"><thead><tr><th>매트</th><th>상태</th><th>지금 차례</th><th></th></tr></thead><tbody id="devBody"></tbody></table></div>
+  <div class="res"><table class="devTbl"><thead><tr><th>기기</th><th>상태</th><th>지금 차례</th><th></th></tr></thead><tbody id="devBody"></tbody></table></div>
   <div class="row"><button class="primary" id="btnFindAll">모두 찾기</button><button id="btnDevClose">닫기</button></div>
 </div></div>
 <div class="big" id="big"></div>
@@ -327,7 +327,7 @@ h1{font-size:clamp(20px,2.4vw,28px);margin:0;font-weight:900;letter-spacing:-.03
    시작·끝 신호, 기기마다 매트 번호·학년·반·번호·정답·시도·단계·상태. 이름은 이 컴퓨터에만.
    ========================================================================================= */
 import { makeGames, GAME_ORDER, seeded, esc, fmt } from '../checker/games.js';
-const VER='0.3.0';
+const VER='0.3.1';
 const FB_CONFIG={ apiKey:'AIzaSyDimPwJ974Pmn9wcgwFZFWUBQPaOra5chQ', authDomain:'jumpropelive.firebaseapp.com',
   databaseURL:'https://jumpropelive-default-rtdb.asia-southeast1.firebasedatabase.app', projectId:'jumpropelive',
   storageBucket:'jumpropelive.firebasestorage.app', messagingSenderId:'727527484238', appId:'1:727527484238:web:aaed6e0585ee7db7228c1f' };
@@ -593,20 +593,20 @@ function rotBar(){
   if(r) $('pRot').innerHTML=`차례<b>${r.i+1}조</b> / ${r.groups.length}조`;
 }
 function handTable(cur,nxt,mats){
-  return `<div class="res"><table class="rotTbl"><thead><tr><th>매트</th><th>비켜 주는 친구</th><th></th><th>들어갈 친구</th></tr></thead><tbody>${mats.map((m,k)=>`<tr><td class="m">${m}번</td><td>${cur&&cur[k]?esc(personName(cur[k])):'<span class="rest">쉬어요</span>'}</td><td class="arr">→</td><td class="nx">${nxt?(nxt[k]?esc(personName(nxt[k])):'<span class="rest">쉬어요</span>'):'<span class="rest">끝</span>'}</td></tr>`).join('')}</tbody></table></div>`;
+  return `<div class="res"><table class="rotTbl"><thead><tr><th>기기</th><th>비켜 주는 친구</th><th></th><th>들어갈 친구</th></tr></thead><tbody>${mats.map((m,k)=>`<tr><td class="m">${m}번</td><td>${cur&&cur[k]?esc(personName(cur[k])):'<span class="rest">쉬어요</span>'}</td><td class="arr">→</td><td class="nx">${nxt?(nxt[k]?esc(personName(nxt[k])):'<span class="rest">쉬어요</span>'):'<span class="rest">끝</span>'}</td></tr>`).join('')}</tbody></table></div>`;
 }
 function rotRender(){
   const r=S.rot, body=$('rotBody'), total=rosterAll().length;
   if(!r){
     const j=joinedMats().length, def=Math.max(1,Math.min(S.mats,j||S.mats));
-    body.innerHTML=`<p style="margin:0;line-height:1.7">매트보다 친구가 많을 때 — <b>쓸 매트 수만큼 조를 나눠</b> 판마다 차례로 뛰어요.<br>매트 기기에는 <b>"지금 차례: ○학년 ○반 ○번"</b>이 저절로 떠서, 학생이 번호를 고르지 않아도 돼요.</p>
-      <div class="row"><label>쓸 매트 <select id="rotN">${Array.from({length:S.mats},(_,i)=>`<option value="${i+1}"${i+1===def?' selected':''}>${i+1}개</option>`).join('')}</select></label>
+    body.innerHTML=`<p style="margin:0;line-height:1.7">매트보다 친구가 많을 때 — <b>쓸 기기 수만큼 조를 나눠</b> 판마다 차례로 뛰어요.<br>매트 기기에는 <b>"지금 차례: ○학년 ○반 ○번"</b>이 저절로 떠서, 학생이 번호를 고르지 않아도 돼요.</p>
+      <div class="row"><label>쓸 기기 <select id="rotN">${Array.from({length:S.mats},(_,i)=>`<option value="${i+1}"${i+1===def?' selected':''}>${i+1}대</option>`).join('')}</select></label>
       <label>순서 <span class="seg" id="rotO"><button type="button" data-v="num" class="on">번호순</button><button type="button" data-v="rand">랜덤</button></span></label></div>
       <p class="small" id="rotInfo" style="margin:0"></p>
       ${S.rulesOld?'<div class="warnbox">Firebase 규칙이 예전 판이라 매트 기기에 차례가 가지 않아요. 규칙을 새 판으로 바꿔 주세요.</div>':''}
       <div class="row"><button class="primary" id="rotMake">이대로 조 나누기</button><button id="rotClose">닫기</button></div>`;
     let order='num';
-    const info=()=>{ const n=+$('rotN').value; $('rotInfo').textContent=`${total}명 → 매트 ${n}개로 ${Math.ceil(total/n)}개 조 · 들어온 기기 ${j}대`+(j&&n>j?' (기기가 아직 없는 매트도 쓰게 돼요)':''); };
+    const info=()=>{ const n=+$('rotN').value; $('rotInfo').textContent=`${total}명 → 기기 ${n}대로 ${Math.ceil(total/n)}개 조 · 들어온 기기 ${j}대`+(j&&n>j?' (아직 안 들어온 기기 번호도 쓰게 돼요)':''); };
     $('rotN').onchange=info; info();
     $('rotO').querySelectorAll('button').forEach(b=>b.onclick=()=>{ order=b.dataset.v; $('rotO').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); });
     $('rotMake').onclick=()=>{ if(!total){ alert('명단이 비어 있어요'); return; } S.rot=rotBuild(+$('rotN').value,order); rotApply(); };
@@ -615,7 +615,7 @@ function rotRender(){
   }
   const cur=r.groups[r.i], nxt=r.groups[r.i+1]||null, busy=S.ctl.ph==='go';
   body.innerHTML=`<p style="margin:0;font-size:20px;font-weight:900">지금 <span style="color:#1e40af">${r.i+1}조</span> / ${r.groups.length}조 <span class="small" style="font-weight:600">· 매트 ${r.mats.length}개 · ${r.order==='rand'?'랜덤':'번호순'}</span></p>
-    ${nxt?'<p class="small" style="margin:0">판이 끝나면 "다음 조 ▶"를 눌러요. 자리를 비켜 주는 친구 → 그 매트에 들어갈 친구예요.</p>':'<p class="small" style="margin:0">마지막 조예요.</p>'}
+    ${nxt?'<p class="small" style="margin:0">판이 끝나면 "다음 조 ▶"를 눌러요. 자리를 비켜 주는 친구 → 그 자리에 들어갈 친구예요.</p>':'<p class="small" style="margin:0">마지막 조예요.</p>'}
     ${S.rulesOld?'<div class="warnbox">Firebase 규칙이 예전 판이라 매트 기기에 차례가 가지 않아요. 규칙을 새 판으로 바꿔 주세요.</div>':''}
     ${handTable(cur,nxt,r.mats)}
     <div class="row"><button id="rotPrev"${r.i?'':' disabled'}>◀ 이전 조</button><button class="primary" id="rotNext"${nxt?'':' disabled'}>다음 조 ▶</button><span class="spacer"></span><button id="rotRedo">조 다시 나누기</button><button id="rotOff">차례 끄기</button><button id="rotClose">닫기</button></div>`;
@@ -651,7 +651,7 @@ $('btnFindAll').onclick=e=>findDev(0,e.target);
 
 /* ---------- QR ---------- */
 function showQr(){
-  $('qrHow').innerHTML='매트 앞 휴대폰·태블릿 <b>카메라</b>로 QR을 찍고<br>→ 이 기기를 세운 <b>매트 번호</b>를 누르고 <span style="color:var(--sub)">(기기마다 처음 한 번)</span><br>→ <b>카메라 켜고 준비하기</b><br>→ '+(S.rot?'<b>지금 차례</b> 친구가 저절로 떠요.':'뛸 친구가 <b>내 번호</b>를 눌러요.');
+  $('qrHow').innerHTML='매트 앞 휴대폰·태블릿 <b>카메라</b>로 QR을 찍고<br>→ <b>카메라 켜고 준비하기</b> <span style="color:var(--sub)">(기기 번호는 저절로 정해져요)</span><br>→ '+(S.rot?'<b>지금 차례</b> 친구가 저절로 떠요.':'뛸 친구가 <b>내 번호</b>를 눌러요.');
   const url=deviceUrl(); $('qrUrl').textContent=url; $('qrTitle').textContent=`매트 앞 기기 ${S.mats}대가 들어와요`;
   const box=$('qrImg'); box.innerHTML='';
   if(window.QRCode) new QRCode(box,{text:url,width:512,height:512,correctLevel:QRCode.CorrectLevel.M}); else box.textContent='QR을 만들지 못했어요 — 아래 주소를 쓰세요';
@@ -849,7 +849,7 @@ async function go(){
   audioWarm();
   const ready=(S.rows||[]).filter(r=>/ready|done/.test(r.st)).length;
   if(unsaved()&&!confirm('지난 판 결과를 아직 우리 학교 시트에 넣지 않았어요. 저장하지 않고 새 판을 시작할까요?')) return;
-  if(!ready&&!confirm('준비된 매트가 아직 없어요. 그래도 시작할까요?')) return;
+  if(!ready&&!confirm('준비된 기기가 아직 없어요. 그래도 시작할까요?')) return;
   const id='r'+Date.now().toString(36), seed=(Math.random()*4294967296)>>>0;
   const c={ph:'go',id,at:B.now()+6000,seed};
   try{ await ctlSet(c); S.ctl=c; S.lastRun={id,at:c.at,game:S.game,opts:Object.assign({},S.opts),grp:S.rot?S.rot.i:null}; S.endShown=''; S.prev={}; $('qr').hidden=true; $('btnResult').disabled=true; tvStart(c); if(mGameOk()) musicCountdown(); }
@@ -883,7 +883,7 @@ function showResult(){
   let rank=0, prev=-1;
   $('resBody').innerHTML=rows.map((r,i)=>{ if(r.ok!==prev){ rank=i+1; prev=r.ok; } const acc=r.tr?Math.round(r.ok/r.tr*100):0;
     return `<tr class="${rank<=3?'top':''}"><td>${rank}</td><td>${r.m}</td><td>${esc(r.name||'(안 고름)')}</td><td class="c">${r.ok}</td><td>${r.tr}</td><td>${acc}%</td></tr>`; }).join('')
-    || '<tr><td colspan="6" style="color:var(--sub)">이번 판에 뛴 매트가 없어요</td></tr>';
+    || '<tr><td colspan="6" style="color:var(--sub)">이번 판에 뛴 친구가 없어요</td></tr>';
   const d=GDEF[run.game];
   $('resTitle').textContent=`${d?d.name:''} 결과`+(run.done?'':' (중간에 끝냄)');
   $('resClimb').innerHTML=`🚀 이번 판으로 다 함께 <b>${sum.toLocaleString()}m</b> 올라갔어요`;
@@ -893,7 +893,7 @@ function showResult(){
 }
 async function copyResult(){
   const rows=resultRows().slice().sort((a,b)=>a.m-b.m);
-  const tsv=['매트\t학년\t반\t번호\t이름\t정답\t시도',...rows.map(r=>`${r.m}\t${r.pick.g}\t${r.pick.c}\t${r.pick.n}\t${r.name}\t${r.ok}\t${r.tr}`)].join('\n');
+  const tsv=['기기\t학년\t반\t번호\t이름\t정답\t시도',...rows.map(r=>`${r.m}\t${r.pick.g}\t${r.pick.c}\t${r.pick.n}\t${r.name}\t${r.ok}\t${r.tr}`)].join('\n');
   try{ await navigator.clipboard.writeText(tsv); $('resMsg').textContent='복사했어요'; }catch(e){ $('resMsg').textContent='복사하지 못했어요'; }
 }
 function savedRuns(){ try{ return JSON.parse(store.get('ml_saved')||'{}')||{}; }catch(e){ return {}; } }
@@ -908,7 +908,7 @@ async function saveResult(){
   if(savedRuns()[run.id]) return resSaveUi();
   const def=GDEF[run.game];
   const rows=resultRows().map(r=>({r,sid:idOf(r.pick)})).filter(x=>x.sid&&x.r.tr>0);
-  if(!rows.length) return resSaveUi('저장할 기록이 없어요 (뛸 사람을 고른 매트만 저장돼요)',true);
+  if(!rows.length) return resSaveUi('저장할 기록이 없어요 (내 번호를 고른 기기만 저장돼요)',true);
   let tok=JR.token||tokGet();
   if(JR.approvalOn&&!tok) return resSaveUi('승인까지 하려면 관리자 비밀번호가 필요해요',true,true);
   resSaveUi('우리 학교 시트에 저장하는 중…'); $('btnResSave').hidden=true;
