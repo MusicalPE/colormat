@@ -206,7 +206,7 @@ body.wide .wrap{max-width:1180px}
         <ul class="tips">
           <li><b>휴대폰은 화면 쪽</b>에 두고 매트를 바라보게 세워요. 아이들이 화면을 보며 뛸 때 몸 앞쪽이 잘 보여요.</li>
           <li>매트 앞 끝에서 <b>2~3m</b>, 높이는 <b>허리쯤</b>(의자·거치대)이 알맞아요.</li>
-          <li>휴대폰은 <b>세로로</b>. 머리부터 발끝, 4칸이 모두 화면에 들어와야 해요.</li>
+          <li><b>무릎부터 발끝</b>과 매트 4칸이 화면에 들어오면 돼요. 머리·몸은 화면 밖이어도 괜찮아요.</li>
           <li>카메라를 켜면 다음 화면에서 자리가 맞는지 바로 알려 줘요.</li>
         </ul>
       </div>
@@ -324,7 +324,7 @@ body.wide .wrap{max-width:1180px}
 
 <script type="module">
 import { TILE, NAME, TILE_COLOR, INK, LEVELS, esc, fmt, pop, hintMat, hintShow, makeGames, GAME_ORDER as GORDER, seeded } from './games.js';
-const VERSION = 'v0.7.3';
+const VERSION = 'v0.7.4';
 // 칸 번호: 0 왼위 빨강, 1 오위 노랑, 2 왼아래 초록, 3 오아래 파랑
 const TILE_CENTER = [{x:.25,y:.25},{x:.75,y:.25},{x:.25,y:.75},{x:.75,y:.75}];
 const params = new URLSearchParams(location.search);
@@ -432,7 +432,7 @@ let landmarker=null, stream=null, lastVideoTime=-1;
 async function initPose(){
   const { PoseLandmarker, FilesetResolver } = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs');
   const fs = await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');
-  const opts = d => ({ baseOptions:{ modelAssetPath:'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task', delegate:d }, runningMode:'VIDEO', numPoses:1 });
+  const opts = d => ({ baseOptions:{ modelAssetPath:'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task', delegate:d }, runningMode:'VIDEO', numPoses:3, minPoseDetectionConfidence:.3, minPosePresenceConfidence:.3, minTrackingConfidence:.3 });   // 다리만 보여도 잡히게 조금 낮춤
   try { landmarker = await PoseLandmarker.createFromOptions(fs, opts('GPU')); }
   catch(e){ landmarker = await PoseLandmarker.createFromOptions(fs, opts('CPU')); }
 }
@@ -454,6 +454,26 @@ function footPoint(lm, side){
   if (h && t) return { x:(h.x+t.x)/2, y:(h.y+t.y)/2 };          // 바닥에 닿는 곳
   if (h || t) return { x:(h||t).x, y:(h||t).y };
   return a ? { x:a.x, y:a.y } : null;
+}
+
+// 여러 사람이 잡히면(뒤에서 기다리는 친구 등) 발이 매트에 가장 가까운 사람을 고름
+function pickPose(list){
+  if (!list || !list.length) return null;
+  if (list.length===1) return list[0];
+  const prev=TR.feet&&(TR.feet[0]||TR.feet[1]);
+  let best=null, bestD=Infinity;
+  for (const lm of list){
+    const f=[footPoint(lm,0), footPoint(lm,1)].filter(Boolean); if (!f.length) continue;
+    let d=0;
+    f.forEach(p=>{
+      if (S.H){ const m=applyH(S.H,p); d+=Math.hypot(Math.max(0,-m.x,m.x-1), Math.max(0,-m.y,m.y-1)); }   // 매트 네모 밖으로 벗어난 만큼
+      else d+=1-guideW(p.x,p.y);                                                                          // 매트 자리(화면 아래쪽)에서 먼 만큼
+    });
+    d=d/f.length + (f.length<2?.15:0);
+    if (prev) d+=.3*Math.hypot(f[0].x-prev.x, f[0].y-prev.y);   // 방금 보던 사람을 조금 더 (갑자기 바뀌지 않게)
+    if (d<bestD){ bestD=d; best=lm; }
+  }
+  return best||list[0];
 }
 
 // ---------- 착지 추적 ----------
@@ -482,7 +502,9 @@ function track(lm, t){
   if (!f[0]&&!f[1]) { TR.stable=null; TR.air=true; return {msg:'발이 보이지 않아요'}; }
   const hipY = vis(lm[23])&&vis(lm[24]) ? (lm[23].y+lm[24].y)/2 : null;
   const footY = (f[0]&&f[1]) ? (f[0].y+f[1].y)/2 : (f[0]||f[1]).y;
-  const leg = Math.max(.08, hipY!=null ? footY-hipY : .3);
+  const kneeY = vis(lm[25])&&vis(lm[26]) ? (lm[25].y+lm[26].y)/2 : (vis(lm[25])||vis(lm[26])||{}).y;
+  // 다리 길이: 엉덩이가 화면 밖이면 무릎~발의 두 배로 어림
+  const leg = Math.max(.08, hipY!=null ? footY-hipY : kneeY!=null ? (footY-kneeY)*2 : .3);
   if (!S.H) return {msg:''};
   TR.mat=f.map(p=>p?applyH(S.H,p):null);
   // 발마다: 디뎠는지(머묾) · 들었는지
@@ -492,7 +514,8 @@ function track(lm, t){
     if (!p){ st.anchor=null; return mv(); }
     if (!st.anchor || d2(p,st.anchor) > .1*leg){ st.anchor={x:p.x,y:p.y}; st.since=t; }
     const o=f[1-i];
-    const lifted = o && legBent(lm,i) && p.y < o.y - .05*leg;
+    const hipSeen = vis(lm[23+i]);   // 엉덩이가 안 보이면(다리만 찍힐 때) 발 높이로만 '든 발'을 봄
+    const lifted = o && (hipSeen ? (legBent(lm,i) && p.y < o.y - .05*leg) : p.y < o.y - .12*leg);
     TR.lifted[i]=!!lifted;
     if (lifted){ st.moveStart=null; return 'air'; }
     if (t-st.since >= 100){ const r=tileOf(TR.mat[i]); TR.raw[i]=typeof r==='number'?r:null; }   // 잠깐(0.1초)만 머물러도 보는 칸 (용암 피하기)
@@ -646,21 +669,22 @@ function scanMat(t){
   } else { DET.cand=pts; DET.since=t; }
 }
 
-// 배치 확인: ① 매트 찾기 ② 몸 전체가 보이는지, 크기가 알맞은지, 발이 화면 아래쪽에 있는지
+// 배치 확인: ① 매트 찾기 ② 다리(무릎~발)가 보이는지, 크기가 알맞은지, 발이 화면 아래쪽에 있는지
 function setupFrame(lm, t){
   scanMat(t);
   const got = DET.blobs ? DET.blobs.filter(Boolean).length : 0;
   const mat = DET.found ? [true, DET.bottom>.94 ? '매트를 찾았어요 — 다만 화면 맨 아래에 붙어 있어요. 앞줄(빨강·노랑) 판정이 흔들리면 휴대폰을 조금 뒤로 하거나 아래를 더 보게 기울여 주세요' : '매트를 찾았어요'] : [false, got ? `매트 찾는 중… (${got}/4색)` + (got===4?' — 배치를 확인하고 있어요':'') : '매트를 찾는 중… 매트 위를 비워 주세요'];
-  const ok=[false,false,false]; let hint=['머리부터 발끝까지 보여요','사람 크기가 알맞아요','발이 매트 자리(화면 아래쪽)에 있어요'];
+  const ok=[false,false,false]; let hint=['무릎부터 발끝까지 보여요','다리 크기가 알맞아요','발이 매트 자리(화면 아래쪽)에 있어요'];
   if (lm){
-    const nose=vis(lm[0]), la=vis(lm[27]), ra=vis(lm[28]);
+    // 머리·몸은 화면 밖이어도 괜찮아요 — 무릎과 발만 보이면 판정해요
+    const lk=vis(lm[25]), rk=vis(lm[26]), la=vis(lm[27]), ra=vis(lm[28]);
     const inside=p=>p && p.x>.02 && p.x<.98 && p.y>.02 && p.y<.98;
-    ok[0] = !!(inside(nose) && inside(la) && inside(ra));
-    if (!ok[0]) hint[0] = !nose ? '머리가 안 보여요 — 휴대폰을 조금 위로·뒤로' : (!la||!ra) ? '발이 안 보여요 — 휴대폰을 조금 뒤로·아래로' : '몸이 화면 끝에 걸려요 — 가운데로';
-    if (nose && la && ra){
-      const tall=((la.y+ra.y)/2)-nose.y;
-      ok[1] = tall>.32 && tall<.7;
-      if (!ok[1]) hint[1] = tall>=.7 ? '너무 가까워요 — 휴대폰을 뒤로' : '너무 멀어요 — 휴대폰을 앞으로';
+    ok[0] = !!(inside(la) && inside(ra) && (lk || rk));
+    if (!ok[0]) hint[0] = (!la||!ra) ? '발이 안 보여요 — 휴대폰을 조금 뒤로·아래로' : (!lk&&!rk) ? '무릎이 안 보여요 — 휴대폰을 조금 위로' : '발이 화면 끝에 걸려요 — 가운데로';
+    if (la && ra && (lk||rk)){
+      const ky=lk&&rk?(lk.y+rk.y)/2:(lk||rk).y, shin=((la.y+ra.y)/2)-ky;
+      ok[1] = shin>.12 && shin<.42;
+      if (!ok[1]) hint[1] = shin>=.42 ? '너무 가까워요 — 휴대폰을 뒤로' : '너무 멀어요 — 휴대폰을 앞으로';
       const fy=(la.y+ra.y)/2;
       if (S.H){ const m=applyH(S.H,{x:(la.x+ra.x)/2,y:fy}); ok[2] = m.x>-.05 && m.x<1.05 && m.y>-.05 && m.y<1.05;
         if (!ok[2]) hint[2]='매트 밖에 서 있어요 — 매트 가운데로'; else hint[2]='매트 위에 서 있어요'; }
@@ -671,9 +695,9 @@ function setupFrame(lm, t){
   const rows=[`<li class="${mat[0]?'ok':''}"><b>${mat[0]?'✓':'1'}</b>${mat[1]}</li>`];
   hint.forEach((h,i)=>{ if (h) rows.push(`<li class="${ok[i]?'ok':''}"><b>${ok[i]?'✓':i+2}</b>${h}</li>`); });
   $('setupChecks').innerHTML=rows.join('');
-  $('setupHelp').innerHTML = DET.found ? '매트를 찾았어요! 이제 <b>매트 가운데에 서서</b> 몸 전체가 잘 보이는지 확인해 주세요.'
+  $('setupHelp').innerHTML = DET.found ? '매트를 찾았어요! 이제 <b>매트 가운데에 서서</b> 무릎부터 발끝까지 잘 보이는지 확인해 주세요. 머리는 화면 밖이어도 괜찮아요.'
     : '먼저 <b>매트 위를 비우고</b> 매트 네 칸이 화면에 모두 보이게 해 주세요. 색깔 칸에 테두리가 그려지면 잡히고 있는 거예요.';
-  // 자동 시작: 매트를 찾았고, 몸 전체가 보이고, 매트 위에 서 있으면 그대로 1.5초 → 시작
+  // 자동 시작: 매트를 찾았고, 다리(무릎~발)가 보이고, 매트 위에 서 있으면 그대로 1.5초 → 시작
   const ready = DET.found && ok[0] && ok[2];
   if (ready){ if (!DET.readySince) DET.readySince=t; } else DET.readySince=0;
   const left = ready ? Math.max(0, AUTO_MS-(t-DET.readySince)) : AUTO_MS;
@@ -717,7 +741,7 @@ function renderCalib(){
 }
 function calibFrame(t){
   const f=TR.feet;
-  if (!f||!f[0]||!f[1]){ CAL.samples=[]; $('calibBar').style.width='0'; $('calibStatus').textContent='발이 보이지 않아요. 몸 전체가 나오게 해 주세요'; return; }
+  if (!f||!f[0]||!f[1]){ CAL.samples=[]; $('calibBar').style.width='0'; $('calibStatus').textContent='발이 보이지 않아요. 무릎부터 발끝까지 나오게 해 주세요'; return; }
   const p={x:(f[0].x+f[1].x)/2, y:(f[0].y+f[1].y)/2};
   if (CAL.pts.some(q=>Math.hypot(q.x-p.x,q.y-p.y)<.04)){ CAL.samples=[]; $('calibBar').style.width='0'; $('calibStatus').textContent=TILE[CAL.step]+' 칸으로 옮겨 주세요'; return; }
   if (CAL.samples.length && Math.hypot(p.x-CAL.samples[0].x, p.y-CAL.samples[0].y) > .025) CAL.samples=[];
@@ -898,7 +922,7 @@ function endGame(completed){
 }
 $('againBtn').onclick = () => startGame();
 // 시험용(?test=1): 카메라 없이 게임을 돌려 보는 손잡이
-if (TEST || params.get('demo')==='1') window.__ck = { S, TR, GM, GDEF, optsFor, show, gameFrame, applyH, detectMat, get LV(){ return LV; }, liveWait:(...a)=>liveWait(...a), livePush:(...a)=>livePush(...a),
+if (TEST || params.get('demo')==='1') window.__ck = { S, TR, GM, GDEF, optsFor, show, gameFrame, applyH, detectMat, pickPose, get LV(){ return LV; }, liveWait:(...a)=>liveWait(...a), livePush:(...a)=>livePush(...a),
   begin(mode, o){ S.mode=mode; const def=GDEF[mode]; o=Object.assign({},optsFor(mode),o||{});
     Object.assign(GM,{ def, o, correct:0, attempts:0, cur:null, level:1, T:0, now:0, start:0, vt:0 }); updHud(); $('ruleText').innerHTML=def.rule(o);
     show('game'); $('countdown').classList.add('hidden'); $('promptCard').classList.remove('hidden'); GM.inst=makeGames(gameEnv(o.seed ?? 12345))[mode].create(o); GM.running=true; } };
@@ -1155,7 +1179,7 @@ function loop(){
     if (landmarker && v.readyState>=2 && v.currentTime!==lastVideoTime){
       lastVideoTime=v.currentTime;
       try {
-        let lm=null; try{ lm=landmarker.detectForVideo(v,t).landmarks?.[0]||null; }catch(e){}
+        let lm=null; try{ lm=pickPose(landmarker.detectForVideo(v,t).landmarks); }catch(e){}
         let info;
         if (lm) info=track(lm,t); else { TR.feet=null; TR.mat=null; TR.stable=null; TR.lm=null; TR.raw=[null,null]; TR.air=true; info={msg:'사람이 보이지 않아요'}; }
         if (S.screen==='setup'){ setupFrame(lm,t); drawSelf(lm, $('setupCanvas'), 1280, true); } else drawSelf(lm);
