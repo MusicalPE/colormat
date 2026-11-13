@@ -1,0 +1,14 @@
+{
+  "name": "saekdong-dev",
+  "private": true,
+  "description": "색동 시험 도구 — 코드 검사(check.js) · 전체 시험(full.js) · 시험 서버(server.js)",
+  "scripts": {
+    "check": "node check.js",
+    "full": "node full.js",
+    "serve": "node server.js"
+  },
+  "devDependencies": {
+    "eslint": "^10.1.0",
+    "playwright": "^1.56.0"
+  }
+}

@@ -3,7 +3,7 @@
 바닥에 4색 매트를 깔고 화면을 보며 뛰는 체육 놀이와, 카메라 판정 기록을 모으는 우리 학교 프로그램입니다.
 
 - **우리 학교 기록 (처음 화면)**: https://musicalpe.github.io/colormat/
-- **놀이터 (게임 모음, 단독판 v1.9.1)**: https://musicalpe.github.io/colormat/play/
+- **놀이터 (게임 모음, 단독판 v1.9.3)**: https://musicalpe.github.io/colormat/play/
 - **카메라 판정기**: https://musicalpe.github.io/colormat/checker/index.html
 - **전국 현황판**: https://musicalpe.github.io/colormat/board.html
 
