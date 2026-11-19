@@ -120,7 +120,7 @@ const must = (cond, msg) => { if (!cond) throw new Error(msg); };
     await pg.click('#nav [data-help]'); await pg.waitForSelector('.help-box', { timeout: 5000 });
     must((await pg.textContent('#helpTitle')).trim() === '색동 간략 사용법', '창 제목이 달라요');
     const n = await pg.$$eval('.help-box section', x => x.length); must(n === HELP_N, '항목 수가 ' + n + '개예요');
-    const nav = await pg.$eval('#nav', e => e.firstElementChild && e.firstElementChild.matches('[data-help]')); must(nav, '단추가 메뉴 줄 맨 앞에 없어요');
+    const nav = await pg.$eval('#nav', e => e.lastElementChild && e.lastElementChild.matches('[data-help]')); must(nav, '단추가 메뉴 줄 맨 오른쪽에 없어요');
     const href = await pg.getAttribute('#helpDemo', 'href'); must(/\?demo$/.test(href || ''), '미리보기 주소가 없어요');
     await shot(pg, 'help-1440');
   });
