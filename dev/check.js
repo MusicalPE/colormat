@@ -14,7 +14,7 @@ const bad = (f, m) => errs.push(`${f}: ${m}`);
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cmcheck-'));
 
 const PAGES = ['index.html', 'board.html', 'app.html', 'play/index.html', 'live/index.html', 'checker/index.html'];
-const SCRIPTS = ['cm-app.js', 'sw.js', 'checker/games.js', 'Shell.gs'];
+const SCRIPTS = ['cm-app.js', 'demo.js', 'sw.js', 'checker/games.js', 'Shell.gs'];
 const JSONS = ['manifest.webmanifest', 'national.json', 'live/database.rules.json'];
 
 function nodeCheck(code, ext, label){
@@ -69,11 +69,13 @@ for (const f of SCRIPTS) nodeCheck(rd(f), f.endsWith('.gs') ? '.js' : '.js', f);
   run(shared, 'cm-app.js', 'script', ['qrcode']);   // qrcode: 쓸 때 불러오는 QR 글자 라이브러리
   run(rd('checker/games.js'), 'checker/games.js', 'module', []);
   run(rd('sw.js'), 'sw.js', 'script', ['self', 'caches', 'clients']);
+  run(rd('demo.js'), 'demo.js', 'script', []);
   run(rd('Shell.gs'), 'Shell.gs', 'script', GAS);
   for (const f of PAGES) {
     const h = rd(f), ss = scripts(h);
-    const usesShared = /<script src="(\.\.\/)?cm-app\.js">/.test(h);
-    const names = ss.filter(s => !s.module).flatMap(s => tops(s.code)).concat(usesShared ? tops(shared) : []);
+    // 이 화면이 불러오는 저장소 안 스크립트 파일(cm-app.js · demo.js 등)의 맨 바깥 이름
+    const srcs = [...h.matchAll(/<script src="([^"]+\.js)"/g)].map(m => path.join(path.dirname(f), m[1])).filter(x => !/^https?:/.test(x) && fs.existsSync(path.join(ROOT, x)));
+    const names = ss.filter(s => !s.module).flatMap(s => tops(s.code)).concat(srcs.flatMap(x => tops(rd(x))));
     const libs = /qrcode/.test(h) ? ['QRCode'] : [];
     ss.forEach((s, i) => run(s.code, `${f} (스크립트 ${i + 1})`, s.module ? 'module' : 'script', names.concat(libs, ['YT', 'onYouTubeIframeAPIReady'])));
   }

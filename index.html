@@ -155,6 +155,25 @@
     .dash-l .stat{padding:10px 10px 10px 14px}
     .dash-l .stat span{display:block;font-size:.74em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   }
+  /* 사용 안내 */
+  .helpbtn{display:inline-flex;align-items:center;gap:6px;min-height:44px;border:0;background:none;padding:0 6px;font:inherit;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer;border-radius:8px;white-space:nowrap}
+  .helpbtn .help-dot{width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-size:13px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;flex:none}
+  .helpbtn:hover{text-decoration:underline}.helpbtn:focus-visible{outline:3px solid var(--coral);outline-offset:1px}
+  .admin-nav .helpbtn{margin-top:10px;padding:8px 12px;justify-content:flex-start;color:var(--ink);background:none}
+  .admin-nav .helpbtn:hover{background:none}
+  @media (max-width:760px){.admin-nav .helpbtn{margin-top:0}}
+  .help-ov{position:fixed;inset:0;z-index:1000;background:rgba(17,24,39,.45);display:flex;align-items:center;justify-content:center;padding:16px}
+  .help-box{background:var(--surface);color:var(--ink);border-radius:16px;width:100%;max-width:620px;max-height:calc(100vh - 32px);overflow:auto;padding:18px 20px;box-shadow:0 20px 50px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:12px}
+  .help-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .help-head h2{margin:0;font-size:19px}
+  .help-box section{border-top:1px solid var(--line);padding-top:10px}
+  .help-box h3{font-size:16px;display:flex;align-items:center;gap:8px;margin:0 0 6px}
+  .help-box h3 .help-num{width:24px;height:24px;border-radius:6px;background:var(--ink);color:#fff;font-size:14px;display:inline-flex;align-items:center;justify-content:center;flex:none}
+  .help-box ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px}
+  .help-box li{font-size:14px;line-height:1.55;color:var(--ink-2)}
+  .help-foot{border-top:1px solid var(--line);padding-top:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .help-foot a{color:var(--ink);font-weight:700;font-size:14px;min-height:44px;display:inline-flex;align-items:center}
+  .demo-bar{margin:0 0 12px}
 </style>
 </head>
 <body>
@@ -168,11 +187,12 @@
 </div>
 
 <script src="cm-app.js"></script>
+<script src="demo.js"></script>
 <script>if (window.CMApp && CMApp.saekdong) document.getElementById('sdMarkTop').innerHTML = CMApp.saekdong(30);</script>
 <script>
 (function(){
 'use strict';
-const VERSION = 'app v1.6.6';
+const VERSION = 'app v1.7.0';
 const REQUIRED_SHELL = 1;
 const GAME_NAME = { stroop:'함정 뛰기', basic:'색깔 뛰기', memory:'기억 뛰기', rhythm:'박자 뛰기', dir:'방향 뛰기', quiz:'정답 뛰기', assoc:'그림 뛰기', twist:'손발 꼬기', freeze:'얼음 꽁꽁', lava:'용암 피하기' };
 const DIFFN = (g, d) => (window.CMApp && CMApp.diffName) ? CMApp.diffName(g, d) : d;
@@ -181,6 +201,8 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp
 const num = n => Number(n || 0).toLocaleString('ko-KR');
 const dur = s => { s = Math.round(s || 0); const h = Math.floor(s/3600), m = Math.floor(s%3600/60); return h ? h+'시간 '+m+'분' : m ? m+'분'+(s%60? ' '+s%60+'초':'') : s+'초'; };
 const q = Object.fromEntries(new URLSearchParams(location.search));
+// ?demo: 설치 없이 둘러보는 미리보기 — 학교 시트 대신 demo.js 가 지어낸 학급으로 대답함, 아무것도 저장하지 않음
+const DEMO = 'demo' in q && !!window.CM_DEMO;
 const LS = { get(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch(e){ return d; } }, set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
 $('ver').textContent = VERSION;
 
@@ -188,16 +210,17 @@ $('ver').textContent = VERSION;
 // 학교 시트 주소: ?id=<배포 번호> (짧은 주소) 또는 예전처럼 ?s=<전체 주소>
 const GAS = id => 'https://script.google.com/macros/s/' + id + '/exec';
 const idOf = u => { const m = String(u || '').match(/^https:\/\/script\.google\.com\/macros\/s\/([A-Za-z0-9_-]+)\/exec$/); return m ? m[1] : ''; };
-const APP = { s: q.s || (q.id && /^[A-Za-z0-9_-]+$/.test(q.id) ? GAS(q.id) : ''), pub: null, page: q.page === 'admin' || q.page === 'approval' ? 'admin' : 'main', token: null, data: null,
+const APP = { s: DEMO ? 'demo' : q.s || (q.id && /^[A-Za-z0-9_-]+$/.test(q.id) ? GAS(q.id) : ''), pub: null, page: q.page === 'admin' || q.page === 'approval' ? 'admin' : 'main', token: null, data: null,
   tab: q.page === 'approval' ? 'pending' : (q.tab || 'pending') };
-try { const t = JSON.parse(sessionStorage.getItem('cm_token|' + APP.s) || 'null'); if (t && t.exp > Date.now()) APP.token = t.token; } catch (e) {}
+if (!DEMO) try { const t = JSON.parse(sessionStorage.getItem('cm_token|' + APP.s) || 'null'); if (t && t.exp > Date.now()) APP.token = t.token; } catch (e) {}
 
 function rpc(fn, args){
+  if (DEMO) return CM_DEMO.call(fn, args);
   return fetch(APP.s, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args || [] }), redirect:'follow' })
     .then(r => { if (!r.ok) throw new Error('학교 시트 응답 오류 (' + r.status + ')'); return r.json(); })
     .then(j => { if (!j.ok) throw new Error(j.error || '요청 실패'); return j.result; });
 }
-function selfUrl(page){ const id = idOf(APP.s); return location.href.split('?')[0] + (id ? '?id=' + id : '?s=' + encodeURIComponent(APP.s)) + (page ? '&page=' + page : ''); }
+function selfUrl(page){ if (DEMO) return location.href.split('?')[0] + '?demo' + (page ? '&page=' + page : ''); const id = idOf(APP.s); return location.href.split('?')[0] + (id ? '?id=' + id : '?s=' + encodeURIComponent(APP.s)) + (page ? '&page=' + page : ''); }
 function go(page, tab){ APP.page = page; if (tab) APP.tab = tab; history.replaceState(null, '', selfUrl(page === 'admin' ? (APP.tab === 'pending' ? 'approval' : 'admin') : '')); render(); window.scrollTo(0, 0); }
 function wireInstall(){ const b = $('cmInstallBtn'); if (b) b.onclick = () => CMApp.showInstall(); }
 function showStudentQr(){
@@ -206,10 +229,42 @@ function showStudentQr(){
     { key:'board', label:'🏆 색동 한마당', url: CMApp.ROOT + 'board.html', note:'찍으면 전국 매트 현황판이 열려요.' }
   ]);
 }
+
+/* ================= 사용 안내 ================= */
+const HELP = [
+  ['학생 등록하기 (선생님)', ['"관리자 메뉴" → "학생 관리" → "여러 명 한 번에"에 한 줄에 한 명씩 넣고 "등록"을 눌러요. (예: 4 1 3 김하늘)', '한 명만 넣을 때는 "한 명씩 추가"에서 "추가"를 눌러요.']],
+  ['학생 기기에서 열기 (선생님)', ['"접속 QR"을 눌러 화면에 띄우면 학생이 휴대폰·태블릿으로 찍어 들어와요.', '한 번 들어온 기기는 다음부터 우리 학교 화면이 바로 열려요.']],
+  ['게임 고르고 시작하기 (학생)', ['학년·반·이름을 고르고 "카메라 판정으로 시작!"을 눌러요.', '"무엇을 할까요?"에서 게임을 고르고 "카메라 켜고 시작"을 눌러요.', '카메라 영상은 저장하거나 어디로 보내지 않아요.']],
+  ['휴대폰 자리 맞추기 (학생)', ['휴대폰을 2~3m 떨어진 허리 높이에 두고, 무릎부터 발끝과 매트 네 칸이 보이게 해요. 머리는 안 보여도 괜찮아요.', '매트를 찾은 뒤 1.5초 가만히 서 있으면 저절로 시작해요. "시작하기"를 눌러도 돼요.', '매트를 못 찾으면 "네 칸에 서서 직접 맞추기", 다음 번에는 "지난번 위치 그대로 쓰기"를 눌러요.']],
+  ['기록 보내기 (학생)', ['게임이 끝나면 기록이 저절로 저장돼요. 중간에 "그만하기"를 눌러도 저장해요.', '저장이 안 되면 "다시 저장하기"를 눌러요.', '보낸 기록은 첫 화면 "오늘 뛴 기록"에 "대기"로 보여요.']],
+  ['기록 승인하기 (선생님)', ['"기록 승인"에서 "모두 승인"이나 "고른 기록 승인"을 눌러요. 승인한 기록만 그래프와 하늘까지에 더해져요.', '승인을 기다리는 동안에도 학생이 다시 뛰는 것은 막지 않아요.', '"설정"에서 "승인 절차"를 끄면 카메라 기록이 바로 인정돼요.']],
+  ['색동 한마당 참여하기 (선생님)', ['"설정" → "전국 현황판 참여"에 학교 이름을 넣고 "참여하기"를 눌러요.', '그다음부터는 기록을 승인할 때 저절로 함께 보내져요.', '"현황판에 학교 이름 보이기"를 끄면 "익명 학교"로 보여요.']],
+  ['색동 한판으로 반 전체 뛰기 (선생님)', ['"관리자 메뉴" → "색동 한판" → "색동 한판 열기"를 누르고 "방 열기"를 눌러요.', '학생 기기로 화면의 QR을 찍으면 기기 번호가 저절로 붙어요.', '"차례"로 조를 나누고, 한 판이 끝나면 "다음 조 ▶"를 눌러요.']],
+  ['비밀번호 · 새 학년', ['비밀번호는 "설정" → "관리자 비밀번호"에서 "바꾸기"로 바꿔요. 처음 비밀번호는 1234예요.', '잊었을 때는 학교 시트의 확장 프로그램 → Apps Script → 프로젝트 설정 → 스크립트 속성에서 ADMIN_HASH 를 지우면 1234로 돌아가요. 기록은 그대로예요.', '새 학년: 하늘까지와 "이번 학년도"는 3월 1일에 저절로 새로 시작해요. 학생은 "고른 학생 지우기" 뒤 "여러 명 한 번에"로 새로 넣어요.']]
+];
+const helpBtn = () => '<button type="button" class="helpbtn" data-help><span class="help-dot" aria-hidden="true">?</span>사용 안내</button>';
+function showHelp(){
+  if ($('helpOv')) return;
+  const ov = document.createElement('div'); ov.className = 'help-ov'; ov.id = 'helpOv';
+  ov.innerHTML = '<div class="help-box" role="dialog" aria-modal="true" aria-labelledby="helpTitle">' +
+    '<div class="help-head"><h2 id="helpTitle">색동 간략 사용법</h2><button type="button" class="btn ghost" id="helpX">닫기</button></div>' +
+    HELP.map((h, i) => '<section><h3><span class="help-num">' + (i + 1) + '</span>' + esc(h[0]) + '</h3><ul>' + h[1].map(t => '<li>' + esc(t) + '</li>').join('') + '</ul></section>').join('') +
+    '<div class="help-foot">' + (DEMO ? '<span></span>' : '<a href="' + location.pathname + '?demo" target="_blank" rel="noopener" id="helpDemo">지어낸 학급으로 미리 눌러 보기</a>') +
+    '<button type="button" class="btn" id="helpOk">확인</button></div></div>';
+  const prev = document.activeElement;
+  const close = () => { ov.remove(); document.removeEventListener('keydown', onKey); if (prev && prev.focus) prev.focus(); };
+  const onKey = e => { if (e.key === 'Escape') close(); };
+  ov.onclick = e => { if (e.target === ov) close(); };
+  document.body.appendChild(ov);
+  $('helpX').onclick = close; $('helpOk').onclick = close;
+  document.addEventListener('keydown', onKey);
+  $('helpX').focus();   // 맨 위(제목)부터 보이게
+}
+document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-help]')) showHelp(); });
 function setNav(){
-  if (!APP.s) { $('nav').innerHTML = '<button class="pill" id="cmInstallBtn">바로가기</button>'; wireInstall(); return; }
+  if (!APP.s) { $('nav').innerHTML = helpBtn() + '<button class="pill" id="cmInstallBtn">바로가기</button>'; wireInstall(); return; }
   const pend = APP.pub && APP.pub.pending ? '<span class="cnt">' + APP.pub.pending + '</span>' : '';
-  $('nav').innerHTML = (APP.page === 'main'
+  $('nav').innerHTML = helpBtn() + (APP.page === 'main'
       ? '<a class="pill sdi" href="play/">놀이터</a>' +
         '<a class="pill sdi" href="' + boardHref() + '">한마당</a>' +
         '<button class="pill" id="qrBtn">접속 QR</button>' +
@@ -223,7 +278,7 @@ function setNav(){
   if ($('mainBtn')) $('mainBtn').onclick = () => { reloadPublic().then(() => go('main')); };
   wireInstall();
 }
-function reloadPublic(){ return rpc('getPublic').then(p => { APP.pub = p; LS.set('cm_pub|' + APP.s, p); $('brandSchool').textContent = p.title || ''; }).catch(() => {}); }
+function reloadPublic(){ return rpc('getPublic').then(p => { APP.pub = p; if (!DEMO) LS.set('cm_pub|' + APP.s, p); $('brandSchool').textContent = p.title || ''; }).catch(() => {}); }
 
 function climbCard(c){
   if (!c || !window.CMApp || !CMApp.climbHTML) return '';
@@ -314,6 +369,7 @@ function renderMain(){
   $('periodSeg').querySelectorAll('button').forEach(b => { b.classList.toggle('on', b.dataset.v === STU.period); b.onclick = () => { STU.period = b.dataset.v; LS.set('cm_period', STU.period); renderMain(); }; });
   $('goCam').onclick = () => {
     const me = list.find(s => s.id === STU.sid); if (!me) return;
+    if (DEMO) { if (!$('camDemo')) $('goCam').insertAdjacentHTML('afterend', '<p class="hint" id="camDemo">미리보기에서는 카메라를 켜지 않아요. 실제 학교 화면에서는 여기서 매트 판정기가 열려요.</p>'); return; }
     const prm = new URLSearchParams({ s: APP.s, sid: me.id, who: me.name, grade: String(me.grade || ''), back: selfUrl() + '&sid=' + encodeURIComponent(me.id) });
     location.href = 'checker/index.html?' + prm.toString();
   };
@@ -373,9 +429,10 @@ const NAT = {
   newKey(){ try { if (crypto.randomUUID) return crypto.randomUUID(); } catch (e) {} return Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => (b<16?'0':'')+b.toString(16)).join(''); },
   deployId(u){ const m = String(u).match(/\/s\/([A-Za-z0-9_-]{20,})\//); return m ? m[1] : String(u); },
   // 한마당에서 '우리 학교'를 알아보게: 이 기기에 학교 공개 ID 를 기억 (학교 키에서 만든 것, 키 자체는 안 남김)
-  rememberMe(){ const c = this.cfg(); if (!c.on || !c.key || this.moved()) return; this.sha('jr-school|' + c.key).then(h => { try { localStorage.setItem('cm_me', h.slice(0, 10)); } catch (e) {} }).catch(() => {}); },
+  rememberMe(){ const c = this.cfg(); if (DEMO || !c.on || !c.key || this.moved()) return; this.sha('jr-school|' + c.key).then(h => { try { localStorage.setItem('cm_me', h.slice(0, 10)); } catch (e) {} }).catch(() => {}); },
   moved(){ const c = this.cfg(); return !!(c.on && c.shell && c.shell !== this.deployId(APP.s)); },
   post(fn, payload){
+    if (DEMO) return Promise.reject(new Error('미리보기에서는 전국 현황판에 보내지 않아요'));
     return fetch(this.collector, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args:[payload] }), redirect:'follow' })
       .then(r => { if (!r.ok) throw new Error('현황판 응답 오류 (' + r.status + ')'); return r.json(); })
       .then(j => { if (!j.ok) throw new Error(j.error || '현황판 요청 실패'); return j.result; });
@@ -421,7 +478,7 @@ function renderLogin(err){
     rpc('verifyAdminPassword', [$('pw').value]).then(r => {
       if (!r.ok) return renderLogin(r.message);
       APP.token = r.token; APP.isDefaultPw = r.isDefault;
-      try { sessionStorage.setItem('cm_token|' + APP.s, JSON.stringify({ token:r.token, exp: Date.now() + 55*60*1000 })); } catch (e) {}
+      if (!DEMO) try { sessionStorage.setItem('cm_token|' + APP.s, JSON.stringify({ token:r.token, exp: Date.now() + 55*60*1000 })); } catch (e) {}
       loadAdmin();
     }).catch(e => renderLogin(e.message));
   };
@@ -477,7 +534,7 @@ function renderAdmin(msg){
   if (d.shell < REQUIRED_SHELL) h += '<div class="msg err">껍데기를 새 판으로 바꿔 주세요.</div>';
   if (APP.isDefaultPw) h += '<div class="msg info">처음 비밀번호(1234)를 쓰고 있어요. 설정 탭에서 바꿔 주세요.</div>';
   if (msg) h += '<div class="msg ok">' + esc(msg) + '</div>';
-  h += '<div class="admin-layout"><nav class="admin-nav">' + tabs.map(t => '<button data-tab="' + t[0] + '" class="' + (APP.tab===t[0]?'on':'') + '"><span class="ico"></span>' + t[1] + (t[2] ? '<span class="cnt">' + t[2] + '</span>' : '') + '</button>').join('') + '</nav><div class="admin-content">';
+  h += '<div class="admin-layout"><nav class="admin-nav">' + tabs.map(t => '<button data-tab="' + t[0] + '" class="' + (APP.tab===t[0]?'on':'') + '"><span class="ico"></span>' + t[1] + (t[2] ? '<span class="cnt">' + t[2] + '</span>' : '') + '</button>').join('') + helpBtn() + '</nav><div class="admin-content">';
 
   if (APP.tab === 'pending') {
     h += '<div class="card"><h2>승인 대기 중인 기록</h2><p class="hint">아이들이 실제로 뛴 기록이 맞는지 보고 승인해 주세요. ' + (nat.on ? '<b>승인한 카메라 판정 기록은 전국 현황판에도 올라가요.</b>' : '') + '</p>' +
@@ -530,7 +587,7 @@ function renderAdmin(msg){
   }
   h += '</div></div>';
   $('view').innerHTML = h;
-  if ($('openLive')) $('openLive').onclick = () => { const w = window.open('live/?s=' + encodeURIComponent(APP.s), '_blank'); if (!w) $('liveMsg').textContent = '새 창이 막혔어요. 주소창 오른쪽에서 팝업을 허용해 주세요.'; };
+  if ($('openLive')) $('openLive').onclick = () => { const w = window.open(DEMO ? 'live/?demo=1' : 'live/?s=' + encodeURIComponent(APP.s), '_blank'); if (!w) $('liveMsg').textContent = '새 창이 막혔어요. 주소창 오른쪽에서 팝업을 허용해 주세요.'; };
   $('view').querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { APP.tab = b.dataset.tab; history.replaceState(null, '', selfUrl(APP.tab === 'pending' ? 'approval' : 'admin')); renderAdmin(); });
   wirePickAll();
   const act = (p, note) => { $('view').querySelectorAll('button').forEach(b => b.disabled = true); return p.then(() => rpc('getAllDataAdmin', [APP.token])).then(dd => { APP.data = dd; return syncAfter(note); }).then(m => renderAdmin(m)).catch(e => { alert(e.message); loadAdmin(); }); };
@@ -610,17 +667,18 @@ if (!APP.s && !q.new) {
 }
 if (!APP.s) { render(); }
 else {
-  LS.set('cm_last_shell', APP.s);
+  if (!DEMO) LS.set('cm_last_shell', APP.s);
+  else $('view').insertAdjacentHTML('beforebegin', '<div class="msg info demo-bar">미리보기예요. 햇살초등학교는 지어낸 학교이고, 눌러 본 내용은 저장되지 않아요. 관리자 비밀번호는 아무거나 넣어도 들어가져요.</div>');
   if (q.s && idOf(APP.s)) history.replaceState(null, '', selfUrl(q.page || ''));
   setNav();
   // 빠르게: 이 기기에 저장해 둔 지난 내용을 먼저 보여 주고, 학교 시트 응답이 오면 새 내용으로 바꿈
-  const CK = 'cm_pub|' + APP.s, cached = LS.get(CK, null);
+  const CK = 'cm_pub|' + APP.s, cached = DEMO ? null : LS.get(CK, null);
   const usePub = p => { APP.pub = p; $('brandSchool').textContent = p.title || ''; document.title = p.title ? p.title + ' — 색동' : '색동';
     if (!p.days) { p.days = []; p.today = []; p.now = new Date().toISOString().slice(0,10); } };
   let shownCached = false;
   if (cached && cached.students) { usePub(cached); shownCached = true; render(); showRefreshing(true); }
   rpc('getPublic').then(p => {
-    LS.set(CK, p); usePub(p); showRefreshing(false);
+    if (!DEMO) LS.set(CK, p); usePub(p); showRefreshing(false);
     if (!shownCached || APP.page === 'main') render();     // 관리자 화면은 자체로 새 자료를 불러옴
     else setNav();
   }).catch(e => {

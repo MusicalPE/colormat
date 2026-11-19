@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // 색동 전체 시험 (2단계) — 코드 검사에 더해, 시험 서버를 켜고 화면을 실제로 띄워 한 번씩 밟아 봐요
 //   우리 학교(관리자 로그인 · 학생 추가 · 화면 이름 · 전국 참여) → 판정기에서 기록 제출 → 승인 → 그래프·하늘까지 반영
-//   → 색동 한마당(학교 순위 · 우리 학교 · 학교 안 순위 · 학생 순위 팝업 · 우리 학교만 · 이름 찾기)
+//   → 사용 안내(창 · 항목 수 · Esc · 관리자 메뉴 단추 · ?demo 미리보기) → 색동 한마당(학교 순위 · 우리 학교 · 학교 안 순위 · 학생 순위 팝업 · 우리 학교만 · 이름 찾기)
 //   → 놀이터(게임 열고 시작) → 색동 한판(방 열기 · 기기 3대 자동 번호 · 차례 돌리기 · 기기 찾기 · 판 시작·끝 · 결과 저장 · 다음 조)
 //   화면마다 자바스크립트 오류가 하나라도 나면 실패. 넓은 화면·휴대폰 화면 사진은 dev/shots/ 에 남겨요.
 // 쓰는 법: node dev/full.js     (playwright 필요 — dev 폴더에서 npm i, 크로미움은 PW_CHROMIUM 으로 경로 지정 가능)
@@ -113,6 +113,38 @@ const must = (cond, msg) => { if (!cond) throw new Error(msg); };
     const bars = await pg.textContent('.bars'); must(bars.includes('김하늘'), '학생별 그래프에 김하늘이 없어요');
   });
   await shot(pg, 'main-1440');
+
+  console.log('\n[사용 안내]');
+  const HELP_N = 9;   // index.html 의 HELP 항목 수와 맞출 것
+  await step('사용 안내 창이 열리고 항목 ' + HELP_N + '개', async () => {
+    await pg.click('#nav [data-help]'); await pg.waitForSelector('.help-box', { timeout: 5000 });
+    must((await pg.textContent('#helpTitle')).trim() === '색동 간략 사용법', '창 제목이 달라요');
+    const n = await pg.$$eval('.help-box section', x => x.length); must(n === HELP_N, '항목 수가 ' + n + '개예요');
+    const nav = await pg.$eval('#nav', e => e.firstElementChild && e.firstElementChild.matches('[data-help]')); must(nav, '단추가 메뉴 줄 맨 앞에 없어요');
+    const href = await pg.getAttribute('#helpDemo', 'href'); must(/\?demo$/.test(href || ''), '미리보기 주소가 없어요');
+    await shot(pg, 'help-1440');
+  });
+  await step('Esc 로 닫힘 · 확인 · 바깥 누르기', async () => {
+    await pg.keyboard.press('Escape'); await pg.waitForSelector('.help-ov', { state: 'detached', timeout: 3000 });
+    await pg.click('#nav [data-help]'); await pg.click('#helpOk'); await pg.waitForSelector('.help-ov', { state: 'detached', timeout: 3000 });
+    await pg.click('#nav [data-help]'); await pg.mouse.click(5, 5); await pg.waitForSelector('.help-ov', { state: 'detached', timeout: 3000 });
+  });
+  await step('관리자 메뉴 안에도 사용 안내 단추', async () => {
+    await pg.goto(`${BASE}/index.html?s=${SHQ}&page=admin`); await pg.waitForSelector('.admin-nav', { timeout: 8000 });
+    must(await pg.$eval('.admin-nav', e => e.lastElementChild.matches('[data-help]')), '왼쪽 메뉴 맨 아래에 단추가 없어요');
+    await pg.click('.admin-nav [data-help]'); await pg.waitForSelector('.help-box', { timeout: 5000 });
+    await pg.click('#helpX'); await pg.waitForSelector('.help-ov', { state: 'detached', timeout: 3000 });
+  });
+  await step('미리보기(?demo): 지어낸 학급 · 아무 비밀번호로 관리자', async () => {
+    const d = await ctx.newPage(); watch(d, '미리보기');
+    await d.goto(`${BASE}/index.html?demo`); await d.waitForSelector('.dash-today', { timeout: 10000 });
+    must(await d.isVisible('.demo-bar'), '미리보기 안내 줄이 없어요');
+    must((await d.textContent('.bars')).includes('강태윤'), '지어낸 학급이 안 보여요');
+    await d.click('#nav [data-help]'); must(!(await d.$('#helpDemo')), '미리보기 안에서도 미리보기 링크가 보여요'); await d.keyboard.press('Escape');
+    await d.click('#adBtn'); await d.fill('#pw', '아무거나'); await d.click('#lf button'); await d.waitForSelector('.admin-nav', { timeout: 8000 });
+    must(!(await d.evaluate(() => localStorage.getItem('cm_last_shell') === '"demo"')), '미리보기가 학교 시트로 기억됐어요');
+    await d.close();
+  });
   { const m = await ctx.newPage(); await m.setViewportSize({ width: 390, height: 844 }); watch(m, '우리 학교(휴대폰)');
     await m.goto(`${BASE}/index.html?s=${SHQ}`); await m.waitForSelector('.dash-today').catch(() => {}); await shot(m, 'main-390'); await m.close(); }
 
